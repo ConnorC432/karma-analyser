@@ -42,22 +42,22 @@ reaction_dict = {
 def get_gambling_rewards(length=10,mode="good"):
     # Rewards table for Reddiquette followers
     good_table = [
-        ("<:reddit_upvote:1266139689136689173>", 10),
-        ("<:quarter_upvote:1266139599814529034>", 20),
-        ("<:reddit_downvote:1266139651660447744>", 10),
-        ("<:quarter_downvote:1266139626276388875>", 20),
-        ("<:reddit_silver:833677163739480079>", 10),
+        ("<:reddit_upvote:1266139689136689173>", 30),
+        ("<:quarter_upvote:1266139599814529034>", 60),
+        ("<:reddit_downvote:1266139651660447744>", 25),
+        ("<:quarter_downvote:1266139626276388875>", 50),
+        ("<:reddit_silver:833677163739480079>", 5),
         ("<:reddit_gold:833675932883484753>", 2),
         ("<:reddit_platinum:833678610279563304>", 1),
-        ("<:reddit_wholesome:833669115762835456>", 5)
+        ("<:reddit_wholesome:833669115762835456>", 10)
     ]
 
     # Rewards table for those in Karmic Debt
     bad_table = [
-        ("<:reddit_upvote:1266139689136689173>", 10),
-        ("<:quarter_upvote:1266139599814529034>", 20),
-        ("<:reddit_downvote:1266139651660447744>", 10),
-        ("<:quarter_downvote:1266139626276388875>", 20),
+        ("<:reddit_upvote:1266139689136689173>", 25),
+        ("<:quarter_upvote:1266139599814529034>", 50),
+        ("<:reddit_downvote:1266139651660447744>", 40),
+        ("<:quarter_downvote:1266139626276388875>", 70),
         ("<:reddit_silver:833677163739480079>", 5),
         ("<:reddit_gold:833675932883484753>", 2),
         ("<:reddit_platinum:833678610279563304>", 1),
@@ -68,8 +68,6 @@ def get_gambling_rewards(length=10,mode="good"):
     rewards, weights = zip(*table)
 
     array = random.choices(rewards, weights=weights, k=length)
-
-    print(array)
 
     return array
 
@@ -143,8 +141,7 @@ async def analyse(context):
         if user is None:
             continue
 
-        karma_ratio = 0
-        #karma_ratio = (karmic_dict[user]["Karma"] / karmic_dict[user]["Messages"])
+        karma_ratio = (karmic_dict[user]["Karma"] / karmic_dict[user]["Messages"])
 
         karma_str = ""
         # Karma up or downvcte?
@@ -218,8 +215,6 @@ async def gambling(context):
     karma_case = get_gambling_rewards(case_length)
     message = await context.reply("Opening your Karma Case...")
     await asyncio.sleep(2)
-
-    print(f"Case Length: {case_length}")
 
     for i in range(case_length - 4):
         frame = karma_case[i:i + 5]
