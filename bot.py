@@ -42,26 +42,26 @@ reaction_dict = {
 def get_gambling_rewards(length=10,mode="good"):
     # Rewards table for Reddiquette followers
     good_table = [
-        ("<:reddit_upvote:1266139689136689173>", 30),
-        ("<:quarter_upvote:1266139599814529034>", 60),
-        ("<:reddit_downvote:1266139651660447744>", 25),
-        ("<:quarter_downvote:1266139626276388875>", 50),
-        ("<:reddit_silver:833677163739480079>", 5),
-        ("<:reddit_gold:833675932883484753>", 2),
+        ("<:reddit_upvote:1266139689136689173>", 100),
+        ("<:quarter_upvote:1266139599814529034>", 250),
+        ("<:reddit_downvote:1266139651660447744>", 110),
+        ("<:quarter_downvote:1266139626276388875>", 260),
+        ("<:reddit_silver:833677163739480079>", 25),
+        ("<:reddit_gold:833675932883484753>", 10),
         ("<:reddit_platinum:833678610279563304>", 1),
-        ("<:reddit_wholesome:833669115762835456>", 10)
+        ("<:reddit_wholesome:833669115762835456>", 25)
     ]
 
     # Rewards table for those in Karmic Debt
     bad_table = [
-        ("<:reddit_upvote:1266139689136689173>", 25),
-        ("<:quarter_upvote:1266139599814529034>", 50),
-        ("<:reddit_downvote:1266139651660447744>", 40),
-        ("<:quarter_downvote:1266139626276388875>", 70),
-        ("<:reddit_silver:833677163739480079>", 5),
-        ("<:reddit_gold:833675932883484753>", 2),
+        ("<:reddit_upvote:1266139689136689173>", 100),
+        ("<:quarter_upvote:1266139599814529034>", 250),
+        ("<:reddit_downvote:1266139651660447744>", 160),
+        ("<:quarter_downvote:1266139626276388875>", 320),
+        ("<:reddit_silver:833677163739480079>", 25),
+        ("<:reddit_gold:833675932883484753>", 10),
         ("<:reddit_platinum:833678610279563304>", 1),
-        ("<:reddit_wholesome:833669115762835456>", 5)
+        ("<:reddit_wholesome:833669115762835456>", 25)
     ]
 
     table = good_table if mode == "good" else bad_table
