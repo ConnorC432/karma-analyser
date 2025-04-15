@@ -28,8 +28,12 @@ bot = commands.Bot(command_prefix="r/", intents=intents)
 # Karma Reaction Values
 reaction_dict = {
     "reddit_upvote": 1,
+    "Upvote": 1,
     "reddit_downvote": -1,
+    "Downvote": -1,
+    "half_upvote": 0.5,
     "quarter_upvote": 0.5,
+    "half_downvote": -0.5,
     "quarter_downvote": -0.5,
     "reddit_gold": 0,
     "reddit_platinum": 0,
@@ -44,7 +48,7 @@ def get_gambling_rewards(length=10,mode="good"):
     good_table = [
         ("<:reddit_upvote:1266139689136689173>", 100),
         ("<:quarter_upvote:1266139599814529034>", 250),
-        ("<:reddit_downvote:1266139651660447744>", 110),
+        ("<:reddit_downvote:1266139651660447744>", 1),
         ("<:quarter_downvote:1266139626276388875>", 260),
         ("<:reddit_silver:833677163739480079>", 25),
         ("<:reddit_gold:833675932883484753>", 10),
@@ -56,7 +60,7 @@ def get_gambling_rewards(length=10,mode="good"):
     bad_table = [
         ("<:reddit_upvote:1266139689136689173>", 100),
         ("<:quarter_upvote:1266139599814529034>", 250),
-        ("<:reddit_downvote:1266139651660447744>", 160),
+        ("<:reddit_downvote:1266139651660447744>", 1),
         ("<:quarter_downvote:1266139626276388875>", 320),
         ("<:reddit_silver:833677163739480079>", 25),
         ("<:reddit_gold:833675932883484753>", 10),
