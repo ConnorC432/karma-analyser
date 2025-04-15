@@ -1,5 +1,4 @@
 import asyncio
-
 import discord
 import random
 import time
@@ -87,9 +86,12 @@ async def analyse(context):
         deductions = json.load(f)
 
     for user, deduction in deductions.items():
-        karmic_dict[user]["Karma"] += deduction
-        print(deduction)
-        print(karmic_dict[user]["Karma"])
+        user_obj = next((member for member in server.members if member.name == user), None)
+        # Find matching user object
+        if user_obj is not None:
+            karmic_dict[user_obj]["Karma"] += deduction
+        else:
+            print(f"User {user} not in server.")
 
     # Count Karma
     print("Counting Karma")
@@ -112,12 +114,16 @@ async def analyse(context):
                     try:
                         # Add Karma
                         async for user in reaction.users():
+                            # Skip Self Reactions
+                            if user == message.author:
+                                continue
+
                             # Add Reaction Count
-                            karmic_dict[user][reaction.emoji.name] += 1
+                            karmic_dict[message.author][reaction.emoji.name] += 1
 
                             # Add Weighted Karma Value
                             if reaction.emoji.name in reaction_dict:
-                                karmic_dict[user]["Karma"] += (1 * reaction_dict[reaction.emoji.name])
+                                karmic_dict[message.author]["Karma"] += (1 * reaction_dict[reaction.emoji.name])
 
                     except discord.HTTPException as e:
                         print(e)
@@ -133,8 +139,12 @@ async def analyse(context):
     )
 
     # Send Karma Analysis Results
-    for user, count in sorted_karmic_dict:
-        karma_ratio = (karmic_dict[user]["Karma"] / karmic_dict[user]["Messages"])
+    for user, count in karmic_dict.items():
+        if user is None:
+            continue
+
+        karma_ratio = 0
+        #karma_ratio = (karmic_dict[user]["Karma"] / karmic_dict[user]["Messages"])
 
         karma_str = ""
         # Karma up or downvcte?
