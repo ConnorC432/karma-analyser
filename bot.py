@@ -1,8 +1,9 @@
+import asyncio
+
 import discord
 import random
 import time
 import json
-import os
 
 from discord.ext import commands
 from collections import defaultdict
@@ -25,6 +26,7 @@ intents.emojis = True
 bot = commands.Bot(command_prefix="r/", intents=intents)
 
 
+# Karma Reaction Values
 reaction_dict = {
     "reddit_upvote": 1,
     "reddit_downvote": -1,
@@ -37,6 +39,43 @@ reaction_dict = {
 }
 
 
+# Gambling Rewards Tables
+def get_gambling_rewards(length=10,mode="good"):
+    # Rewards table for Reddiquette followers
+    good_table = [
+        ("<:reddit_upvote:1266139689136689173>", 10),
+        ("<:quarter_upvote:1266139599814529034>", 20),
+        ("<:reddit_downvote:1266139651660447744>", 10),
+        ("<:quarter_downvote:1266139626276388875>", 20),
+        ("<:reddit_silver:833677163739480079>", 10),
+        ("<:reddit_gold:833675932883484753>", 2),
+        ("<:reddit_platinum:833678610279563304>", 1),
+        ("<:reddit_wholesome:833669115762835456>", 5)
+    ]
+
+    # Rewards table for those in Karmic Debt
+    bad_table = [
+        ("<:reddit_upvote:1266139689136689173>", 10),
+        ("<:quarter_upvote:1266139599814529034>", 20),
+        ("<:reddit_downvote:1266139651660447744>", 10),
+        ("<:quarter_downvote:1266139626276388875>", 20),
+        ("<:reddit_silver:833677163739480079>", 5),
+        ("<:reddit_gold:833675932883484753>", 2),
+        ("<:reddit_platinum:833678610279563304>", 1),
+        ("<:reddit_wholesome:833669115762835456>", 5)
+    ]
+
+    table = good_table if mode == "good" else bad_table
+    rewards, weights = zip(*table)
+
+    array = random.choices(rewards, weights=weights, k=length)
+
+    print(array)
+
+    return array
+
+
+
 @bot.command()
 async def analyse(context):
     karmic_dict = defaultdict(lambda: defaultdict(int))  # User - Key - Int
@@ -47,8 +86,10 @@ async def analyse(context):
     with open("deductions.json", "r") as f:
         deductions = json.load(f)
 
-    for user in deductions:
-        karmic_dict[user]["Karma"] += deductions[user]
+    for user, deduction in deductions.items():
+        karmic_dict[user]["Karma"] += deduction
+        print(deduction)
+        print(karmic_dict[user]["Karma"])
 
     # Count Karma
     print("Counting Karma")
@@ -63,9 +104,6 @@ async def analyse(context):
                 karmic_dict[message.author]["Messages"] += 1
 
                 for reaction in message.reactions:
-                    # Ignore Bot Reactions
-                    if message.author.bot:
-                        continue
 
                     # Ignore Non-Karma Emojis
                     if reaction.emoji.name not in reaction_dict:
@@ -103,9 +141,9 @@ async def analyse(context):
         if karmic_dict[user]["Karma"] >= 0:
             karma_str = "<:reddit_upvote:1266139689136689173>"
         else:
-            karma_str = "<:reddit_downvote: 1266139651660447744>"
+            karma_str = "<:reddit_downvote:1266139651660447744>"
 
-        await context.send(f"{user.mention} **has:** \n"
+        await context.reply(f"{user.mention} **has:** \n"
                            f"{karmic_dict[user]["Karma"]} Karma {karma_str} \n"
                            f"{karmic_dict[user]["Messages"]} Messages. \n"
                            f"{round(karma_ratio, 4)} Karma per Message \n"
@@ -121,7 +159,7 @@ async def gild(context):
     await context.send("Thank you kind stranger!")
 
 @bot.command()
-@commands.has_role("Karma Court Judge")
+#@commands.has_role("Karma Court Judge")
 async def sentence(context, member: discord.Member):
     await context.send(f"ENUMERATING REDDIQUETTE VIOLATIONS FROM u/{member.name}")
     time.sleep(2)
@@ -143,6 +181,50 @@ async def sentence(context, member: discord.Member):
     # Save to JSON
     with open("deductions.json", "w") as f:
         json.dump(data, f, indent=4)
+
+@bot.command()
+async def gambling(context):
+    # Determine Karma Case Length
+    case_length = random.randint(10, 20)
+
+    # Good or bad odds?
+    user = context.author
+    with open("deductions.json", "r") as f:
+        data = json.load(f)
+
+    if user not in data:
+        karma_case = get_gambling_rewards(case_length, "good")
+        print("rolling case with good odds")
+    else:
+        user_karma = data[user]
+        if user_karma < 0:
+            karma_case = get_gambling_rewards(case_length, "bad")
+            print("rolling case with bad odds")
+        else:
+            karma_case = get_gambling_rewards(case_length, "good")
+            print("rolling case with good odds")
+
+    # Open Karma Case
+    karma_case = get_gambling_rewards(case_length)
+    message = await context.reply("Opening your Karma Case...")
+    await asyncio.sleep(2)
+
+    print(f"Case Length: {case_length}")
+
+    for i in range(case_length - 4):
+        frame = karma_case[i:i + 5]
+        display = (
+            f"{frame[0]}  |  "
+            f"{frame[1]}  |  "
+            f"**>> {frame[2]} <<**  |  "
+            f"{frame[3]}  |  "
+            f"{frame[4]}"
+        )
+        await message.edit(content=display)
+        await asyncio.sleep(0.5)
+
+    print(karma_case[case_length - 2])
+    await message.add_reaction(karma_case[case_length - 2])
 
 
 bot.run(bot_token)
