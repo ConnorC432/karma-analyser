@@ -169,9 +169,9 @@ async def gild(context):
 #@commands.has_role("Karma Court Judge")
 async def sentence(context, member: discord.Member):
     await context.send(f"ENUMERATING REDDIQUETTE VIOLATIONS FROM u/{member.name}")
-    time.sleep(2)
+    await asyncio.sleep(2)
     await context.send("CALCULATING COMMENSURATE KARMIC DEDUCTION")
-    time.sleep(2)
+    await asyncio.sleep(2)
     ded = random.randint(50,100)
     await context.send(f"FOR CRIMES AGAINST REDDIT AND XER PEOPLE, u/{member.name} IS HEREBY SENTENCED TO A KARMIC DEDUCTION TOTALLING {ded} REDDIT KARMA")
 
