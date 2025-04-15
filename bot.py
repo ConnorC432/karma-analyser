@@ -216,6 +216,10 @@ async def gambling(context):
     message = await context.reply("Opening your Karma Case...")
     await asyncio.sleep(2)
 
+    # Jaden Odds
+    if user == "ja320":
+        karma_case[case_length - 2] = "<:reddit_downvote:1266139651660447744>"
+
     for i in range(case_length - 4):
         frame = karma_case[i:i + 5]
         display = (
