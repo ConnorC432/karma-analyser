@@ -2,10 +2,15 @@ import discord
 import random
 import time
 import json
+import os
 
 from discord.ext import commands
 from collections import defaultdict
 
+
+# Get Bot Token from text file
+with open("token.txt", "r") as f:
+    bot_token = f.readline().strip()
 
 # Enable the necessary intents
 intents = discord.Intents.default()
@@ -140,4 +145,4 @@ async def sentence(context, member: discord.Member):
         json.dump(data, f, indent=4)
 
 
-bot.run('put token here')
+bot.run(bot_token)
