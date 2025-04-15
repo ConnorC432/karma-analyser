@@ -121,7 +121,7 @@ async def gild(context):
     await context.send("Thank you kind stranger!")
 
 @bot.command()
-#@commands.has_role("Karma Court Judge")
+@commands.has_role("Karma Court Judge")
 async def sentence(context, member: discord.Member):
     await context.send(f"ENUMERATING REDDIQUETTE VIOLATIONS FROM u/{member.name}")
     time.sleep(2)
