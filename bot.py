@@ -1,7 +1,6 @@
 import asyncio
 import discord
 import random
-import time
 import json
 
 from discord.ext import commands
@@ -48,7 +47,7 @@ def get_gambling_rewards(length=10,mode="good"):
     good_table = [
         ("<:reddit_upvote:1266139689136689173>", 100),
         ("<:quarter_upvote:1266139599814529034>", 250),
-        ("<:reddit_downvote:1266139651660447744>", 1),
+        ("<:reddit_downvote:1266139651660447744>", 110),
         ("<:quarter_downvote:1266139626276388875>", 260),
         ("<:reddit_silver:833677163739480079>", 25),
         ("<:reddit_gold:833675932883484753>", 10),
@@ -60,7 +59,7 @@ def get_gambling_rewards(length=10,mode="good"):
     bad_table = [
         ("<:reddit_upvote:1266139689136689173>", 100),
         ("<:quarter_upvote:1266139599814529034>", 250),
-        ("<:reddit_downvote:1266139651660447744>", 1),
+        ("<:reddit_downvote:1266139651660447744>", 160),
         ("<:quarter_downvote:1266139626276388875>", 320),
         ("<:reddit_silver:833677163739480079>", 25),
         ("<:reddit_gold:833675932883484753>", 10),
@@ -203,7 +202,12 @@ async def gambling(context):
     with open("deductions.json", "r") as f:
         data = json.load(f)
 
-    if user not in data:
+    jaden_obj = discord.utils.find(lambda m: m.name.lower() == "ja320", context.guild.members)
+
+    if user == jaden_obj:
+        karma_case = get_gambling_rewards(case_length, "good")
+        karma_case[case_length - 3] = "<:reddit_downvote:1266139651660447744>"
+    elif user not in data:
         karma_case = get_gambling_rewards(case_length, "good")
         print("rolling case with good odds")
     else:
@@ -216,13 +220,8 @@ async def gambling(context):
             print("rolling case with good odds")
 
     # Open Karma Case
-    karma_case = get_gambling_rewards(case_length)
     message = await context.reply("Opening your Karma Case...")
     await asyncio.sleep(2)
-
-    # Jaden Odds
-    if user == "ja320":
-        karma_case[case_length - 2] = "<:reddit_downvote:1266139651660447744>"
 
     for i in range(case_length - 4):
         frame = karma_case[i:i + 5]
