@@ -144,6 +144,8 @@ async def on_raw_reaction_add(reaction):
     # Ignore Non-Karmic Reactions
     if reaction.emoji.name not in reaction_dict:
         return
+    if user == reaction.message.author:
+        return
 
     with open("karma.json", "r") as f:
         karmic_dict = json.load(f)
@@ -169,6 +171,8 @@ async def on_raw_reaction_remove(reaction):
     user = bot.get_guild(reaction.guild_id).get_member(reaction.user_id)
     # Ignore Non-Karmic Reactions
     if reaction.emoji.name not in reaction_dict:
+        return
+    if user == reaction.message.author:
         return
 
     with open("karma.json", "r") as f:
