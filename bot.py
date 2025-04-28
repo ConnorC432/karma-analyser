@@ -1,11 +1,14 @@
 import asyncio
+import re
 import discord
 import random
 import json
 import openai
+import ollama
 
 from discord.ext import commands
 from collections import defaultdict
+from ollama import Client
 
 # Enable the necessary intents
 intents = discord.Intents.default()
@@ -78,10 +81,6 @@ def get_gambling_rewards(length=10,mode="good"):
 
 @bot.event
 async def on_ready():
-    # Load Settings
-    with open("settings.json", "r") as f:
-        karma_output_channel = bot.get_channel(int(settings["karma_output_channel"]))
-
     karmic_dict = defaultdict(lambda: defaultdict(int))
 
     # Load Karmic Deductions
@@ -317,14 +316,15 @@ async def diagnose(context, user: discord.Member = None):
         if msg.author == user:
             message.append(msg.content)
 
-    message_log = "\n".join(message)
+    message_log = "These are the messages you need to analyse: \n" + "\n".join(message)
     ai_instructions = (
         "You are a reddit moderation bot who can only use the neo-pronouns xe, xem, ze, zir. \n"
         "your sole purpose is to analyse the following reddit comments, and then provide feedback on your fellow redditor's "
         "comments, determining whether they follow the proper reddiquette and whether their messages are high or low quality,"
         "providing feedback on low quality messages that send the redditor into karmic debt, "
         "and also recognising good quality messages with positive feedback. \n"
-        "you love using the following words/phrases but don't overuse them: \n"
+        "You are to reference the messages as if you are reading through them yourself, and criticising them. \n"
+        "You must use some of the following words/phrases, but don't overuse them: \n"
         "actually, king, AMA, OP, ELI5, cake day, TIL, Karma, Karmic Debt, Redditorial (a reddit synonym for good/great), "
         "hello kind stranger, i hope you all have a great day, fellow redditor you MUST shower, duke cage, big chungus, up the ra, "
         "Jaden level of cringe, your hitting that spot, who made that mess?, you don't deserve my nut, "
@@ -366,13 +366,34 @@ async def diagnose(context, user: discord.Member = None):
         "⦁ Take moderation positions in a community where your profession, employment, or biases could pose a direct conflict of interest to the neutral and user driven nature of Reddit. \n"
     )
 
-    response = openai.responses.create(
-        model="gpt-4.1-mini",
-        instructions = ai_instructions,
-        input = message_log,
-    )
+    with open("settings.json", "r") as f:
+        settings = json.load(f)
+        ollama_endpoint = settings["ollama_endpoint"]
 
-    await reply.edit(content=f"{user.mention} \n {response.output_text[:2000]}")
+    ollama_server = Client(host=ollama_endpoint)
+
+    if ollama_endpoint is not None:
+        response = ollama_server.chat(
+            model="llama3",
+            messages=[
+                {"role": "system", "content": ai_instructions},
+                {"role": "user", "content": message_log}
+            ]
+        )
+        print(response)
+        clean_response = re.sub(r"<think>\s*.*?\s*</think>\n\n", "", response.message.content, flags=re.DOTALL)
+        await reply.edit(content=f"{user.mention}: {clean_response[:1950]}")
+
+    elif openai.api_key is not None:
+        response = openai.responses.create(
+            model="gpt-4.1-mini",
+            instructions=ai_instructions,
+            input=message_log,
+        )
+        await reply.edit(content=f"{user.mention} \n {response.output_text[:1950]}")
+
+    else:
+        print("No AI available")
 
 
 bot.run(bot_token)

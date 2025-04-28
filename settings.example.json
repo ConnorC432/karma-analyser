@@ -2,5 +2,5 @@
 {
   "bot_token": "",
   "open_ai_key": "",
-  "karma_output_channel": ""
+  "ollama_endpoint": "localhost:11434"
 }
