@@ -163,5 +163,5 @@ cython_debug/
 #.idea/
 
 # Ignore Bot Token text file
-token.txt
-openai.txt
+
+settings.json

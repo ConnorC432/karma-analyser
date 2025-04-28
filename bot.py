@@ -7,14 +7,8 @@ import openai
 from discord.ext import commands
 from collections import defaultdict
 
-# Open AI Token
-with open("openai.txt", "r") as f:
-    openai.api_key = f.readline().strip()
 
-
-# Get Bot Token from text file
-with open("token.txt", "r") as f:
-    bot_token = f.readline().strip()
+global karma_stats_message
 
 # Enable the necessary intents
 intents = discord.Intents.default()
@@ -27,6 +21,11 @@ intents.emojis = True
 
 # Create the bot instance
 bot = commands.Bot(command_prefix="r/", intents=intents)
+
+with open("settings.json", "r") as f:
+    settings = json.load(f)
+    bot_token = settings["bot_token"]
+    openai.api_key = settings["open_ai_key"]
 
 
 # Karma Reaction Values
@@ -80,28 +79,42 @@ def get_gambling_rewards(length=10,mode="good"):
     return array
 
 
+# @bot.command()
+# async def analyse(context):
+@bot.event
+async def on_ready():
+    # Load Settings
+    with open("settings.json", "r") as f:
+        karma_output_channel = bot.get_channel(int(settings["karma_output_channel"]))
 
-@bot.command()
-async def analyse(context):
-    karmic_dict = defaultdict(lambda: defaultdict(int))  # User - Key - Int
-    await context.send("KARMA SUBROUTINE INITIALISED")
-    server = context.guild
+    # Find Karma analysis output message object
+    global karma_stats_message
+    async for message in karma_output_channel.history():
+        if message.author == bot.user:
+            karma_stats_message = message
+            break
+
+    else:
+        karma_stats_message = await karma_output_channel.send("KARMA SUBROUTINE INITIALISED")
+
+    # Count Karma
+    karmic_dict = defaultdict(lambda: defaultdict(int))
 
     # Load Karmic Deductions
     with open("deductions.json", "r") as f:
         deductions = json.load(f)
 
     for user, deduction in deductions.items():
-        user_obj = next((member for member in server.members if member.name == user), None)
+        user_obj = next((member for member in bot.guilds[0].members if member.name == user), None)
         # Find matching user object
         if user_obj is not None:
-            karmic_dict[user_obj]["Karma"] += deduction
+            karmic_dict[user_obj.name]["Karma"] += deduction
         else:
             print(f"User {user} not in server.")
 
     # Count Karma
     print("Counting Karma")
-    for channel in server.text_channels:
+    for channel in bot.guilds[0].text_channels:
         try:
             async for message in channel.history(limit=None, oldest_first=True):
                 # Ignore Bot Comments
@@ -109,7 +122,7 @@ async def analyse(context):
                     continue
 
                 # Count Messages
-                karmic_dict[message.author]["Messages"] += 1
+                karmic_dict[message.author.name]["Messages"] += 1
 
                 for reaction in message.reactions:
 
@@ -125,11 +138,11 @@ async def analyse(context):
                                 continue
 
                             # Add Reaction Count
-                            karmic_dict[message.author][reaction.emoji.name] += 1
+                            karmic_dict[message.author.name][reaction.emoji.name] += 1
 
                             # Add Weighted Karma Value
                             if reaction.emoji.name in reaction_dict:
-                                karmic_dict[message.author]["Karma"] += (1 * reaction_dict[reaction.emoji.name])
+                                karmic_dict[message.author.name]["Karma"] += (1 * reaction_dict[reaction.emoji.name])
 
                     except discord.HTTPException as e:
                         print(e)
@@ -137,42 +150,137 @@ async def analyse(context):
         except discord.HTTPException as e:
             print(e)
 
-    # Sort Dict by Karma Values
-    sorted_karmic_dict = sorted(
-        karmic_dict.items(),
-        key=lambda item: item[1]["Karma"],
-        reverse=True
-    )
+    with open("karma.json", "w") as f:
+        json.dump(karmic_dict, f, indent=4)
+        print("Karma saved to JSON")
 
-    # Send Karma Analysis Results
-    for user, count in karmic_dict.items():
-        if user is None:
-            continue
 
-        karma_ratio = (karmic_dict[user]["Karma"] / karmic_dict[user]["Messages"])
+@bot.event
+async def on_raw_reaction_add(reaction):
+    user = bot.get_guild(reaction.guild_id).get_member(reaction.user_id)
+    # Ignore Non-Karmic Reactions
+    if reaction.emoji.name not in reaction_dict:
+        return
 
-        karma_str = ""
-        # Karma up or downvcte?
-        if karmic_dict[user]["Karma"] >= 0:
-            karma_str = "<:reddit_upvote:1266139689136689173>"
-        else:
-            karma_str = "<:reddit_downvote:1266139651660447744>"
+    global karma_stats_message
+    with open("karma.json", "r") as f:
+        karmic_dict = json.load(f)
+        if user.name not in karmic_dict:
+            karmic_dict[user.name] = {}
 
-        await context.reply(f"{user.mention} **has:** \n"
-                           f"{karmic_dict[user]["Karma"]} Karma {karma_str} \n"
-                           f"{karmic_dict[user]["Messages"]} Messages. \n"
-                           f"{round(karma_ratio, 4)} Karma per Message \n"
-                           f"Awards: \n"
-                           f"{karmic_dict[user]["reddit_silver"]} Silver <:reddit_silver:833677163739480079>\n"
-                           f"{karmic_dict[user]["reddit_gold"]} Gold <:reddit_gold:833675932883484753>\n"
-                           f"{karmic_dict[user]["reddit_platinum"]} Platinum <:reddit_platinum:833678610279563304>\n"
-                           f"{karmic_dict[user]["reddit_wholesome"]} Wholesome <:reddit_wholesome:833669115762835456>")
+        if reaction.emoji.name not in karmic_dict[user.name]:
+            karmic_dict[user.name][reaction.emoji.name] = 0
 
+        if "Karma" not in karmic_dict[user.name]:
+            karmic_dict[user.name]["Karma"] = 0
+
+        # Count Reactions
+        karmic_dict[user.name][reaction.emoji.name] += 1
+        karmic_dict[user.name]["Karma"] += reaction_dict[reaction.emoji.name]
+
+    with open("karma.json", "w") as f:
+        json.dump(karmic_dict, f, indent=4)
+
+    # # Update Karma stats
+    # with open("karma.json", "r") as f:
+    #     sorted_karmic_dict = sorted(
+    #         json.loads(f.read()),
+    #         key=lambda item: item[1]["Karma"],
+    #         reverse=True
+    #     )
+    #
+    # for user, count in sorted_karmic_dict.items():
+    #     if user is None:
+    #         continue
+    #
+    #     karma_ratio = (sorted_karmic_dict[user]["Karma"] / sorted_karmic_dict[user]["Messages"])
+    #
+    #     karma_str = ""
+    #     # Karma up or downvcte?
+    #     if karmic_dict[user]["Karma"] >= 0:
+    #         karma_str = "<:reddit_upvote:1266139689136689173>"
+    #     else:
+    #         karma_str = "<:reddit_downvote:1266139651660447744>"
+    #
+    #     try:
+    #         await karma_stats_message.edit(content=f"{user.mention} **has:** \n"
+    #                            f"{sorted_karmic_dict[user]["Karma"]} Karma {karma_str} \n"
+    #                            f"{sorted_karmic_dict[user]["Messages"]} Messages. \n"
+    #                            f"{round(karma_ratio, 4)} Karma per Message \n"
+    #                            f"Awards: \n"
+    #                            f"{sorted_karmic_dict[user]["reddit_silver"]} Silver <:reddit_silver:833677163739480079>\n"
+    #                            f"{sorted_karmic_dict[user]["reddit_gold"]} Gold <:reddit_gold:833675932883484753>\n"
+    #                            f"{sorted_karmic_dict[user]["reddit_platinum"]} Platinum <:reddit_platinum:833678610279563304>\n"
+    #                            f"{sorted_karmic_dict[user]["reddit_wholesome"]} Wholesome <:reddit_wholesome:833669115762835456>")
+    #     except discord.HTTPException as e:
+    #         print(e)
+
+
+@bot.event
+async def on_raw_reaction_remove(reaction):
+    user = bot.get_guild(reaction.guild_id).get_member(reaction.user_id)
+    # Ignore Non-Karmic Reactions
+    if reaction.emoji.name not in reaction_dict:
+        return
+
+    global karma_stats_message
+    with open("karma.json", "r") as f:
+        karmic_dict = json.load(f)
+        if user.name not in karmic_dict:
+            karmic_dict[user.name] = {}
+
+        if reaction.emoji.name not in karmic_dict[user.name]:
+            karmic_dict[user.name][reaction.emoji.name] = 0
+
+        if "Karma" not in karmic_dict[user.name]:
+            karmic_dict[user.name]["Karma"] = 0
+
+        # Count Reactions
+        karmic_dict[user.name][reaction.emoji.name] -= 1
+        karmic_dict[user.name]["Karma"] -= reaction_dict[reaction.emoji.name]
+
+    with open("karma.json", "w") as f:
+        json.dump(karmic_dict, f, indent=4)
+
+    # # Update Karma stats
+    # with open("karma.json", "r") as f:
+    #     sorted_karmic_dict = sorted(
+    #         json.loads(f.read()),
+    #         key=lambda item: item[1]["Karma"],
+    #         reverse=True
+    #     )
+    #
+    # for user, count in sorted_karmic_dict.items():
+    #     if user is None:
+    #         continue
+    #
+    #     karma_ratio = (sorted_karmic_dict[user]["Karma"] / sorted_karmic_dict[user]["Messages"])
+    #
+    #     karma_str = ""
+    #     # Karma up or downvcte?
+    #     if karmic_dict[user]["Karma"] >= 0:
+    #         karma_str = "<:reddit_upvote:1266139689136689173>"
+    #     else:
+    #         karma_str = "<:reddit_downvote:1266139651660447744>"
+    #
+    #     try:
+    #         await karma_stats_message.edit(content=f"{user.mention} **has:** \n"
+    #                            f"{sorted_karmic_dict[user]["Karma"]} Karma {karma_str} \n"
+    #                            f"{sorted_karmic_dict[user]["Messages"]} Messages. \n"
+    #                            f"{round(karma_ratio, 4)} Karma per Message \n"
+    #                            f"Awards: \n"
+    #                            f"{sorted_karmic_dict[user]["reddit_silver"]} Silver <:reddit_silver:833677163739480079>\n"
+    #                            f"{sorted_karmic_dict[user]["reddit_gold"]} Gold <:reddit_gold:833675932883484753>\n"
+    #                            f"{sorted_karmic_dict[user]["reddit_platinum"]} Platinum <:reddit_platinum:833678610279563304>\n"
+    #                            f"{sorted_karmic_dict[user]["reddit_wholesome"]} Wholesome <:reddit_wholesome:833669115762835456>")
+    #     except discord.HTTPException as e:
+    #         print(e)
 
 @bot.command()
 async def gild(context):
     await context.send("Thank you kind stranger!")
 
+## TODO have this function update karma stats and move update karma stats into a callable function
 @bot.command()
 @commands.has_role("Karma Court Judge")
 async def sentence(context, member: discord.Member):

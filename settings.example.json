@@ -1,0 +1,6 @@
+### Remove this line and rename file to settings.json
+{
+  "bot_token": "",
+  "open_ai_key": "",
+  "karma_output_channel": ""
+}
