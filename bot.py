@@ -7,9 +7,6 @@ import openai
 from discord.ext import commands
 from collections import defaultdict
 
-
-global karma_stats_message
-
 # Enable the necessary intents
 intents = discord.Intents.default()
 intents.messages = True
@@ -86,16 +83,6 @@ async def on_ready():
     # Load Settings
     with open("settings.json", "r") as f:
         karma_output_channel = bot.get_channel(int(settings["karma_output_channel"]))
-
-    # Find Karma analysis output message object
-    global karma_stats_message
-    async for message in karma_output_channel.history():
-        if message.author == bot.user:
-            karma_stats_message = message
-            break
-
-    else:
-        karma_stats_message = await karma_output_channel.send("KARMA SUBROUTINE INITIALISED")
 
     # Count Karma
     karmic_dict = defaultdict(lambda: defaultdict(int))
@@ -181,40 +168,6 @@ async def on_raw_reaction_add(reaction):
     with open("karma.json", "w") as f:
         json.dump(karmic_dict, f, indent=4)
 
-    # # Update Karma stats
-    # with open("karma.json", "r") as f:
-    #     sorted_karmic_dict = sorted(
-    #         json.loads(f.read()),
-    #         key=lambda item: item[1]["Karma"],
-    #         reverse=True
-    #     )
-    #
-    # for user, count in sorted_karmic_dict.items():
-    #     if user is None:
-    #         continue
-    #
-    #     karma_ratio = (sorted_karmic_dict[user]["Karma"] / sorted_karmic_dict[user]["Messages"])
-    #
-    #     karma_str = ""
-    #     # Karma up or downvcte?
-    #     if karmic_dict[user]["Karma"] >= 0:
-    #         karma_str = "<:reddit_upvote:1266139689136689173>"
-    #     else:
-    #         karma_str = "<:reddit_downvote:1266139651660447744>"
-    #
-    #     try:
-    #         await karma_stats_message.edit(content=f"{user.mention} **has:** \n"
-    #                            f"{sorted_karmic_dict[user]["Karma"]} Karma {karma_str} \n"
-    #                            f"{sorted_karmic_dict[user]["Messages"]} Messages. \n"
-    #                            f"{round(karma_ratio, 4)} Karma per Message \n"
-    #                            f"Awards: \n"
-    #                            f"{sorted_karmic_dict[user]["reddit_silver"]} Silver <:reddit_silver:833677163739480079>\n"
-    #                            f"{sorted_karmic_dict[user]["reddit_gold"]} Gold <:reddit_gold:833675932883484753>\n"
-    #                            f"{sorted_karmic_dict[user]["reddit_platinum"]} Platinum <:reddit_platinum:833678610279563304>\n"
-    #                            f"{sorted_karmic_dict[user]["reddit_wholesome"]} Wholesome <:reddit_wholesome:833669115762835456>")
-    #     except discord.HTTPException as e:
-    #         print(e)
-
 
 @bot.event
 async def on_raw_reaction_remove(reaction):
@@ -242,39 +195,45 @@ async def on_raw_reaction_remove(reaction):
     with open("karma.json", "w") as f:
         json.dump(karmic_dict, f, indent=4)
 
-    # # Update Karma stats
-    # with open("karma.json", "r") as f:
-    #     sorted_karmic_dict = sorted(
-    #         json.loads(f.read()),
-    #         key=lambda item: item[1]["Karma"],
-    #         reverse=True
-    #     )
-    #
-    # for user, count in sorted_karmic_dict.items():
-    #     if user is None:
-    #         continue
-    #
-    #     karma_ratio = (sorted_karmic_dict[user]["Karma"] / sorted_karmic_dict[user]["Messages"])
-    #
-    #     karma_str = ""
-    #     # Karma up or downvcte?
-    #     if karmic_dict[user]["Karma"] >= 0:
-    #         karma_str = "<:reddit_upvote:1266139689136689173>"
-    #     else:
-    #         karma_str = "<:reddit_downvote:1266139651660447744>"
-    #
-    #     try:
-    #         await karma_stats_message.edit(content=f"{user.mention} **has:** \n"
-    #                            f"{sorted_karmic_dict[user]["Karma"]} Karma {karma_str} \n"
-    #                            f"{sorted_karmic_dict[user]["Messages"]} Messages. \n"
-    #                            f"{round(karma_ratio, 4)} Karma per Message \n"
-    #                            f"Awards: \n"
-    #                            f"{sorted_karmic_dict[user]["reddit_silver"]} Silver <:reddit_silver:833677163739480079>\n"
-    #                            f"{sorted_karmic_dict[user]["reddit_gold"]} Gold <:reddit_gold:833675932883484753>\n"
-    #                            f"{sorted_karmic_dict[user]["reddit_platinum"]} Platinum <:reddit_platinum:833678610279563304>\n"
-    #                            f"{sorted_karmic_dict[user]["reddit_wholesome"]} Wholesome <:reddit_wholesome:833669115762835456>")
-    #     except discord.HTTPException as e:
-    #         print(e)
+@bot.command()
+async def analyse(context, analyse_user: discord.Member = None):
+    reply = await context.reply("KARMA SUBROUTINE INITIALISED")
+    with open("karma.json", "r") as f:
+        output_dict = defaultdict(lambda: defaultdict(int))
+        for key, value in json.load(f).items():
+            output_dict[key] = value
+
+    output_str = ""
+
+    for user, count in output_dict.items():
+        if user is None:
+            continue
+
+        karma_ratio = (output_dict[user].get("Karma", 0) / output_dict[user].get("Messages", 0))
+
+        karma_str = ""
+        # Karma up or downvcte?
+        if output_dict[user].get("Karma", 0) >= 0:
+            karma_str = "<:reddit_upvote:1266139689136689173>"
+        else:
+            karma_str = "<:reddit_downvote:1266139651660447744>"
+
+        try:
+            output_str += (f"**{user} has:** \n"
+                           f"{output_dict[user].get("Karma", 0)} Karma {karma_str} \n"
+                           f"{output_dict[user].get("Messages", 0)} Messages \n"
+                           f"{round(karma_ratio, 4)} Karma/Messages \n"
+                           f"{output_dict[user].get("reddit_silver", 0)} Silver <:reddit_silver:833677163739480079>\n"
+                           f"{output_dict[user].get("reddit_gold", 0)} Gold <:reddit_gold:833675932883484753>\n"
+                           f"{output_dict[user].get("reddit_platinum", 0)} Platinum <:reddit_platinum:833678610279563304>\n"
+                           f"{output_dict[user].get("reddit_wholesome", 0)} Wholesome <:reddit_wholesome:833669115762835456>\n"
+                           f"\n")
+        except discord.HTTPException as e:
+            print(e)
+
+    await asyncio.sleep(5)
+    await reply.edit(content=output_str)
+
 
 @bot.command()
 async def gild(context):
