@@ -76,15 +76,12 @@ def get_gambling_rewards(length=10,mode="good"):
     return array
 
 
-# @bot.command()
-# async def analyse(context):
 @bot.event
 async def on_ready():
     # Load Settings
     with open("settings.json", "r") as f:
         karma_output_channel = bot.get_channel(int(settings["karma_output_channel"]))
 
-    # Count Karma
     karmic_dict = defaultdict(lambda: defaultdict(int))
 
     # Load Karmic Deductions
@@ -149,7 +146,6 @@ async def on_raw_reaction_add(reaction):
     if reaction.emoji.name not in reaction_dict:
         return
 
-    global karma_stats_message
     with open("karma.json", "r") as f:
         karmic_dict = json.load(f)
         if user.name not in karmic_dict:
@@ -176,7 +172,6 @@ async def on_raw_reaction_remove(reaction):
     if reaction.emoji.name not in reaction_dict:
         return
 
-    global karma_stats_message
     with open("karma.json", "r") as f:
         karmic_dict = json.load(f)
         if user.name not in karmic_dict:
@@ -211,7 +206,6 @@ async def analyse(context, analyse_user: discord.Member = None):
 
         karma_ratio = (output_dict[user].get("Karma", 0) / output_dict[user].get("Messages", 0))
 
-        karma_str = ""
         # Karma up or downvcte?
         if output_dict[user].get("Karma", 0) >= 0:
             karma_str = "<:reddit_upvote:1266139689136689173>"
@@ -311,7 +305,7 @@ async def gambling(context):
     await message.add_reaction(karma_case[case_length - 2])
 
 @bot.command()
-async def diagnosis(context, user: discord.Member = None):
+async def diagnose(context, user: discord.Member = None):
     if user == None:
         user = context.author
     channel = context.channel
