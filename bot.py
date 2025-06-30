@@ -81,6 +81,7 @@ reaction_dict = {
     "reddit_platinum": 0,
     "reddit_silver": 0,
     "reddit_wholesome": 0,
+    "truthnuke": 0
 }
 
 
@@ -263,6 +264,7 @@ async def analyse(context, analyse_user: discord.Member = None):
                            f"{output_dict[user].get("reddit_gold", 0)} Gold <:reddit_gold:833675932883484753>\n"
                            f"{output_dict[user].get("reddit_platinum", 0)} Platinum <:reddit_platinum:833678610279563304>\n"
                            f"{output_dict[user].get("reddit_wholesome", 0)} Wholesome <:reddit_wholesome:833669115762835456>\n"
+                           f"{output_dict[user].get("truthnuke", 0)} Trukes <:truthnuke:1359507023951298700>\n"
                            f"\n")
         except discord.HTTPException as e:
             print(e)
