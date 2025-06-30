@@ -4,7 +4,6 @@ import discord
 import random
 import json
 import openai
-import ollama
 
 from discord.ext import commands
 from collections import defaultdict
