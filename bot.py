@@ -232,13 +232,15 @@ async def on_raw_reaction_remove(reaction):
     with open("karma.json", "w") as f:
         json.dump(karmic_dict, f, indent=4)
 
-@bot.event()
+@bot.event
 async def on_message(message):
     if message.author == bot.user:
         return
 
     if bot.user in message.mentions:
         await message.channel.send(f"shut up neek")
+
+    await bot.process_commands(message)
 
 @bot.command()
 async def analyse(context, analyse_user: discord.Member = None):
