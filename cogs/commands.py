@@ -50,6 +50,10 @@ class GeneralCommands(commands.Cog):
         await ctx.reply("Thank you kind stranger!")
 
     @commands.command()
+    async def help(self, ctx):
+        await ctx.reply("https://tenor.com/view/no-gif-24966265")
+
+    @commands.command()
     @commands.has_role("Karma Court Judge")
     async def sentence(self, ctx, member: discord.Member):
         await ctx.reply(f"ENUMERATING REDDIQUETTE VIOLATIONS FROM u/{member.name}")
