@@ -152,6 +152,10 @@ async def on_ready():
                     if reaction.emoji.name not in reaction_dict:
                         continue
 
+                    if reaction.emoji.name is "truthnuke":
+                        karmic_dict[message.author.name]["truthnuke"] += 1
+                        continue
+
                     try:
                         # Add Karma
                         async for user in reaction.users():
