@@ -47,12 +47,12 @@ class GeneralCommands(commands.Cog):
 
     @commands.command()
     async def gild(self, ctx):
-        await ctx.edit("Thank you kind stranger!")
+        await ctx.reply("Thank you kind stranger!")
 
     @commands.command()
     @commands.has_role("Karma Court Judge")
     async def sentence(self, ctx, member: discord.Member):
-        await ctx.send(f"ENUMERATING REDDIQUETTE VIOLATIONS FROM u/{member.name}")
+        await ctx.reply(f"ENUMERATING REDDIQUETTE VIOLATIONS FROM u/{member.name}")
         await asyncio.sleep(2)
         await ctx.send("CALCULATING COMMENSURATE KARMIC DEDUCTION")
         await asyncio.sleep(2)
