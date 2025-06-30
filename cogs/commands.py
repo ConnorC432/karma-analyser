@@ -8,7 +8,7 @@ from discord.ext import commands
 from ollama import Client
 from .utils import get_gambling_rewards, reddiquette
 
-class GeneralCommands(commands.Cog):
+class Commands(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
 
@@ -48,10 +48,6 @@ class GeneralCommands(commands.Cog):
     @commands.command()
     async def gild(self, ctx):
         await ctx.reply("Thank you kind stranger!")
-
-    @commands.command()
-    async def help(self, ctx):
-        await ctx.reply("https://tenor.com/view/no-gif-24966265")
 
     @commands.command()
     @commands.has_role("Karma Court Judge")
