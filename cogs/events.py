@@ -1,3 +1,5 @@
+import asyncio
+import random
 import discord
 import json
 from collections import defaultdict
@@ -11,6 +13,7 @@ class Events(commands.Cog):
     @commands.Cog.listener()
     async def on_ready(self):
         karmic_dict = defaultdict(lambda: defaultdict(int))
+        message_count = 0
 
         # Load Karmic Deductions
         try:
@@ -32,6 +35,8 @@ class Events(commands.Cog):
         for channel in self.bot.guilds[0].text_channels:
             try:
                 async for message in channel.history(limit=None, oldest_first=True):
+                    message_count += 1
+                    print(f"({message_count}) {message.author}: {message.content}")
                     # Ignore Bot Comments
                     if message.author.bot:
                         continue
@@ -40,12 +45,14 @@ class Events(commands.Cog):
                     karmic_dict[message.author.name]["Messages"] += 1
 
                     for reaction in message.reactions:#
+                        emoji_name = reaction.emoji if isinstance(reaction.emoji, str) else reaction.emoji.name
+
                         # Ignore Non-Karmic Reactions
-                        if reaction.emoji.name not in reaction_dict:
+                        if emoji_name not in reaction_dict:
                             continue
 
                         # Count multiple truke reactions as a single truke
-                        if reaction.emoji.name == "truthnuke":
+                        if emoji_name == "truthnuke":
                             karmic_dict[message.author.name]["truthnuke"] += 1
                             continue
 
@@ -57,10 +64,10 @@ class Events(commands.Cog):
                                     continue
 
                                 # Add Reaction Count
-                                karmic_dict[message.author.name][reaction.emoji.name] += 1
+                                karmic_dict[message.author.name][emoji_name] += 1
 
                                 # Add Weighted Karma Value
-                                karmic_dict[message.author.name]["Karma"] += reaction_dict[reaction.emoji.name]
+                                karmic_dict[message.author.name]["Karma"] += reaction_dict[emoji_name]
 
                         except discord.HTTPException as e:
                             print(e)
@@ -143,6 +150,21 @@ class Events(commands.Cog):
 
         with open("karma.json", "w") as f:
             json.dump(karmic_dict, f, indent=4)
+
+    @commands.Cog.listener()
+    async def on_message(self, payload):
+        if payload.author.bot:
+            return
+
+        if "pass it on" in payload.content.lower():
+            async for message in payload.channel.history(limit=100, oldest_first=False):
+                if message.author.bot and message.content == payload.content:
+                    return
+
+            await asyncio.sleep(random.uniform(0, 2.5))
+            await payload.channel.send(payload.content)
+
+
 
 async def setup(bot):
     await bot.add_cog(Events(bot))

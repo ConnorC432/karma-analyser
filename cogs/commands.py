@@ -102,9 +102,9 @@ class Commands(commands.Cog):
                 f"{frame[0]}  |  {frame[1]}  |  **>> {frame[2]} <<**  |  {frame[3]}  |  {frame[4]}"
             )
             await message.edit(content=display)
-            await asyncio.sleep(0.5)
+            await asyncio.sleep(0.25)
 
-        await message.add_reaction(karma_case[case_length - 2])
+        await ctx.message.add_reaction(karma_case[case_length - 3])
 
     @commands.command()
     async def diagnose(self, ctx, user: discord.Member = None):
@@ -123,7 +123,8 @@ class Commands(commands.Cog):
             settings = json.load(f)
         client = Client(host=settings.get("ollama_endpoint"))
 
-        response = client.chat(
+        response = await asyncio.to_thread(
+            client.chat,
             model="llama3",
             messages=[
                 {"role": "system", "content": ai_instructions},
@@ -141,7 +142,8 @@ class Commands(commands.Cog):
         client = Client(host=settings.get("ollama_endpoint"))
         ai_instructions = "You are replying to a post on the subreddit r/askreddit...\n" + reddiquette
 
-        response = client.chat(
+        response = await asyncio.to_thread(
+            client.chat,
             model="llama3",
             messages=[
                 {"role": "system", "content": ai_instructions},
