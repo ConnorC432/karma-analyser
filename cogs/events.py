@@ -157,6 +157,10 @@ class Events(commands.Cog):
             return
 
         if "pass it on" in payload.content.lower():
+            async for message in payload.channel.history(limit=100, oldest_first=False):
+                if message.author.bot and message.content == payload.content:
+                    return
+
             await asyncio.sleep(random.uniform(0, 2.5))
             await payload.channel.send(payload.content)
 
