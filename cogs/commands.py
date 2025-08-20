@@ -12,7 +12,7 @@ class Commands(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
 
-    @commands.command()
+    @commands.command(aliases=['analysis'])
     async def analyse(self, ctx, analyse_user: discord.Member = None):
         reply = await ctx.reply("KARMA SUBROUTINE INITIALISED")
 
@@ -85,7 +85,7 @@ class Commands(commands.Cog):
         with open("deductions.json", "w") as f:
             json.dump(data, f, indent=4)
 
-    @commands.command()
+    @commands.command(aliases=['gamble'])
     async def gambling(self, ctx):
         user = ctx.author
         case_length = random.randint(10, 20)
@@ -118,7 +118,7 @@ class Commands(commands.Cog):
 
         await ctx.message.add_reaction(karma_case[case_length - 3])
 
-    @commands.command()
+    @commands.command(aliases=["diagnosis"])
     async def diagnose(self, ctx, user: discord.Member = None):
         if user is None:
             user = ctx.author
