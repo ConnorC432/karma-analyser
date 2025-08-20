@@ -35,6 +35,8 @@ class Events(commands.Cog):
         for channel in self.bot.guilds[0].text_channels:
             try:
                 async for message in channel.history(limit=None, oldest_first=True):
+                    message_count += 1
+                    print(f"({message_count}) {message.author}: {message.content}")
                     # Ignore Bot Comments
                     if message.author.bot:
                         continue
