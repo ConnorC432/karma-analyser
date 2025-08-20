@@ -18,10 +18,10 @@ reaction_dict = {
 
 def get_gambling_rewards(length=10, mode="good"):
     good_table = [
-        ("<:reddit_upvote:1266139689136689173>", 100),
-        ("<:quarter_upvote:1266139599814529034>", 250),
-        ("<:reddit_downvote:1266139651660447744>", 110),
-        ("<:quarter_downvote:1266139626276388875>", 260),
+        ("<:reddit_upvote:1266139689136689173>", 200),
+        ("<:quarter_upvote:1266139599814529034>", 500),
+        ("<:reddit_downvote:1266139651660447744>", 250),
+        ("<:quarter_downvote:1266139626276388875>", 550),
         ("<:reddit_silver:833677163739480079>", 25),
         ("<:reddit_gold:833675932883484753>", 10),
         ("<:reddit_platinum:833678610279563304>", 1),
@@ -29,10 +29,10 @@ def get_gambling_rewards(length=10, mode="good"):
     ]
 
     bad_table = [
-        ("<:reddit_upvote:1266139689136689173>", 100),
-        ("<:quarter_upvote:1266139599814529034>", 250),
-        ("<:reddit_downvote:1266139651660447744>", 160),
-        ("<:quarter_downvote:1266139626276388875>", 320),
+        ("<:reddit_upvote:1266139689136689173>", 200),
+        ("<:quarter_upvote:1266139599814529034>", 500),
+        ("<:reddit_downvote:1266139651660447744>", 350),
+        ("<:quarter_downvote:1266139626276388875>", 700),
         ("<:reddit_silver:833677163739480079>", 25),
         ("<:reddit_gold:833675932883484753>", 10),
         ("<:reddit_platinum:833678610279563304>", 1),
