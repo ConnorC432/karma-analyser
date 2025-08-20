@@ -13,6 +13,7 @@ class Events(commands.Cog):
     @commands.Cog.listener()
     async def on_ready(self):
         karmic_dict = defaultdict(lambda: defaultdict(int))
+        message_count = 0
 
         # Load Karmic Deductions
         try:
@@ -42,12 +43,14 @@ class Events(commands.Cog):
                     karmic_dict[message.author.name]["Messages"] += 1
 
                     for reaction in message.reactions:#
+                        emoji_name = reaction.emoji if isinstance(reaction.emoji, str) else reaction.emoji.name
+
                         # Ignore Non-Karmic Reactions
-                        if reaction.emoji.name not in reaction_dict:
+                        if emoji_name not in reaction_dict:
                             continue
 
                         # Count multiple truke reactions as a single truke
-                        if reaction.emoji.name == "truthnuke":
+                        if emoji_name == "truthnuke":
                             karmic_dict[message.author.name]["truthnuke"] += 1
                             continue
 
@@ -59,10 +62,10 @@ class Events(commands.Cog):
                                     continue
 
                                 # Add Reaction Count
-                                karmic_dict[message.author.name][reaction.emoji.name] += 1
+                                karmic_dict[message.author.name][emoji_name] += 1
 
                                 # Add Weighted Karma Value
-                                karmic_dict[message.author.name]["Karma"] += reaction_dict[reaction.emoji.name]
+                                karmic_dict[message.author.name]["Karma"] += reaction_dict[emoji_name]
 
                         except discord.HTTPException as e:
                             print(e)
