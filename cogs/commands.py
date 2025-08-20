@@ -87,6 +87,9 @@ class Commands(commands.Cog):
 
     @commands.command(aliases=['gamble'])
     async def gambling(self, ctx):
+        if ctx.channel.name != "gambling":
+            return
+
         user = ctx.author
         case_length = random.randint(10, 20)
         with open("deductions.json", "r") as f:
