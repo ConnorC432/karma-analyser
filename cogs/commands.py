@@ -19,14 +19,13 @@ class Commands(commands.Cog):
         with open("karma.json", "r") as f:
             output_dict = defaultdict(lambda: defaultdict(int))
             for key, value in json.load(f).items():
-                output_dict[key] = value
+                output_dict[key] = defaultdict(int, value)
 
         output_str = ""
 
-        for user, count in output_dict.items():
-            if user is None:
-                continue
+        users_iterate = [str(analyse_user.id)] if analyse_user else output_dict.keys()
 
+        for user in users_iterate:
             # Karma up or downvote?
             messages = output_dict[user].get("Messages", 1)
             karma_ratio = output_dict[user].get("Karma", 0) / messages
