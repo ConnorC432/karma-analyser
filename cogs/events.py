@@ -1,3 +1,5 @@
+import asyncio
+import random
 import discord
 import json
 from collections import defaultdict
@@ -143,6 +145,17 @@ class Events(commands.Cog):
 
         with open("karma.json", "w") as f:
             json.dump(karmic_dict, f, indent=4)
+
+    @commands.Cog.listener()
+    async def on_message(self, payload):
+        if payload.author.bot:
+            return
+
+        if "pass it on" in payload.content.lower():
+            await asyncio.sleep(random.uniform(0, 2.5))
+            await payload.channel.send(payload.content)
+
+
 
 async def setup(bot):
     await bot.add_cog(Events(bot))
