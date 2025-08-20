@@ -102,7 +102,7 @@ class Commands(commands.Cog):
         if user == jaden_obj:
             karma_case = get_gambling_rewards(case_length, "good")
             karma_case[case_length - 3] = "<:reddit_downvote:1266139651660447744>"
-        elif user = hull_obj:
+        elif user == hull_obj:
             karma_case = get_gambling_rewards(case_length, "good")
             karma_case[case_length - 3] = "<:Hullnarna:1406697829883314280>"
         elif user.name not in data:
