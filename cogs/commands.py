@@ -16,33 +16,46 @@ class Commands(commands.Cog):
     async def analyse(self, ctx, analyse_user: discord.Member = None):
         reply = await ctx.reply("KARMA SUBROUTINE INITIALISED")
 
+        # Load karma JSON
         with open("karma.json", "r") as f:
             output_dict = defaultdict(lambda: defaultdict(int))
             for key, value in json.load(f).items():
                 output_dict[key] = defaultdict(int, value)
 
-        output_str = ""
+        # Determine which users to analyse
+        users_to_iterate = [str(analyse_user.name)] if analyse_user else output_dict.keys()
 
-        users_iterate = [str(analyse_user.id)] if analyse_user else output_dict.keys()
+        # Create the analysis embed
+        embed = discord.Embed(
+            title="KARMA ANALYSED",
+            color=0xED001C
+        )
 
-        for user in users_iterate:
-            # Karma up or downvote?
+        for user in users_to_iterate:
+            user_obj = discord.utils.find(lambda m: m.name.lower() == user, ctx.guild.members)
+            user_str = user_obj.display_name if user_obj else user
             messages = output_dict[user].get("Messages", 1)
-            karma_ratio = output_dict[user].get("Karma", 0) / messages
-            karma_str = "<:reddit_upvote:1266139689136689173>" if output_dict[user].get("Karma", 0) >= 0 else "<:reddit_downvote:1266139651660447744>"
+            karma = output_dict[user].get("Karma", 0)
+            karma_ratio = karma / messages
+            karma_str = "<:reddit_upvote:1266139689136689173>" if karma >= 0 else "<:reddit_downvote:1266139651660447744>"
 
-            output_str += (f"**{user} has:** \n"
-                           f"{output_dict[user].get('Karma', 0)} Karma {karma_str} \n"
-                           f"{output_dict[user].get('Messages', 0)} Messages \n"
-                           f"{round(karma_ratio, 4)} Karma/Messages \n"
-                           f"{output_dict[user].get('reddit_silver', 0)} Silver <:reddit_silver:833677163739480079>\n"
-                           f"{output_dict[user].get('reddit_gold', 0)} Gold <:reddit_gold:833675932883484753>\n"
-                           f"{output_dict[user].get('reddit_platinum', 0)} Platinum <:reddit_platinum:833678610279563304>\n"
-                           f"{output_dict[user].get('reddit_wholesome', 0)} Wholesome <:reddit_wholesome:833669115762835456>\n"
-                           f"{output_dict[user].get('truthnuke', 0)} Trukes <:truthnuke:1359507023951298700>\n\n")
+            embed.add_field(
+                name=f"{user_str}",
+                value=(
+                    f"{karma} Karma {karma_str}\n"
+                    f"{messages} Messages\n"
+                    f"{round(karma_ratio, 4)} Karma/Messages\n"
+                    f"{output_dict[user].get('reddit_silver', 0)} Silver <:reddit_silver:833677163739480079>\n"
+                    f"{output_dict[user].get('reddit_gold', 0)} Gold <:reddit_gold:833675932883484753>\n"
+                    f"{output_dict[user].get('reddit_platinum', 0)} Platinum <:reddit_platinum:833678610279563304>\n"
+                    f"{output_dict[user].get('reddit_wholesome', 0)} Wholesome <:reddit_wholesome:833669115762835456>\n"
+                    f"{output_dict[user].get('truthnuke', 0)} Trukes <:truthnuke:1359507023951298700>"
+                ),
+                inline=False
+            )
 
         await asyncio.sleep(5)
-        await reply.edit(content=output_str)
+        await reply.edit(content=None, embed=embed)
 
     @commands.command()
     async def gild(self, ctx):
