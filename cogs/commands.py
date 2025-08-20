@@ -123,7 +123,8 @@ class Commands(commands.Cog):
             settings = json.load(f)
         client = Client(host=settings.get("ollama_endpoint"))
 
-        response = client.chat(
+        response = await asyncio.to_thread(
+            client.chat,
             model="llama3",
             messages=[
                 {"role": "system", "content": ai_instructions},
@@ -141,7 +142,8 @@ class Commands(commands.Cog):
         client = Client(host=settings.get("ollama_endpoint"))
         ai_instructions = "You are replying to a post on the subreddit r/askreddit...\n" + reddiquette
 
-        response = client.chat(
+        response = await asyncio.to_thread(
+            client.chat,
             model="llama3",
             messages=[
                 {"role": "system", "content": ai_instructions},
