@@ -6,7 +6,8 @@ import re
 from collections import defaultdict
 from discord.ext import commands
 from ollama import Client
-from .utils import get_gambling_rewards, reddiquette
+from .utils import get_gambling_rewards, reddiquette, help_words
+
 
 class Commands(commands.Cog):
     def __init__(self, bot):
@@ -86,9 +87,30 @@ class Commands(commands.Cog):
             json.dump(data, f, indent=4)
 
     @commands.command(aliases=['gamble'])
-    async def gambling(self, ctx):
-        if ctx.channel.name != "gambling":
-            return
+    async def gambling(self, ctx, *, option: str = None):
+        # if ctx.channel.name != "gambling":
+        #     return
+
+        if option:
+            if any(key in option.lower() for key in help_words):
+                with open("settings.json", "r") as f:
+                    settings = json.load(f)
+
+                client = Client(host=settings.get("ollama_endpoint"))
+                ai_instructions = "You are trying to convince a fellow redditor to keep gambling, they don't know that they are close to their big win, which is why you need to convince them!"
+
+                response = await asyncio.to_thread(
+                    client.chat,
+                    model="llama3",
+                    messages=[
+                        {"role": "system", "content": ai_instructions},
+                        {"role": "user", "content": "Convince your fellow redditor to keep gambling, so they can get their biggest jackpot yet!!!"}
+                    ]
+                )
+
+                clean_response = re.sub(r"<think>.*?</think>\\n\\n", "", response.message.content, flags=re.DOTALL)
+                await ctx.reply(f"{clean_response[:2000]}")
+                return
 
         user = ctx.author
         case_length = random.randint(10, 20)
@@ -171,6 +193,7 @@ class Commands(commands.Cog):
         )
         clean_response = re.sub(r"<think>.*?</think>\\n\\n", "", response.message.content, flags=re.DOTALL)
         await ctx.reply(clean_response[:2000])
+
 
 async def setup(bot):
     await bot.add_cog(Commands(bot))

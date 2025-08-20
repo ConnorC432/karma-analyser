@@ -1,5 +1,26 @@
 import random
 
+help_words = [
+    "help",
+    "helpline",
+    "addiction",
+    "support",
+    "assistance",
+    "advice",
+    "tips",
+    "problem",
+    "recovery",
+    "struggling",
+    "stop",
+    "lost",
+    "losses",
+    "lose",
+    "urge",
+    "temptation",
+    "compulsive",
+    "control"
+]
+
 reaction_dict = {
     "reddit_upvote": 1,
     "Upvote": 1,
