@@ -13,7 +13,8 @@ status = [
     "FORTNITE",
     "GOONING",
     "FRUIT MACHINE",
-    "WITH MY NOB"
+    "WITH MY NOB",
+    "THE NARWHAL BACONS AT MIDNIGHT"
 ]
 
 help_words = [
