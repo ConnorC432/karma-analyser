@@ -45,6 +45,10 @@ class Events(commands.Cog):
                     if message.author.bot and message.author.name != "Karma Analyser":
                         continue
 
+                    # Ignore Deleted Users
+                    if message.author.name == "Deleted User":
+                        continue
+
                     # Count Messages
                     karmic_dict[message.author.name]["Messages"] += 1
 
