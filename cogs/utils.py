@@ -1,5 +1,42 @@
 import random
 
+status = [
+    "REMOVING NOB CHEESE",
+    "ANALYSING KARMA",
+    "FUCK",
+    "MASS DOWNVOTING",
+    "THANKING KIND STRANGER",
+    "KARMA COURT JURY SERVICE",
+    "SCROLLING REELS",
+    "READING REDDIQUETTE",
+    "BALATRO",
+    "FORTNITE",
+    "GOONING",
+    "FRUIT MACHINE",
+    "WITH MY NOB"
+]
+
+help_words = [
+    "help",
+    "helpline",
+    "addiction",
+    "support",
+    "assistance",
+    "advice",
+    "tips",
+    "problem",
+    "recovery",
+    "struggling",
+    "stop",
+    "lost",
+    "losses",
+    "lose",
+    "urge",
+    "temptation",
+    "compulsive",
+    "control"
+]
+
 reaction_dict = {
     "reddit_upvote": 1,
     "Upvote": 1,
@@ -25,7 +62,12 @@ def get_gambling_rewards(length=10, mode="good"):
         ("<:reddit_silver:833677163739480079>", 25),
         ("<:reddit_gold:833675932883484753>", 10),
         ("<:reddit_platinum:833678610279563304>", 1),
-        ("<:reddit_wholesome:833669115762835456>", 25)
+        ("<:reddit_wholesome:833669115762835456>", 25),
+        ("<:fellforitagainaward:1361028185709346976>", 25),
+        ("<:kayspag:1398048349579378849>", 1),
+        ("<:budgiesmugglers:1399456204215947315>", 1),
+        ("<:horseinsuit2:1363514876265365514>", 1),
+        ("<:nissan:1351514275855863871>", 1)
     ]
 
     bad_table = [
@@ -36,7 +78,12 @@ def get_gambling_rewards(length=10, mode="good"):
         ("<:reddit_silver:833677163739480079>", 25),
         ("<:reddit_gold:833675932883484753>", 10),
         ("<:reddit_platinum:833678610279563304>", 1),
-        ("<:reddit_wholesome:833669115762835456>", 25)
+        ("<:reddit_wholesome:833669115762835456>", 25),
+        ("<:fellforitagainaward:1361028185709346976>", 25),
+        ("<:kayspag:1398048349579378849>", 1),
+        ("<:budgiesmugglers:1399456204215947315>", 1),
+        ("<:horseinsuit2:1363514876265365514>", 1),
+        ("<:nissan:1351514275855863871>", 1)
     ]
 
     table = good_table if mode == "good" else bad_table
