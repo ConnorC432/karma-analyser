@@ -26,11 +26,9 @@ class Commands(commands.Cog):
         # Determine which users to analyse
         users_to_iterate = [str(analyse_user.name)] if analyse_user else output_dict.keys()
 
-        # Create the analysis embed
-        embed = discord.Embed(
-            title="KARMA ANALYSED",
-            color=0xED001C
-        )
+        await asyncio.sleep(random.uniform(2.5, 5))
+
+        await reply.edit(content="KARMA ANALYSED")
 
         for user in users_to_iterate:
             user_obj = discord.utils.find(lambda m: m.name.lower() == user, ctx.guild.members)
@@ -40,23 +38,22 @@ class Commands(commands.Cog):
             karma_ratio = karma / messages
             karma_str = "<:reddit_upvote:1266139689136689173>" if karma >= 0 else "<:reddit_downvote:1266139651660447744>"
 
-            embed.add_field(
-                name=f"{user_str}",
-                value=(
-                    f"{karma} Karma {karma_str}\n"
-                    f"{messages} Messages\n"
-                    f"{round(karma_ratio, 4)} Karma/Messages\n"
-                    f"{output_dict[user].get('reddit_silver', 0)} Silver <:reddit_silver:833677163739480079>\n"
-                    f"{output_dict[user].get('reddit_gold', 0)} Gold <:reddit_gold:833675932883484753>\n"
-                    f"{output_dict[user].get('reddit_platinum', 0)} Platinum <:reddit_platinum:833678610279563304>\n"
-                    f"{output_dict[user].get('reddit_wholesome', 0)} Wholesome <:reddit_wholesome:833669115762835456>\n"
-                    f"{output_dict[user].get('truthnuke', 0)} Trukes <:truthnuke:1359507023951298700>"
-                ),
-                inline=False
+            # Create Karmic analysis embed for each user
+            embed = discord.Embed(
+                title=f"{user_str}",
+                color=0xED001C,
             )
 
-        await asyncio.sleep(5)
-        await reply.edit(content=None, embed=embed)
+            embed.add_field(name="Karma", value=f"{karma} {karma_str}", inline=False)
+            embed.add_field(name="Messages", value=f"{messages}", inline=False)
+            embed.add_field(name="Karmic Ratio", value=f"{round(karma_ratio, 4)}", inline=False)
+            embed.add_field(name="Silver", value=f"{output_dict[user].get('reddit_silver', 0)} <:reddit_silver:833677163739480079>", inline=True)
+            embed.add_field(name="Gold", value=f"{output_dict[user].get('reddit_gold', 0)} <:reddit_gold:833675932883484753>", inline=True)
+            embed.add_field(name="Platinum", value=f"{output_dict[user].get('reddit_platinum', 0)} <:reddit_platinum:833678610279563304>", inline=True)
+            embed.add_field(name="Wholesome", value=f"{output_dict[user].get('reddit_wholesome', 0)} <:reddit_wholesome:833669115762835456>", inline=True)
+            embed.add_field(name="Trukes", value=f"{output_dict[user].get('truthnuke', 0)} <:truthnuke:1359507023951298700>", inline=True)
+
+            await ctx.channel.send(embed=embed)
 
     @commands.command()
     async def gild(self, ctx):
@@ -88,8 +85,8 @@ class Commands(commands.Cog):
 
     @commands.command(aliases=['gamble'])
     async def gambling(self, ctx, *, option: str = None):
-        # if ctx.channel.name != "gambling":
-        #     return
+        if ctx.channel.name != "gambling":
+            return
 
         if option:
             if any(key in option.lower() for key in help_words):
