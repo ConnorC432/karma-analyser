@@ -1,5 +1,21 @@
 import random
 
+status = [
+    "REMOVING NOB CHEESE",
+    "ANALYSING KARMA",
+    "FUCK",
+    "MASS DOWNVOTING",
+    "THANKING KIND STRANGER",
+    "KARMA COURT JURY SERVICE",
+    "SCROLLING REELS",
+    "READING REDDIQUETTE",
+    "BALATRO",
+    "FORTNITE",
+    "GOONING",
+    "FRUIT MACHINE",
+    "WITH MY NOB"
+]
+
 help_words = [
     "help",
     "helpline",
