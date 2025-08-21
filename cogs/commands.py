@@ -119,14 +119,7 @@ class Commands(commands.Cog):
         jaden_obj = discord.utils.find(lambda m: m.name.lower() == "ja320", ctx.guild.members)
         hull_obj = discord.utils.find(lambda m: m.name.lower() == "emnelwt3x7" or "jopj", ctx.guild.members)
 
-        # Determine if Jaden's odds are used
-        if user == jaden_obj:
-            karma_case = get_gambling_rewards(case_length, "good")
-            karma_case[case_length - 3] = "<:fellforitagainaward:1361028185709346976>"
-        elif user == hull_obj:
-            karma_case = get_gambling_rewards(case_length, "good")
-            karma_case[case_length - 3] = "<:Hullnarna:1406697829883314280>"
-        elif user.name not in data:
+        if user.name not in data:
             karma_case = get_gambling_rewards(case_length, "good")
         else:
             user_karma = data[user.name]
