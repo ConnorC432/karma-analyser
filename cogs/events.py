@@ -176,6 +176,9 @@ class Events(commands.Cog):
             await asyncio.sleep(random.uniform(0, 2.5))
             await payload.channel.send(payload.content)
 
+        if "nothing ever happens" in payload.content.lower():
+            await payload.reply(content="https://tenor.com/view/nothing-ever-happens-chud-chudjak-soyjak-90-seconds-to-nothing-gif-9277709574191520604")
+
 
 async def setup(bot):
     await bot.add_cog(Events(bot))
