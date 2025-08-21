@@ -146,7 +146,7 @@ class Commands(commands.Cog):
         reply = await ctx.reply("DIAGNOSING...")
         message_log = []
         async for msg in ctx.channel.history(limit=200):
-            if msg.author == user and "r/" not in msg.content:
+            if msg.author == user and "r/" not in msg.content and "http" not in msg.content:
                 message_log.append(msg.content)
 
         ai_instructions = ("You are a reddit moderation bot...\n" + reddiquette)
