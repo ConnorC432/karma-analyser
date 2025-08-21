@@ -122,7 +122,7 @@ class Commands(commands.Cog):
         # Determine if Jaden's odds are used
         if user == jaden_obj:
             karma_case = get_gambling_rewards(case_length, "good")
-            karma_case[case_length - 3] = "<:reddit_downvote:1266139651660447744>"
+            karma_case[case_length - 3] = "<:fellforitagainaward:1361028185709346976>"
         elif user == hull_obj:
             karma_case = get_gambling_rewards(case_length, "good")
             karma_case[case_length - 3] = "<:Hullnarna:1406697829883314280>"
