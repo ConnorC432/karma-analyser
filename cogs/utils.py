@@ -53,8 +53,8 @@ reaction_dict = {
     "reddit_wholesome": 0,
     "truthnuke": 0,
     "up" : 0.25,
-    "arrow_up", 0.5,
-    "arrow_down", -0.5
+    "arrow_up" : 0.5,
+    "arrow_down" : -0.5
 }
 
 def get_gambling_rewards(length=10, mode="good"):
