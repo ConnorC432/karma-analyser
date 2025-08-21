@@ -18,10 +18,12 @@ class Commands(commands.Cog):
         reply = await ctx.reply("KARMA SUBROUTINE INITIALISED")
 
         # Load karma JSON
-        with open("karma.json", "r") as f:
-            output_dict = defaultdict(lambda: defaultdict(int))
-            for key, value in json.load(f).items():
-                output_dict[key] = defaultdict(int, value)
+        if karma_lock.locked(): print("WAITING TO ACCESS KARMIC ARCHIVES, THIS MAY TAKE LONGER THAN USUAL")
+        async with karma_lock:
+            with open("karma.json", "r") as f:
+                output_dict = defaultdict(lambda: defaultdict(int))
+                for key, value in json.load(f).items():
+                    output_dict[key] = defaultdict(int, value)
 
         # Determine which users to analyse
         users_to_iterate = [str(analyse_user.name)] if analyse_user else output_dict.keys()
