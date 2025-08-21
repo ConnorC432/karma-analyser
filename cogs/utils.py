@@ -13,7 +13,19 @@ status = [
     "FORTNITE",
     "GOONING",
     "FRUIT MACHINE",
-    "WITH MY NOB"
+    "WITH MY NOB",
+    "WITH MY NUTS",
+    "R6 SIEGE",
+    "5D CHESS WITH MULTIVERSE TIME TRAVEL",
+    "MINECRAFT",
+    "PORNHUB",
+    "NOTHING (EVER HAPPENS)",
+    "BLADES IN THE DARK",
+    "ANALYSING YOUR SHITPOSTS",
+    "RAGEBAITING",
+    "AFK",
+    "ANYTHING BUT SHOWERING",
+    "KAY'S COOKING"
 ]
 
 help_words = [
