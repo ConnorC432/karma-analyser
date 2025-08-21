@@ -42,7 +42,7 @@ class Events(commands.Cog):
                         await self.bot.change_presence(activity=discord.Game(name=f"{message_count} MESSAGES ANALYSED"))
 
                     # Ignore Bot Comments
-                    if message.author.bot:
+                    if message.author.bot and message.author.name != "Karma Analyser":
                         continue
 
                     # Count Messages
