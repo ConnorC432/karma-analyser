@@ -1,4 +1,7 @@
 import random
+import asyncio
+
+karma_lock = asyncio.Lock()
 
 status = [
     "REMOVING NOB CHEESE",
