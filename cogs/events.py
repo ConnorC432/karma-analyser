@@ -105,11 +105,12 @@ class Events(commands.Cog):
         if user == message.author:
             return
 
-        try:
-            with open("karma.json", "r") as f:
-                karmic_dict = json.load(f)
-        except FileNotFoundError:
-            karmic_dict = {}
+        async with karma_lock:
+            try:
+                with open("karma.json", "r") as f:
+                    karmic_dict = json.load(f)
+            except FileNotFoundError:
+                karmic_dict = {}
 
         user_name = message.author.name
         if user_name not in karmic_dict:
@@ -142,11 +143,12 @@ class Events(commands.Cog):
         if user == message.author:
             return
 
-        try:
-            with open("karma.json", "r") as f:
-                karmic_dict = json.load(f)
-        except FileNotFoundError:
-            return
+        async with karma_lock:
+            try:
+                with open("karma.json", "r") as f:
+                    karmic_dict = json.load(f)
+            except FileNotFoundError:
+                return
 
         user_name = message.author.name
         if user_name not in karmic_dict:
