@@ -37,6 +37,10 @@ class Events(commands.Cog):
                 async for message in channel.history(limit=None, oldest_first=True):
                     message_count += 1
                     print(f"({message_count}) {message.author}: {message.content}")
+
+                    if message_count % 100 == 0:
+                        await self.bot.change_presence(activity=discord.Game(name=f"{message_count} MESSAGES ANALYSED"))
+
                     # Ignore Bot Comments
                     if message.author.bot:
                         continue
