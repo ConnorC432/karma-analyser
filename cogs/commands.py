@@ -28,7 +28,11 @@ class Commands(commands.Cog):
                     output_dict[key] = defaultdict(int, value)
 
         # Determine which users to analyse
-        users_to_iterate = [str(analyse_user.name)] if analyse_user else output_dict.keys()
+        if analyse_user:
+            users_to_iterate = [str(analyse_user.name)]
+        else:
+            server_members = {m.name.lower() for m in ctx.guild.members}
+            users_to_iterate = [u for u in output_dict.keys() if u.lower() in server_members]
 
         await asyncio.sleep(random.uniform(2.5, 5))
 
