@@ -116,9 +116,6 @@ class Commands(commands.Cog):
         with open("deductions.json", "r") as f:
             data = json.load(f)
 
-        jaden_obj = discord.utils.find(lambda m: m.name.lower() == "ja320", ctx.guild.members)
-        hull_obj = discord.utils.find(lambda m: m.name.lower() == "emnelwt3x7" or "jopj", ctx.guild.members)
-
         if user.name not in data:
             karma_case = get_gambling_rewards(case_length, "good")
         else:
