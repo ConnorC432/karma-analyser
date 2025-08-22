@@ -4,7 +4,7 @@ import discord
 import json
 from collections import defaultdict
 from discord.ext import commands, tasks
-from .utils import reaction_dict, status
+from .utils import reaction_dict, status, karma_lock
 
 class Events(commands.Cog):
     def __init__(self, bot):
@@ -83,9 +83,10 @@ class Events(commands.Cog):
             except discord.HTTPException as e:
                 print(e)
 
-        with open("karma.json", "w") as f:
-            json.dump(karmic_dict, f, indent=4)
-            print("Karma saved to JSON")
+        async with karma_lock:
+            with open("karma.json", "w") as f:
+                json.dump(karmic_dict, f, indent=4)
+                print("Karma saved to JSON")
 
         self.change_status.start()
 
@@ -108,11 +109,12 @@ class Events(commands.Cog):
         if user == message.author:
             return
 
-        try:
-            with open("karma.json", "r") as f:
-                karmic_dict = json.load(f)
-        except FileNotFoundError:
-            karmic_dict = {}
+        async with karma_lock:
+            try:
+                with open("karma.json", "r") as f:
+                    karmic_dict = json.load(f)
+            except FileNotFoundError:
+                karmic_dict = {}
 
         user_name = message.author.name
         if user_name not in karmic_dict:
@@ -128,8 +130,9 @@ class Events(commands.Cog):
         karmic_dict[user_name][payload.emoji.name] += 1
         karmic_dict[user_name]["Karma"] += reaction_dict[payload.emoji.name]
 
-        with open("karma.json", "w") as f:
-            json.dump(karmic_dict, f, indent=4)
+        async with karma_lock:
+            with open("karma.json", "w") as f:
+                json.dump(karmic_dict, f, indent=4)
 
     @commands.Cog.listener()
     async def on_raw_reaction_remove(self, payload):
@@ -144,11 +147,12 @@ class Events(commands.Cog):
         if user == message.author:
             return
 
-        try:
-            with open("karma.json", "r") as f:
-                karmic_dict = json.load(f)
-        except FileNotFoundError:
-            return
+        async with karma_lock:
+            try:
+                with open("karma.json", "r") as f:
+                    karmic_dict = json.load(f)
+            except FileNotFoundError:
+                return
 
         user_name = message.author.name
         if user_name not in karmic_dict:
@@ -164,8 +168,9 @@ class Events(commands.Cog):
         karmic_dict[user_name][payload.emoji.name] -= 1
         karmic_dict[user_name]["Karma"] -= reaction_dict[payload.emoji.name]
 
-        with open("karma.json", "w") as f:
-            json.dump(karmic_dict, f, indent=4)
+        async with karma_lock:
+            with open("karma.json", "w") as f:
+                json.dump(karmic_dict, f, indent=4)
 
     @commands.Cog.listener()
     async def on_message(self, payload):
