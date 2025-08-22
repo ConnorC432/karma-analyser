@@ -1,3 +1,5 @@
+from urllib import parse, request
+
 import discord
 import asyncio
 import json
@@ -6,7 +8,7 @@ import re
 from collections import defaultdict
 from discord.ext import commands
 from ollama import Client
-from .utils import get_gambling_rewards, reddiquette, help_words
+from .utils import get_gambling_rewards, reddiquette, help_words, karma_lock
 
 
 class Commands(commands.Cog):
@@ -26,7 +28,11 @@ class Commands(commands.Cog):
                     output_dict[key] = defaultdict(int, value)
 
         # Determine which users to analyse
-        users_to_iterate = [str(analyse_user.name)] if analyse_user else output_dict.keys()
+        if analyse_user:
+            users_to_iterate = [str(analyse_user.name)]
+        else:
+            server_members = {m.name.lower() for m in ctx.guild.members}
+            users_to_iterate = [u for u in output_dict.keys() if u.lower() in server_members]
 
         await asyncio.sleep(random.uniform(2.5, 5))
 
@@ -116,17 +122,7 @@ class Commands(commands.Cog):
         with open("deductions.json", "r") as f:
             data = json.load(f)
 
-        jaden_obj = discord.utils.find(lambda m: m.name.lower() == "ja320", ctx.guild.members)
-        hull_obj = discord.utils.find(lambda m: m.name.lower() == "emnelwt3x7" or "jopj", ctx.guild.members)
-
-        # Determine if Jaden's odds are used
-        if user == jaden_obj:
-            karma_case = get_gambling_rewards(case_length, "good")
-            karma_case[case_length - 3] = "<:reddit_downvote:1266139651660447744>"
-        elif user == hull_obj:
-            karma_case = get_gambling_rewards(case_length, "good")
-            karma_case[case_length - 3] = "<:Hullnarna:1406697829883314280>"
-        elif user.name not in data:
+        if user.name not in data:
             karma_case = get_gambling_rewards(case_length, "good")
         else:
             user_karma = data[user.name]
@@ -153,7 +149,7 @@ class Commands(commands.Cog):
         reply = await ctx.reply("DIAGNOSING...")
         message_log = []
         async for msg in ctx.channel.history(limit=200):
-            if msg.author == user and "r/" not in msg.content:
+            if msg.author == user and "r/" not in msg.content and "http" not in msg.content:
                 message_log.append(msg.content)
 
         ai_instructions = ("You are a reddit moderation bot...\n" + reddiquette)
@@ -192,6 +188,27 @@ class Commands(commands.Cog):
         )
         clean_response = re.sub(r"<think>.*?</think>\\n\\n", "", response.message.content, flags=re.DOTALL)
         await ctx.reply(clean_response[:2000])
+
+    @commands.command(aliases=["gif", "pic", "pics", "picture", "pictures"])
+    async def gifs(self, ctx, *, text: str):
+        with open("settings.json", "r") as f:
+            settings = json.load(f)
+            giphy_key = settings.get("giphy_key")
+
+        giphy_url = "https://api.giphy.com/v1/gifs/search"
+
+        params = parse.urlencode({
+            "q": text,
+            "api_key": giphy_key,
+            "limit": 5
+        })
+
+        with request.urlopen(f"{giphy_url}?{params}") as response:
+            data = json.loads(response.read())
+
+        gif_urls = [item['images']['original']['url'] for item in data['data']]
+
+        await ctx.message.reply(random.choice(gif_urls))
 
 
 async def setup(bot):

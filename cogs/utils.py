@@ -17,6 +17,40 @@ status = [
     "GOONING",
     "FRUIT MACHINE",
     "WITH MY NOB",
+    "WITH MY NUTS",
+    "R6 SIEGE",
+    "5D CHESS WITH MULTIVERSE TIME TRAVEL",
+    "MINECRAFT",
+    "PORNHUB",
+    "NOTHING (EVER HAPPENS)",
+    "BLADES IN THE DARK",
+    "ANALYSING YOUR SHITPOSTS",
+    "RAGEBAITING",
+    "AFK",
+    "ANYTHING BUT SHOWERING",
+    "KAY'S COOKING",
+    "SPAFFING IN MEAL DEALS",
+    "PICKING UP SHIFTS AT BIG TESCOS",
+    "TURNING OFF AUTOPILOT",
+    "RYANAIR FLIGHT SIMULATOR",
+    "EATING THE HULL NARNA",
+    "SOGGY BISCUIT",
+    "THE HURDY GURDY",
+    "HOGGING ALL THE GAMES IN MY STEAM FAMILY LIBRARY",
+    "WITH YOUR MUM'S KNOCKERS",
+    "WITH YOUR DAD'S BOLLOCKS",
+    "WORDLE",
+    "R/GAMBLING",
+    "LOSING MONEY AT THE BOOKIES",
+    "TOUCHING GRASS",
+    "KARMA FARMING",
+    "EATING DONER AND CHIPS",
+    "SHITTING MYSELF",
+    "SCRANNING MY DEAD HAMSTER",
+    "LICKING WINDOWS",
+    "FALLOUT: NEW VEGAS",
+    "BALDUR'S GATE",
+    "SKYRIM",
     "THE NARWHAL BACONS AT MIDNIGHT"
 ]
 
@@ -62,10 +96,11 @@ reaction_dict = {
 
 def get_gambling_rewards(length=10, mode="good"):
     good_table = [
-        ("<:reddit_upvote:1266139689136689173>", 200),
-        ("<:quarter_upvote:1266139599814529034>", 500),
-        ("<:reddit_downvote:1266139651660447744>", 250),
-        ("<:quarter_downvote:1266139626276388875>", 550),
+        ("<:reddit_upvote:1266139689136689173>", 100),
+        ("<:quarter_upvote:1266139599814529034>", 250),
+        ("<:reddit_downvote:1266139651660447744>", 125),
+        ("<:quarter_downvote:1266139626276388875>", 275),
+        ("<:middlevote:1152474066331123823>", 50),
         ("<:reddit_silver:833677163739480079>", 25),
         ("<:reddit_gold:833675932883484753>", 10),
         ("<:reddit_platinum:833678610279563304>", 1),
@@ -74,14 +109,23 @@ def get_gambling_rewards(length=10, mode="good"):
         ("<:kayspag:1398048349579378849>", 1),
         ("<:budgiesmugglers:1399456204215947315>", 1),
         ("<:horseinsuit2:1363514876265365514>", 1),
-        ("<:nissan:1351514275855863871>", 1)
+        ("<:nissan:1351514275855863871>", 1),
+        ("<:imjakingit:1361028727206711488>", 1),
+        ("<:Hullnarna:1406697829883314280>", 10),
+        ("<:Last_in_PE:1371888191858016266>", 1),
+        ("<:absolutelynothing:1379228455580729435>", 1),
+        ("<:bovril:1401110047500668958>", 1),
+        ("<:fruity:1399459414716715078>", 10),
+        ("<:pepperjak:1189327796724580493>", 1),
+        ("<:sadmark:1398048884332298260>", 1)
     ]
 
     bad_table = [
-        ("<:reddit_upvote:1266139689136689173>", 200),
-        ("<:quarter_upvote:1266139599814529034>", 500),
-        ("<:reddit_downvote:1266139651660447744>", 350),
-        ("<:quarter_downvote:1266139626276388875>", 700),
+        ("<:reddit_upvote:1266139689136689173>", 100),
+        ("<:quarter_upvote:1266139599814529034>", 250),
+        ("<:reddit_downvote:1266139651660447744>", 135),
+        ("<:quarter_downvote:1266139626276388875>", 285),
+        ("<:middlevote:1152474066331123823>", 50),
         ("<:reddit_silver:833677163739480079>", 25),
         ("<:reddit_gold:833675932883484753>", 10),
         ("<:reddit_platinum:833678610279563304>", 1),
@@ -90,7 +134,15 @@ def get_gambling_rewards(length=10, mode="good"):
         ("<:kayspag:1398048349579378849>", 1),
         ("<:budgiesmugglers:1399456204215947315>", 1),
         ("<:horseinsuit2:1363514876265365514>", 1),
-        ("<:nissan:1351514275855863871>", 1)
+        ("<:nissan:1351514275855863871>", 1),
+        ("<:imjakingit:1361028727206711488>", 1),
+        ("<:Hullnarna:1406697829883314280>", 10),
+        ("<:Last_in_PE:1371888191858016266>", 1),
+        ("<:absolutelynothing:1379228455580729435>", 1),
+        ("<:bovril:1401110047500668958>", 1),
+        ("<:fruity:1399459414716715078>", 10),
+        ("<:pepperjak:1189327796724580493>", 1),
+        ("<:sadmark:1398048884332298260>", 1)
     ]
 
     table = good_table if mode == "good" else bad_table
