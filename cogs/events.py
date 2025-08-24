@@ -14,6 +14,7 @@ class Events(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
         self.init_time = datetime.datetime.now(datetime.timezone.utc)
+        self.clear_ai_chat.start()
 
     @commands.Cog.listener()
     async def on_ready(self):
@@ -263,13 +264,13 @@ class Events(commands.Cog):
             with open("karma.json", "w") as f:
                 json.dump(karmic_dict, f, indent=4)
 
-    @tasks.loop(minutes=30)
+    @tasks.loop(minutes=60)
     async def clear_ai_chat(self):
         from .utils import askreddit_messages
         now = datetime.datetime.now()
 
         chats = [id for id, chat in askreddit_messages.items()
-                 if now - chat["last_reply"] > datetime.timedelta(minutes=30)]
+                 if now - chat["last_reply"] > datetime.timedelta(minutes=60)]
 
         for chat in chats:
             del askreddit_messages[chat]
