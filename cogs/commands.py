@@ -1,5 +1,4 @@
 import datetime
-
 import discord
 import asyncio
 import json
@@ -28,7 +27,7 @@ class Commands(commands.Cog):
         async with karma_lock:
             with open("karma.json", "r") as f:
                 output_dict = defaultdict(lambda: defaultdict(int))
-                for key, value in json.load(f).items():
+                for key, value in json.load(f).get(str(ctx.guild.id), {}).items():
                     output_dict[key] = defaultdict(int, value)
 
         # Determine which users to analyse
@@ -95,10 +94,13 @@ class Commands(commands.Cog):
         except FileNotFoundError:
             data = {}
 
-        if member.name not in data:
-            data[member.name] = 0
+        if str(ctx.guild.id) not in data:
+            data[str(ctx.guild.id)] = {}
 
-        data[member.name] -= ded
+        if member.name not in data[str(ctx.guild.id)]:
+            data[str(ctx.guild.id)][member.name] = 0
+
+        data[str(ctx.guild.id)][member.name] -= ded
 
         with open("deductions.json", "w") as f:
             json.dump(data, f, indent=4)
@@ -132,7 +134,7 @@ class Commands(commands.Cog):
         user = ctx.author
         case_length = random.randint(10, 20)
         with open("deductions.json", "r") as f:
-            data = json.load(f)
+            data = json.load(f).get(str(ctx.guild.id), {})
 
         if user.name not in data:
             karma_case = get_gambling_rewards(case_length, "good")

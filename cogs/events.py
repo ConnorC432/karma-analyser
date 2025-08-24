@@ -20,7 +20,7 @@ class Events(commands.Cog):
     async def on_ready(self):
         async with karma_lock:
 
-            karmic_dict = defaultdict(lambda: defaultdict(int))
+            karmic_dict = defaultdict(lambda: defaultdict(lambda: defaultdict(int)))
             message_count = 0
 
             # Load Karmic Deductions
@@ -30,66 +30,68 @@ class Events(commands.Cog):
             except FileNotFoundError:
                 deductions = {}
 
-            for user, deduction in deductions.items():
-                user_obj = next((member for member in self.bot.guilds[0].members if member.name == user), None)
+            for guild in self.bot.guilds:
+                guild_deductions = deductions.get(guild.id, {})
 
-                # Find matching user object
-                if user_obj is not None:
-                    karmic_dict[user_obj.name]["Karma"] += deduction
-                else:
-                    print(f"USER {user} NOT IN SUBREDDIT.")
+                for user, deduction in guild_deductions.items():
+                    user_obj = guild.get_member_named(user)
+                    if user_obj is not None:
+                        karmic_dict[guild.id][user_obj.name]["Karma"] += deduction
+                    else:
+                        print(f"USER {user} NOT IN SUBREDDIT {guild.name}")
 
             print("Counting Karma")
-            for channel in self.bot.guilds[0].text_channels:
-                try:
-                    async for message in channel.history(limit=None, oldest_first=True):
-                        message_count += 1
-                        print(f"({message_count}) {message.author}: {message.content}")
+            for guild in self.bot.guilds:
+                for channel in guild.text_channels:
+                    try:
+                        async for message in channel.history(limit=None, oldest_first=True):
+                            message_count += 1
+                            print(f"({message_count}) {message.author}: {message.content}")
 
-                        if message_count % 100 == 0:
-                            await self.bot.change_presence(activity=discord.Game(name=f"{message_count} MESSAGES ANALYSED"))
+                            if message_count % 100 == 0:
+                                await self.bot.change_presence(activity=discord.Game(name=f"{message_count} MESSAGES ANALYSED"))
 
-                        # Ignore Bots, Deleted Users, and messages sent after bot initialisation.
-                        if (
-                            message.author.bot and message.author.name != "Karma Analyser"
-                            or message.author.name == "Deleted User"
-                            or message.created_at > self.init_time
-                        ):
-                            continue
-
-                        # Count Messages
-                        karmic_dict[message.author.name]["Messages"] += 1
-
-                        for reaction in message.reactions:#
-                            emoji_name = reaction.emoji if isinstance(reaction.emoji, str) else reaction.emoji.name
-
-                            # Ignore Non-Karmic Reactions
-                            if emoji_name not in reaction_dict:
+                            # Ignore Bots, Deleted Users, and messages sent after bot initialisation.
+                            if (
+                                message.author.bot and message.author.name != "Karma Analyser"
+                                or message.author.name == "Deleted User"
+                                or message.created_at > self.init_time
+                            ):
                                 continue
 
-                            # Count multiple truke reactions as a single truke
-                            if emoji_name == "truthnuke":
-                                karmic_dict[message.author.name]["truthnuke"] += 1
-                                continue
+                            # Count Messages
+                            karmic_dict[guild.id][message.author.name]["Messages"] += 1
 
-                            try:
-                                # Add Karma
-                                async for user in reaction.users():
-                                    # Skip Self Reactions
-                                    if user == message.author:
-                                        continue
+                            for reaction in message.reactions:#
+                                emoji_name = reaction.emoji if isinstance(reaction.emoji, str) else reaction.emoji.name
 
-                                    # Add Reaction Count
-                                    karmic_dict[message.author.name][emoji_name] += 1
+                                # Ignore Non-Karmic Reactions
+                                if emoji_name not in reaction_dict:
+                                    continue
 
-                                    # Add Weighted Karma Value
-                                    karmic_dict[message.author.name]["Karma"] += reaction_dict[emoji_name]
+                                # Count multiple truke reactions as a single truke
+                                if emoji_name == "truthnuke":
+                                    karmic_dict[guild.id][message.author.name]["truthnuke"] += 1
+                                    continue
 
-                            except discord.HTTPException as e:
-                                print(e)
+                                try:
+                                    # Add Karma
+                                    async for user in reaction.users():
+                                        # Skip Self Reactions
+                                        if user == message.author:
+                                            continue
 
-                except discord.HTTPException as e:
-                    print(e)
+                                        # Add Reaction Count
+                                        karmic_dict[guild.id][message.author.name][emoji_name] += 1
+
+                                        # Add Weighted Karma Value
+                                        karmic_dict[guild.id][message.author.name]["Karma"] += reaction_dict[emoji_name]
+
+                                except discord.HTTPException as e:
+                                    print(e)
+
+                    except discord.HTTPException as e:
+                        print(e)
 
             with open("karma.json", "w") as f:
                 json.dump(karmic_dict, f, indent=4)
