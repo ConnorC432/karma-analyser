@@ -1,3 +1,4 @@
+import datetime
 import discord
 import asyncio
 import json
@@ -7,7 +8,7 @@ from collections import defaultdict
 from discord.ext import commands
 from ollama import Client
 from urllib import parse, request
-from .utils import get_gambling_rewards, reddiquette, help_words, karma_lock
+from .utils import get_gambling_rewards, reddiquette, help_words, karma_lock, askreddit_messages
 
 
 class Commands(commands.Cog):
@@ -26,7 +27,7 @@ class Commands(commands.Cog):
         async with karma_lock:
             with open("karma.json", "r") as f:
                 output_dict = defaultdict(lambda: defaultdict(int))
-                for key, value in json.load(f).items():
+                for key, value in json.load(f).get(str(ctx.guild.id), {}).items():
                     output_dict[key] = defaultdict(int, value)
 
         # Determine which users to analyse
@@ -48,8 +49,11 @@ class Commands(commands.Cog):
             messages = output_dict[user].get("Messages", 1)
             karma = output_dict[user].get("Karma", 0)
             karma_ratio = karma / messages
-            3
             karma_str = "<:reddit_upvote:1266139689136689173>" if karma >= 0 else "<:reddit_downvote:1266139651660447744>"
+
+            # Skip users with low message count
+            if messages < 100:
+                continue
 
             # Create Karmic analysis embed for each user
             embed = discord.Embed(
@@ -90,10 +94,13 @@ class Commands(commands.Cog):
         except FileNotFoundError:
             data = {}
 
-        if member.name not in data:
-            data[member.name] = 0
+        if str(ctx.guild.id) not in data:
+            data[str(ctx.guild.id)] = {}
 
-        data[member.name] -= ded
+        if member.name not in data[str(ctx.guild.id)]:
+            data[str(ctx.guild.id)][member.name] = 0
+
+        data[str(ctx.guild.id)][member.name] -= ded
 
         with open("deductions.json", "w") as f:
             json.dump(data, f, indent=4)
@@ -127,7 +134,7 @@ class Commands(commands.Cog):
         user = ctx.author
         case_length = random.randint(10, 20)
         with open("deductions.json", "r") as f:
-            data = json.load(f)
+            data = json.load(f).get(str(ctx.guild.id), {})
 
         if user.name not in data:
             karma_case = get_gambling_rewards(case_length, "good")
@@ -188,16 +195,25 @@ class Commands(commands.Cog):
         client = Client(host=settings.get("ollama_endpoint"))
         ai_instructions = "You are replying to a post on the subreddit r/askreddit...\n" + reddiquette
 
+        message_history = [
+            {"role": "system", "content": ai_instructions},
+            {"role": "user", "content": text}
+        ]
+
         response = await asyncio.to_thread(
             client.chat,
             model="llama3",
-            messages=[
-                {"role": "system", "content": ai_instructions},
-                {"role": "user", "content": text}
-            ]
+            messages=message_history
         )
         clean_response = re.sub(r"<think>.*?</think>\\n\\n", "", response.message.content, flags=re.DOTALL)
-        await ctx.reply(clean_response[:2000])
+        bot_reply = await ctx.reply(clean_response[:2000])
+
+        # Store r/askreddit chats
+        askreddit_messages[bot_reply.id] = {
+            "messages": message_history + [{"role": "assistant", "content": response.message.content}],
+            "bot_replies": {bot_reply.id},
+            "last_reply": datetime.datetime.now(datetime.timezone.utc)
+        }
 
     @commands.command(aliases=["gif", "pic", "pics", "picture", "pictures"])
     async def gifs(self, ctx, *, text: str):

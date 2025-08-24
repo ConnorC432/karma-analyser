@@ -1,6 +1,8 @@
 import random
 import asyncio
 
+askreddit_messages = {}
+
 karma_lock = asyncio.Lock()
 
 status = [
@@ -25,6 +27,9 @@ status = [
     "FALLOUT: NEW VEGAS",
     "BALDUR'S GATE",
     "SKYRIM",
+    "FACTORIO",
+    "RIMWORLD",
+    "JACKBOX",
     "THE NARWHAL BACONS AT MIDNIGHT"
 ]
 
