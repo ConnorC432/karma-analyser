@@ -214,7 +214,7 @@ class Events(commands.Cog):
 
         # r/askreddit replies
         if payload.reference and payload.reference.resolved:
-            print(f"RESPONDING TO FELLOW REDDITOR {askreddit_messages}")
+            print(f"RESPONDING TO FELLOW REDDITOR {user_name}")
             replied_message = payload.reference.resolved
 
             ai_chat = None
