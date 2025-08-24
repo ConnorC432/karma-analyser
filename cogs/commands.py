@@ -52,6 +52,10 @@ class Commands(commands.Cog):
             karma_ratio = karma / messages
             karma_str = "<:reddit_upvote:1266139689136689173>" if karma >= 0 else "<:reddit_downvote:1266139651660447744>"
 
+            # Skip users with low message count
+            if messages < 100:
+                continue
+
             # Create Karmic analysis embed for each user
             embed = discord.Embed(
                 title=f"{user_str}",
