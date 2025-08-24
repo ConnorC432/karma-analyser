@@ -1,5 +1,4 @@
-from urllib import parse, request
-
+import datetime
 import discord
 import asyncio
 import json
@@ -8,7 +7,8 @@ import re
 from collections import defaultdict
 from discord.ext import commands
 from ollama import Client
-from .utils import get_gambling_rewards, reddiquette, help_words, karma_lock
+from urllib import parse, request
+from .utils import get_gambling_rewards, reddiquette, help_words, karma_lock, askreddit_messages
 
 
 class Commands(commands.Cog):
@@ -16,32 +16,57 @@ class Commands(commands.Cog):
         self.bot = bot
 
     @commands.command(aliases=['analysis'])
-    async def analyse(self, ctx, analyse_user: discord.Member = None):
+    async def analyse(self, ctx):
         reply = await ctx.reply("KARMA SUBROUTINE INITIALISED")
 
         # Load karma JSON
-        if karma_lock.locked(): print("WAITING TO ACCESS KARMIC ARCHIVES, THIS MAY TAKE LONGER THAN USUAL")
+        if karma_lock.locked():
+            print("WAITING TO ACCESS KARMIC ARCHIVES, THIS MAY TAKE LONGER THAN USUAL")
+            await reply.edit(content="WAITING TO ACCESS KARMIC ARCHIVES, THIS MAY TAKE LONGER THAN USUAL")
+
         async with karma_lock:
             with open("karma.json", "r") as f:
                 output_dict = defaultdict(lambda: defaultdict(int))
-                for key, value in json.load(f).items():
+                for key, value in json.load(f).get(str(ctx.guild.id), {}).items():
                     output_dict[key] = defaultdict(int, value)
 
         # Determine which users to analyse
-        if analyse_user:
-            users_to_iterate = [str(analyse_user.name)]
+        users_to_iterate = set()
+
+        # @everyone
+        if "@everyone" in ctx.message.content:
+            users_to_iterate.update([m.name.lower() for m in ctx.guild.members])
+
+        # @here
+        elif "@here" in ctx.message.content:
+            users_to_iterate.update(m.name.lower() for m in ctx.guild.members if m.status != discord.Status.offline)
+
         else:
-            server_members = {m.name.lower() for m in ctx.guild.members}
-            users_to_iterate = [u for u in output_dict.keys() if u.lower() in server_members]
+            # @user
+            users_to_iterate.update(m.name.lower() for m in ctx.message.mentions)
+
+            # @role
+            for role in ctx.message.role_mentions:
+                users_to_iterate.update(m.name.lower() for m in role.members)
+
+            # No Arguments
+            if not users_to_iterate:
+                users_to_iterate.add(ctx.author.name.lower())
+
+        print(f"ANALYSING THE FOLLOWING USERS: {users_to_iterate}")
 
         await asyncio.sleep(random.uniform(2.5, 5))
-
         await reply.edit(content="KARMA ANALYSED")
 
         for user in users_to_iterate:
+            # Skip users with low message count
+            messages = output_dict[user].get("Messages", 1)
+            if messages < 100:
+                continue
+
             user_obj = discord.utils.find(lambda m: m.name.lower() == user, ctx.guild.members)
             user_str = user_obj.display_name if user_obj else user
-            messages = output_dict[user].get("Messages", 1)
+
             karma = output_dict[user].get("Karma", 0)
             karma_ratio = karma / messages
             karma_str = "<:reddit_upvote:1266139689136689173>" if karma >= 0 else "<:reddit_downvote:1266139651660447744>"
@@ -77,27 +102,32 @@ class Commands(commands.Cog):
         ded = random.randint(50, 100)
         await ctx.send(f"FOR CRIMES AGAINST REDDIT AND XER PEOPLE, u/{member.name} IS HEREBY SENTENCED TO A KARMIC DEDUCTION TOTALLING {ded} REDDIT KARMA")
 
+        print (f"SENTENCING {member.name} BY A DEDUCTION TOTALLING {ded} REDDIT KARMA")
+
         try:
             with open("deductions.json", "r") as f:
                 data = json.load(f)
         except FileNotFoundError:
             data = {}
 
-        if member.name not in data:
-            data[member.name] = 0
+        if str(ctx.guild.id) not in data:
+            data[str(ctx.guild.id)] = {}
 
-        data[member.name] -= ded
+        if member.name not in data[str(ctx.guild.id)]:
+            data[str(ctx.guild.id)][member.name] = 0
+
+        data[str(ctx.guild.id)][member.name] -= ded
 
         with open("deductions.json", "w") as f:
             json.dump(data, f, indent=4)
 
     @commands.command(aliases=['gamble'])
-    async def gambling(self, ctx, *, option: str = None):
+    async def gambling(self, ctx, *, text: str = None):
         if ctx.channel.name != "gambling":
             return
 
-        if option:
-            if any(key in option.lower() for key in help_words):
+        if text:
+            if any(key in text.lower() for key in help_words):
                 with open("settings.json", "r") as f:
                     settings = json.load(f)
 
@@ -117,16 +147,8 @@ class Commands(commands.Cog):
                 await ctx.reply(f"{clean_response[:2000]}")
                 return
 
-        user = ctx.author
         case_length = random.randint(10, 20)
-        with open("deductions.json", "r") as f:
-            data = json.load(f)
-
-        if user.name not in data:
-            karma_case = get_gambling_rewards(case_length, "good")
-        else:
-            user_karma = data[user.name]
-            karma_case = get_gambling_rewards(case_length, "bad" if user_karma < 0 else "good")
+        karma_case = get_gambling_rewards(case_length)
 
         # Open Karma Case
         message = await ctx.reply("Opening your Karma Case...")
@@ -146,6 +168,9 @@ class Commands(commands.Cog):
     async def diagnose(self, ctx, user: discord.Member = None):
         if user is None:
             user = ctx.author
+
+        print(f"DIAGNOSING {user.name}")
+
         reply = await ctx.reply("DIAGNOSING...")
         message_log = []
         async for msg in ctx.channel.history(limit=200):
@@ -178,16 +203,25 @@ class Commands(commands.Cog):
         client = Client(host=settings.get("ollama_endpoint"))
         ai_instructions = "You are replying to a post on the subreddit r/askreddit...\n" + reddiquette
 
+        message_history = [
+            {"role": "system", "content": ai_instructions},
+            {"role": "user", "content": text}
+        ]
+
         response = await asyncio.to_thread(
             client.chat,
             model="llama3",
-            messages=[
-                {"role": "system", "content": ai_instructions},
-                {"role": "user", "content": text}
-            ]
+            messages=message_history
         )
         clean_response = re.sub(r"<think>.*?</think>\\n\\n", "", response.message.content, flags=re.DOTALL)
-        await ctx.reply(clean_response[:2000])
+        bot_reply = await ctx.reply(clean_response[:2000])
+
+        # Store r/askreddit chats
+        askreddit_messages[bot_reply.id] = {
+            "messages": message_history + [{"role": "assistant", "content": response.message.content}],
+            "bot_replies": {bot_reply.id},
+            "last_reply": datetime.datetime.now(datetime.timezone.utc)
+        }
 
     @commands.command(aliases=["gif", "pic", "pics", "picture", "pictures"])
     async def gifs(self, ctx, *, text: str):
@@ -208,6 +242,7 @@ class Commands(commands.Cog):
 
         gif_urls = [item['images']['original']['url'] for item in data['data']]
 
+        print(f"ANALYSING GIF: {gif_urls}")
         await ctx.message.reply(random.choice(gif_urls))
 
 
