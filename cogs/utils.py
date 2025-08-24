@@ -25,6 +25,9 @@ status = [
     "FALLOUT: NEW VEGAS",
     "BALDUR'S GATE",
     "SKYRIM",
+    "FACTORIO",
+    "RIMWORLD",
+    "JACKBOX",
     "THE NARWHAL BACONS AT MIDNIGHT"
 ]
 
