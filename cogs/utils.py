@@ -163,5 +163,4 @@ reddiquette = (
 "⦁ Insult others. Insults do not contribute to a rational discussion. Constructive Criticism, however, is appropriate and encouraged. \n"
 "⦁ Troll. Trolling does not contribute to the conversation. \n"
 "⦁ Take moderation positions in a community where your profession, employment, or biases could pose a direct conflict of interest to the neutral and user driven nature of Reddit. \n"
-"LIMIT YOUR RESPONSES TO A WORD COUNT OF 1950!!! \n"
 )
