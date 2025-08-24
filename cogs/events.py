@@ -180,6 +180,24 @@ class Events(commands.Cog):
 
     @commands.Cog.listener()
     async def on_message(self, payload):
+        # Update message count
+        async with karma_lock:
+            with open("karma.json", "r") as f:
+                karmic_dict = json.load(f)
+
+            user_name = payload.author.name
+
+            if user_name not in karmic_dict:
+                karmic_dict[user_name] = {}
+
+            if "Messages" not in karmic_dict[user_name]:
+                karmic_dict[user_name]["Messages"] = 0
+
+            karmic_dict[user_name]["Messages"] += 1
+
+            with open("karma.json", "w") as f:
+                json.dump(karmic_dict, f, indent=4)
+
         if payload.author.bot:
             return
 
@@ -225,6 +243,25 @@ class Events(commands.Cog):
             ai_chat["messages"].append({"role": "assistant", "content": response.message.content})
             ai_chat["bot_replies"].add(bot_reply.id)
             ai_chat["last_reply"] = datetime.datetime.now(datetime.timezone.utc)
+
+    @commands.Cog.listener()
+    async def on_message_delete(self, payload):
+        async with karma_lock:
+            with open("karma.json", "r") as f:
+                karmic_dict = json.load(f)
+
+            user_name = payload.author.name
+
+            if user_name not in karmic_dict:
+                karmic_dict[user_name] = {}
+
+            if "Messages" not in karmic_dict[user_name]:
+                karmic_dict[user_name]["Messages"] = 0
+
+            karmic_dict[user_name]["Messages"] -= 1
+
+            with open("karma.json", "w") as f:
+                json.dump(karmic_dict, f, indent=4)
 
     @tasks.loop(minutes=30)
     async def clear_ai_chat(self):
