@@ -52,7 +52,7 @@ class Commands(commands.Cog):
             karma_str = "<:reddit_upvote:1266139689136689173>" if karma >= 0 else "<:reddit_downvote:1266139651660447744>"
 
             # Skip users with low message count
-            if messages < 100:
+            if messages < 100 and not analyse_user:
                 continue
 
             # Create Karmic analysis embed for each user
