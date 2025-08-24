@@ -8,7 +8,7 @@ from collections import defaultdict
 from discord.ext import commands
 from ollama import Client
 from urllib import parse, request
-from .utils import *
+from .utils import get_gambling_rewards, reddiquette, help_words, karma_lock, askreddit_messages
 
 
 class Commands(commands.Cog):

@@ -7,7 +7,7 @@ import json
 from collections import defaultdict
 from discord.ext import commands, tasks
 from ollama import Client
-from .utils import *
+from .utils import reaction_dict, status, karma_lock, askreddit_messages
 
 
 class Events(commands.Cog):
