@@ -48,7 +48,6 @@ class Commands(commands.Cog):
             messages = output_dict[user].get("Messages", 1)
             karma = output_dict[user].get("Karma", 0)
             karma_ratio = karma / messages
-            3
             karma_str = "<:reddit_upvote:1266139689136689173>" if karma >= 0 else "<:reddit_downvote:1266139651660447744>"
 
             # Create Karmic analysis embed for each user
