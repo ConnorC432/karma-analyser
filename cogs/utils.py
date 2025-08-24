@@ -1,6 +1,8 @@
 import random
 import asyncio
 
+askreddit_messages = {}
+
 karma_lock = asyncio.Lock()
 
 status = [

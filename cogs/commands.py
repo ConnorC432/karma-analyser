@@ -1,3 +1,5 @@
+import datetime
+
 import discord
 import asyncio
 import json
@@ -7,7 +9,7 @@ from collections import defaultdict
 from discord.ext import commands
 from ollama import Client
 from urllib import parse, request
-from .utils import get_gambling_rewards, reddiquette, help_words, karma_lock
+from .utils import get_gambling_rewards, reddiquette, help_words, karma_lock, askreddit_messages
 
 
 class Commands(commands.Cog):
@@ -187,16 +189,25 @@ class Commands(commands.Cog):
         client = Client(host=settings.get("ollama_endpoint"))
         ai_instructions = "You are replying to a post on the subreddit r/askreddit...\n" + reddiquette
 
+        message_history = [
+            {"role": "system", "content": ai_instructions},
+            {"role": "user", "content": text}
+        ]
+
         response = await asyncio.to_thread(
             client.chat,
             model="llama3",
-            messages=[
-                {"role": "system", "content": ai_instructions},
-                {"role": "user", "content": text}
-            ]
+            messages=message_history
         )
         clean_response = re.sub(r"<think>.*?</think>\\n\\n", "", response.message.content, flags=re.DOTALL)
-        await ctx.reply(clean_response[:2000])
+        bot_reply = await ctx.reply(clean_response[:2000])
+
+        # Store r/askreddit chats
+        askreddit_messages[bot_reply.id] = {
+            "messages": message_history + [{"role": "assistant", "content": response.message.content}],
+            "bot_replies": {bot_reply.id},
+            "last_reply": datetime.datetime.now()
+        }
 
     @commands.command(aliases=["gif", "pic", "pics", "picture", "pictures"])
     async def gifs(self, ctx, *, text: str):
