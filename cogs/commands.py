@@ -15,7 +15,62 @@ class Commands(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
 
+    @commands.command(aliases=['analysis'])
+    async def analyse(self, ctx, analyse_user: discord.Member = None):
+        reply = await ctx.reply("KARMA SUBROUTINE INITIALISED")
 
+        # Load karma JSON
+        if karma_lock.locked():
+            print("WAITING TO ACCESS KARMIC ARCHIVES, THIS MAY TAKE LONGER THAN USUAL")
+            await reply.edit(content="WAITING TO ACCESS KARMIC ARCHIVES, THIS MAY TAKE LONGER THAN USUAL")
+
+        async with karma_lock:
+            with open("karma.json", "r") as f:
+                output_dict = defaultdict(lambda: defaultdict(int))
+                for key, value in json.load(f).get(str(ctx.guild.id), {}).items():
+                    output_dict[key] = defaultdict(int, value)
+
+        # Determine which users to analyse
+        if analyse_user:
+            users_to_iterate = [str(analyse_user.name)]
+        else:
+            server_members = {m.name.lower() for m in ctx.guild.members}
+            users_to_iterate = [u for u in output_dict.keys() if u.lower() in server_members]
+
+        print(f"ANALYSING THE FOLLOWING USERS: {users_to_iterate}")
+
+        await asyncio.sleep(random.uniform(2.5, 5))
+        await reply.edit(content="KARMA ANALYSED")
+
+        for user in users_to_iterate:
+            user_obj = discord.utils.find(lambda m: m.name.lower() == user, ctx.guild.members)
+            user_str = user_obj.display_name if user_obj else user
+
+            messages = output_dict[user].get("Messages", 1)
+            karma = output_dict[user].get("Karma", 0)
+            karma_ratio = karma / messages
+            karma_str = "<:reddit_upvote:1266139689136689173>" if karma >= 0 else "<:reddit_downvote:1266139651660447744>"
+
+            # Skip users with low message count
+            if messages < 100 and not analyse_user:
+                continue
+
+            # Create Karmic analysis embed for each user
+            embed = discord.Embed(
+                title=f"{user_str}",
+                color=0xED001C,
+            )
+
+            embed.add_field(name="Karma", value=f"{karma} {karma_str}", inline=False)
+            embed.add_field(name="Messages", value=f"{messages}", inline=False)
+            embed.add_field(name="Karmic Ratio", value=f"{round(karma_ratio, 4)}", inline=False)
+            embed.add_field(name="Silver", value=f"{output_dict[user].get('reddit_silver', 0)} <:reddit_silver:833677163739480079>", inline=True)
+            embed.add_field(name="Gold", value=f"{output_dict[user].get('reddit_gold', 0)} <:reddit_gold:833675932883484753>", inline=True)
+            embed.add_field(name="Platinum", value=f"{output_dict[user].get('reddit_platinum', 0)} <:reddit_platinum:833678610279563304>", inline=True)
+            embed.add_field(name="Wholesome", value=f"{output_dict[user].get('reddit_wholesome', 0)} <:reddit_wholesome:833669115762835456>", inline=True)
+            embed.add_field(name="Trukes", value=f"{output_dict[user].get('truthnuke', 0)} <:truthnuke:1359507023951298700>", inline=True)
+
+            await ctx.channel.send(embed=embed)
 
     @commands.command()
     async def gild(self, ctx):
