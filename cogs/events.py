@@ -1,4 +1,5 @@
 import asyncio
+import datetime
 import random
 import discord
 import json
@@ -9,10 +10,12 @@ from .utils import reaction_dict, status, karma_lock
 class Events(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
+        self.init_time = datetime.datetime.now()
 
     @commands.Cog.listener()
     async def on_ready(self):
         async with karma_lock:
+
             karmic_dict = defaultdict(lambda: defaultdict(int))
             message_count = 0
 
@@ -42,12 +45,12 @@ class Events(commands.Cog):
                         if message_count % 100 == 0:
                             await self.bot.change_presence(activity=discord.Game(name=f"{message_count} MESSAGES ANALYSED"))
 
-                        # Ignore Bot Comments
-                        if message.author.bot and message.author.name != "Karma Analyser":
-                            continue
-
-                        # Ignore Deleted Users
-                        if message.author.name == "Deleted User":
+                        # Ignore Bots, Deleted Users, and messages sent after bot initialisation.
+                        if (
+                            message.author.bot and message.author.name != "Karma Analyser"
+                            or message.author.name == "Deleted User"
+                            or message.created_at.date() > self.init_time
+                        ):
                             continue
 
                         # Count Messages
