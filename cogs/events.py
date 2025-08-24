@@ -29,7 +29,7 @@ class Events(commands.Cog):
             if user_obj is not None:
                 karmic_dict[user_obj.name]["Karma"] += deduction
             else:
-                print(f"User {user} not in server.")
+                print(f"USER {user} NOT IN SUBREDDIT.")
 
         print("Counting Karma")
         for channel in self.bot.guilds[0].text_channels:
@@ -86,14 +86,14 @@ class Events(commands.Cog):
         async with karma_lock:
             with open("karma.json", "w") as f:
                 json.dump(karmic_dict, f, indent=4)
-                print("Karma saved to JSON")
+                print("KARMIC ANALYSIS RESULTS ARCHIVED IN THE JSON")
 
         self.change_status.start()
 
     @tasks.loop(minutes=15)
     async def change_status(self):
         activity = random.choice(status)
-        print(f"Status changed: {activity}")
+        print(f"CHANGED STATUS: {activity}")
         await self.bot.change_presence(activity=discord.Game(name=activity))
 
     @commands.Cog.listener()
