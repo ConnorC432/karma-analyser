@@ -1,5 +1,3 @@
-from urllib import parse, request
-
 import discord
 import asyncio
 import json
@@ -8,6 +6,7 @@ import re
 from collections import defaultdict
 from discord.ext import commands
 from ollama import Client
+from urllib import parse, request
 from .utils import get_gambling_rewards, reddiquette, help_words, karma_lock
 
 
@@ -20,7 +19,10 @@ class Commands(commands.Cog):
         reply = await ctx.reply("KARMA SUBROUTINE INITIALISED")
 
         # Load karma JSON
-        if karma_lock.locked(): print("WAITING TO ACCESS KARMIC ARCHIVES, THIS MAY TAKE LONGER THAN USUAL")
+        if karma_lock.locked():
+            print("WAITING TO ACCESS KARMIC ARCHIVES, THIS MAY TAKE LONGER THAN USUAL")
+            await reply.edit(content="WAITING TO ACCESS KARMIC ARCHIVES, THIS MAY TAKE LONGER THAN USUAL")
+
         async with karma_lock:
             with open("karma.json", "r") as f:
                 output_dict = defaultdict(lambda: defaultdict(int))
@@ -34,16 +36,19 @@ class Commands(commands.Cog):
             server_members = {m.name.lower() for m in ctx.guild.members}
             users_to_iterate = [u for u in output_dict.keys() if u.lower() in server_members]
 
-        await asyncio.sleep(random.uniform(2.5, 5))
+        print(f"ANALYSING THE FOLLOWING USERS: {users_to_iterate}")
 
+        await asyncio.sleep(random.uniform(2.5, 5))
         await reply.edit(content="KARMA ANALYSED")
 
         for user in users_to_iterate:
             user_obj = discord.utils.find(lambda m: m.name.lower() == user, ctx.guild.members)
             user_str = user_obj.display_name if user_obj else user
+
             messages = output_dict[user].get("Messages", 1)
             karma = output_dict[user].get("Karma", 0)
             karma_ratio = karma / messages
+            3
             karma_str = "<:reddit_upvote:1266139689136689173>" if karma >= 0 else "<:reddit_downvote:1266139651660447744>"
 
             # Create Karmic analysis embed for each user
@@ -77,6 +82,8 @@ class Commands(commands.Cog):
         ded = random.randint(50, 100)
         await ctx.send(f"FOR CRIMES AGAINST REDDIT AND XER PEOPLE, u/{member.name} IS HEREBY SENTENCED TO A KARMIC DEDUCTION TOTALLING {ded} REDDIT KARMA")
 
+        print (f"SENTENCING {member.name} BY A DEDUCTION TOTALLING {ded} REDDIT KARMA")
+
         try:
             with open("deductions.json", "r") as f:
                 data = json.load(f)
@@ -92,12 +99,12 @@ class Commands(commands.Cog):
             json.dump(data, f, indent=4)
 
     @commands.command(aliases=['gamble'])
-    async def gambling(self, ctx, *, option: str = None):
+    async def gambling(self, ctx, *, text: str = None):
         if ctx.channel.name != "gambling":
             return
 
-        if option:
-            if any(key in option.lower() for key in help_words):
+        if text:
+            if any(key in text.lower() for key in help_words):
                 with open("settings.json", "r") as f:
                     settings = json.load(f)
 
@@ -146,6 +153,9 @@ class Commands(commands.Cog):
     async def diagnose(self, ctx, user: discord.Member = None):
         if user is None:
             user = ctx.author
+
+        print(f"DIAGNOSING {user.name}")
+
         reply = await ctx.reply("DIAGNOSING...")
         message_log = []
         async for msg in ctx.channel.history(limit=200):
@@ -208,6 +218,7 @@ class Commands(commands.Cog):
 
         gif_urls = [item['images']['original']['url'] for item in data['data']]
 
+        print(f"ANALYSING GIF: {gif_urls}")
         await ctx.message.reply(random.choice(gif_urls))
 
 

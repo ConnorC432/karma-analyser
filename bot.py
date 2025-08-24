@@ -14,7 +14,7 @@ bot = commands.Bot(command_prefix="r/", intents=intents)
 
 @bot.event
 async def on_ready():
-    print(f"{bot.user} is online and ready.")
+    print(f"{bot.user} IS READY TO ANALYSE REDDIT KARMA")
 
 # Load cogs
 async def load_extensions():
@@ -22,9 +22,9 @@ async def load_extensions():
         if filename.endswith(".py") and not filename.startswith("_") and filename != "utils.py":
             try:
                 await bot.load_extension(f"cogs.{filename[:-3]}")
-                print(f"Loaded extension: {filename}")
+                print(f"LOADED COG: {filename}")
             except Exception as e:
-                print(f"Failed to load {filename}: {e}")
+                print(f"FAILED TO LOAD COG: {filename}: {e}")
 
 async def main():
     async with bot:
