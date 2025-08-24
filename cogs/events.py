@@ -2,7 +2,6 @@ import asyncio
 import datetime
 import random
 import re
-
 import discord
 import json
 from collections import defaultdict
@@ -14,7 +13,7 @@ from .utils import reaction_dict, status, karma_lock, askreddit_messages
 class Events(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
-        self.init_time = datetime.datetime.now()
+        self.init_time = datetime.datetime.now(datetime.timezone.utc)
 
     @commands.Cog.listener()
     async def on_ready(self):
@@ -53,7 +52,7 @@ class Events(commands.Cog):
                         if (
                             message.author.bot and message.author.name != "Karma Analyser"
                             or message.author.name == "Deleted User"
-                            or message.created_at.date() > self.init_time
+                            or message.created_at > self.init_time
                         ):
                             continue
 
@@ -197,12 +196,12 @@ class Events(commands.Cog):
 
         # r/askreddit replies
         if payload.reference and payload.reference.resolved:
-            print("RESPONDING TO FELLOW REDDITOR")
+            print(f"RESPONDING TO FELLOW REDDITOR {askreddit_messages}")
             replied_message = payload.reference.resolved
 
             ai_chat = None
             for a in askreddit_messages.values():
-                if replied_message.id in a["messages"]:
+                if replied_message.id in a["bot_replies"]:
                     ai_chat = a
                     break
 
@@ -225,7 +224,7 @@ class Events(commands.Cog):
 
             ai_chat["messages"].append({"role": "assistant", "content": response.message.content})
             ai_chat["bot_replies"].add(bot_reply.id)
-            ai_chat["last_reply"] = datetime.datetime.now()
+            ai_chat["last_reply"] = datetime.datetime.now(datetime.timezone.utc)
 
     @tasks.loop(minutes=30)
     async def clear_ai_chat(self):

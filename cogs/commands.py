@@ -206,7 +206,7 @@ class Commands(commands.Cog):
         askreddit_messages[bot_reply.id] = {
             "messages": message_history + [{"role": "assistant", "content": response.message.content}],
             "bot_replies": {bot_reply.id},
-            "last_reply": datetime.datetime.now()
+            "last_reply": datetime.datetime.now(datetime.timezone.utc)
         }
 
     @commands.command(aliases=["gif", "pic", "pics", "picture", "pictures"])
