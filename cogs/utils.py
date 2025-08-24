@@ -73,8 +73,8 @@ reaction_dict = {
     "arrow_down" : -0.5
 }
 
-def get_gambling_rewards(length=10, mode="good"):
-    good_table = [
+def get_gambling_rewards(length=10):
+    table = [
         ("<:reddit_upvote:1266139689136689173>", 100),
         ("<:quarter_upvote:1266139599814529034>", 250),
         ("<:reddit_downvote:1266139651660447744>", 125),
@@ -99,32 +99,6 @@ def get_gambling_rewards(length=10, mode="good"):
         ("<:sadmark:1398048884332298260>", 1)
     ]
 
-    bad_table = [
-        ("<:reddit_upvote:1266139689136689173>", 100),
-        ("<:quarter_upvote:1266139599814529034>", 250),
-        ("<:reddit_downvote:1266139651660447744>", 135),
-        ("<:quarter_downvote:1266139626276388875>", 285),
-        ("<:middlevote:1152474066331123823>", 50),
-        ("<:reddit_silver:833677163739480079>", 25),
-        ("<:reddit_gold:833675932883484753>", 10),
-        ("<:reddit_platinum:833678610279563304>", 1),
-        ("<:reddit_wholesome:833669115762835456>", 25),
-        ("<:fellforitagainaward:1361028185709346976>", 25),
-        ("<:kayspag:1398048349579378849>", 1),
-        ("<:budgiesmugglers:1399456204215947315>", 1),
-        ("<:horseinsuit2:1363514876265365514>", 1),
-        ("<:nissan:1351514275855863871>", 1),
-        ("<:imjakingit:1361028727206711488>", 1),
-        ("<:Hullnarna:1406697829883314280>", 10),
-        ("<:Last_in_PE:1371888191858016266>", 1),
-        ("<:absolutelynothing:1379228455580729435>", 1),
-        ("<:bovril:1401110047500668958>", 1),
-        ("<:fruity:1399459414716715078>", 10),
-        ("<:pepperjak:1189327796724580493>", 1),
-        ("<:sadmark:1398048884332298260>", 1)
-    ]
-
-    table = good_table if mode == "good" else bad_table
     rewards, weights = zip(*table)
     return random.choices(rewards, weights=weights, k=length)
 
