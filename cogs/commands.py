@@ -16,7 +16,7 @@ class Commands(commands.Cog):
         self.bot = bot
 
     @commands.command(aliases=['analysis'])
-    async def analyse(self, ctx, analyse_user: discord.Member = None):
+    async def analyse(self, ctx):
         reply = await ctx.reply("KARMA SUBROUTINE INITIALISED")
 
         # Load karma JSON
@@ -31,11 +31,27 @@ class Commands(commands.Cog):
                     output_dict[key] = defaultdict(int, value)
 
         # Determine which users to analyse
-        if analyse_user:
-            users_to_iterate = [str(analyse_user.name)]
+        users_to_iterate = set()
+
+        # @everyone
+        if "@everyone" in ctx.message.content:
+            users_to_iterate.update([m.name.lower() for m in ctx.guild.members])
+
+        # @here
+        elif "@here" in ctx.message.content:
+            users_to_iterate.update(m.name.lower() for m in ctx.guild.members if m.status != discord.Status.offline)
+
         else:
-            server_members = {m.name.lower() for m in ctx.guild.members}
-            users_to_iterate = [u for u in output_dict.keys() if u.lower() in server_members]
+            # @user
+            users_to_iterate.update(m.name.lower() for m in ctx.message.mentions)
+
+            # @role
+            for role in ctx.message.role_mentions:
+                users_to_iterate.update(m.name.lower() for m in role.members)
+
+            # No Arguments
+            if not users_to_iterate:
+                users_to_iterate.add(ctx.author.name.lower())
 
         print(f"ANALYSING THE FOLLOWING USERS: {users_to_iterate}")
 
@@ -43,17 +59,17 @@ class Commands(commands.Cog):
         await reply.edit(content="KARMA ANALYSED")
 
         for user in users_to_iterate:
+            # Skip users with low message count
+            messages = output_dict[user].get("Messages", 1)
+            if messages < 100:
+                continue
+
             user_obj = discord.utils.find(lambda m: m.name.lower() == user, ctx.guild.members)
             user_str = user_obj.display_name if user_obj else user
 
-            messages = output_dict[user].get("Messages", 1)
             karma = output_dict[user].get("Karma", 0)
             karma_ratio = karma / messages
             karma_str = "<:reddit_upvote:1266139689136689173>" if karma >= 0 else "<:reddit_downvote:1266139651660447744>"
-
-            # Skip users with low message count
-            if messages < 100 and not analyse_user:
-                continue
 
             # Create Karmic analysis embed for each user
             embed = discord.Embed(
@@ -131,16 +147,8 @@ class Commands(commands.Cog):
                 await ctx.reply(f"{clean_response[:2000]}")
                 return
 
-        user = ctx.author
         case_length = random.randint(10, 20)
-        with open("deductions.json", "r") as f:
-            data = json.load(f).get(str(ctx.guild.id), {})
-
-        if user.name not in data:
-            karma_case = get_gambling_rewards(case_length, "good")
-        else:
-            user_karma = data[user.name]
-            karma_case = get_gambling_rewards(case_length, "bad" if user_karma < 0 else "good")
+        karma_case = get_gambling_rewards(case_length)
 
         # Open Karma Case
         message = await ctx.reply("Opening your Karma Case...")
