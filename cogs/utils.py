@@ -5,6 +5,8 @@ askreddit_messages = {}
 
 karma_lock = asyncio.Lock()
 
+gamble_lock = asyncio.Lock()
+
 status = [
     "ANALYSING KARMA",
     "MASS DOWNVOTING",

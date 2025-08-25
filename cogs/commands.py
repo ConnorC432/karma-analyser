@@ -8,7 +8,7 @@ from collections import defaultdict
 from discord.ext import commands
 from ollama import Client
 from urllib import parse, request
-from .utils import get_gambling_rewards, reddiquette, help_words, karma_lock, askreddit_messages
+from .utils import get_gambling_rewards, reddiquette, help_words, karma_lock, gamble_lock, askreddit_messages
 
 
 class Commands(commands.Cog):
@@ -154,15 +154,16 @@ class Commands(commands.Cog):
         message = await ctx.reply("Opening your Karma Case...")
         await asyncio.sleep(2)
 
-        for i in range(case_length - 4):
-            frame = karma_case[i:i + 5]
-            display = (
-                f"{frame[0]}  |  {frame[1]}  |  **>> {frame[2]} <<**  |  {frame[3]}  |  {frame[4]}"
-            )
-            await message.edit(content=display)
-            await asyncio.sleep(0.25)
+        async with gamble_lock:
+            for i in range(case_length - 4):
+                frame = karma_case[i:i + 5]
+                display = (
+                    f"{frame[0]}  |  {frame[1]}  |  **>> {frame[2]} <<**  |  {frame[3]}  |  {frame[4]}"
+                )
+                await message.edit(content=display)
+                await asyncio.sleep(0.25)
 
-        await ctx.message.add_reaction(karma_case[case_length - 3])
+            await ctx.message.add_reaction(karma_case[case_length - 3])
 
     @commands.command(aliases=["diagnosis"])
     async def diagnose(self, ctx, user: discord.Member = None):
