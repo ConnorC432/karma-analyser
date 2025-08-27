@@ -125,23 +125,24 @@ class Events(commands.Cog):
             except FileNotFoundError:
                 karmic_dict = {}
 
-        user_name = message.author.name
-        if user_name not in karmic_dict:
-            karmic_dict[user_name] = {}
+            user_name = message.author.name
+            if user_name not in karmic_dict:
+                karmic_dict[user_name] = {}
 
-        if payload.emoji.name not in karmic_dict[user_name]:
-            karmic_dict[user_name][payload.emoji.name] = 0
+            if payload.emoji.name not in karmic_dict[user_name]:
+                karmic_dict[user_name][payload.emoji.name] = 0
 
-        if "Karma" not in karmic_dict[user_name]:
-            karmic_dict[user_name]["Karma"] = 0
+            if "Karma" not in karmic_dict[user_name]:
+                karmic_dict[user_name]["Karma"] = 0
 
-        # Count Reactions
-        karmic_dict[user_name][payload.emoji.name] += 1
-        karmic_dict[user_name]["Karma"] += reaction_dict[payload.emoji.name]
+            # Count Reactions
+            karmic_dict[user_name][payload.emoji.name] += 1
+            karmic_dict[user_name]["Karma"] += reaction_dict[payload.emoji.name]
 
-        async with karma_lock:
-            with open("karma.json", "w") as f:
-                json.dump(karmic_dict, f, indent=4)
+                with open("karma.json", "w") as f:
+                    json.dump(karmic_dict, f, indent=4)
+
+            print(f"ANALYSED KARMA FOR USER {user_name}")
 
     @commands.Cog.listener()
     async def on_raw_reaction_remove(self, payload):
@@ -163,23 +164,24 @@ class Events(commands.Cog):
             except FileNotFoundError:
                 return
 
-        user_name = message.author.name
-        if user_name not in karmic_dict:
-            karmic_dict[user_name] = {}
+            user_name = message.author.name
+            if user_name not in karmic_dict:
+                karmic_dict[user_name] = {}
 
-        if payload.emoji.name not in karmic_dict[user_name]:
-            karmic_dict[user_name][payload.emoji.name] = 0
+            if payload.emoji.name not in karmic_dict[user_name]:
+                karmic_dict[user_name][payload.emoji.name] = 0
 
-        if "Karma" not in karmic_dict[user_name]:
-            karmic_dict[user_name]["Karma"] = 0
+            if "Karma" not in karmic_dict[user_name]:
+                karmic_dict[user_name]["Karma"] = 0
 
-        # Count Reactions
-        karmic_dict[user_name][payload.emoji.name] -= 1
-        karmic_dict[user_name]["Karma"] -= reaction_dict[payload.emoji.name]
+            # Count Reactions
+            karmic_dict[user_name][payload.emoji.name] -= 1
+            karmic_dict[user_name]["Karma"] -= reaction_dict[payload.emoji.name]
 
-        async with karma_lock:
-            with open("karma.json", "w") as f:
-                json.dump(karmic_dict, f, indent=4)
+                with open("karma.json", "w") as f:
+                    json.dump(karmic_dict, f, indent=4)
+
+            print(f"ANALYSED KARMA FOR USER {user_name}")
 
     @commands.Cog.listener()
     async def on_message(self, payload):
