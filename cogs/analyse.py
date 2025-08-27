@@ -1,20 +1,17 @@
 import asyncio
 import datetime
 import random
-import re
 import discord
 import json
 from collections import defaultdict
 from discord.ext import commands, tasks
-from ollama import Client
-from .utils import reaction_dict, status, karma_lock, askreddit_messages
+from .utils import reaction_dict, status, karma_lock
 
 
-class Events(commands.Cog):
+class Analyse(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
         self.init_time = datetime.datetime.now(datetime.timezone.utc)
-        self.clear_ai_chat.start()
 
     @commands.Cog.listener()
     async def on_ready(self):
@@ -49,20 +46,21 @@ class Events(commands.Cog):
                             print(f"({message_count}) {message.author}: {message.content}")
 
                             if message_count % 100 == 0:
-                                await self.bot.change_presence(activity=discord.Game(name=f"{message_count} MESSAGES ANALYSED"))
+                                await self.bot.change_presence(
+                                    activity=discord.Game(name=f"{message_count} MESSAGES ANALYSED"))
 
                             # Ignore Bots, Deleted Users, and messages sent after bot initialisation.
                             if (
-                                message.author.bot and message.author.name != "Karma Analyser"
-                                or message.author.name == "Deleted User"
-                                or message.created_at > self.init_time
+                                    message.author.bot and message.author.name != "Karma Analyser"
+                                    or message.author.name == "Deleted User"
+                                    or message.created_at > self.init_time
                             ):
                                 continue
 
                             # Count Messages
                             karmic_dict[guild.id][message.author.name]["Messages"] += 1
 
-                            for reaction in message.reactions:#
+                            for reaction in message.reactions:  #
                                 emoji_name = reaction.emoji if isinstance(reaction.emoji, str) else reaction.emoji.name
 
                                 # Ignore Non-Karmic Reactions
@@ -139,10 +137,11 @@ class Events(commands.Cog):
             karmic_dict[user_name][payload.emoji.name] += 1
             karmic_dict[user_name]["Karma"] += reaction_dict[payload.emoji.name]
 
-                with open("karma.json", "w") as f:
-                    json.dump(karmic_dict, f, indent=4)
+            with open("karma.json", "w") as f:
+                json.dump(karmic_dict, f, indent=4)
 
-            print(f"ANALYSED KARMA FOR USER {user_name}")
+        print(f"ANALYSED KARMA FOR USER {user_name}")
+
 
     @commands.Cog.listener()
     async def on_raw_reaction_remove(self, payload):
@@ -178,10 +177,10 @@ class Events(commands.Cog):
             karmic_dict[user_name][payload.emoji.name] -= 1
             karmic_dict[user_name]["Karma"] -= reaction_dict[payload.emoji.name]
 
-                with open("karma.json", "w") as f:
-                    json.dump(karmic_dict, f, indent=4)
+            with open("karma.json", "w") as f:
+                json.dump(karmic_dict, f, indent=4)
 
-            print(f"ANALYSED KARMA FOR USER {user_name}")
+        print(f"ANALYSED KARMA FOR USER {user_name}")
 
     @commands.Cog.listener()
     async def on_message(self, payload):
@@ -203,52 +202,6 @@ class Events(commands.Cog):
             with open("karma.json", "w") as f:
                 json.dump(karmic_dict, f, indent=4)
 
-        if payload.author.bot:
-            return
-
-        if "pass it on" in payload.content.lower():
-            async for message in payload.channel.history(limit=100, oldest_first=False):
-                if message.author.bot and message.content == payload.content:
-                    return
-
-            await asyncio.sleep(random.uniform(0, 2.5))
-            await payload.channel.send(payload.content)
-
-        if "nothing ever happens" in payload.content.lower():
-            await payload.reply(content="https://tenor.com/view/nothing-ever-happens-chud-chudjak-soyjak-90-seconds-to-nothing-gif-9277709574191520604")
-
-        # r/askreddit replies
-        if payload.reference and payload.reference.resolved:
-            print(f"RESPONDING TO FELLOW REDDITOR {user_name}")
-            replied_message = payload.reference.resolved
-
-            ai_chat = None
-            for a in askreddit_messages.values():
-                if replied_message.id in a["bot_replies"]:
-                    ai_chat = a
-                    break
-
-            if not ai_chat:
-                return
-
-            ai_chat["messages"].append({"role": "user", "content": payload.content})
-
-            with open("settings.json", "r") as f:
-                settings = json.load(f)
-
-            client = Client(host=settings.get("ollama_endpoint"))
-            response = await asyncio.to_thread(
-                client.chat,
-                model="llama3",
-                messages=ai_chat["messages"]
-            )
-            clean_response = re.sub(r"<think>.*?</think>\\n\\n", "", response.message.content, flags=re.DOTALL)
-            bot_reply = await payload.reply(clean_response[:2000])
-
-            ai_chat["messages"].append({"role": "assistant", "content": response.message.content})
-            ai_chat["bot_replies"].add(bot_reply.id)
-            ai_chat["last_reply"] = datetime.datetime.now(datetime.timezone.utc)
-
     @commands.Cog.listener()
     async def on_message_delete(self, payload):
         async with karma_lock:
@@ -268,17 +221,78 @@ class Events(commands.Cog):
             with open("karma.json", "w") as f:
                 json.dump(karmic_dict, f, indent=4)
 
-    @tasks.loop(minutes=60)
-    async def clear_ai_chat(self):
-        from .utils import askreddit_messages
-        now = datetime.datetime.now()
+    @commands.command(aliases=['analysis'])
+    async def analyse(self, ctx):
+        reply = await ctx.reply("KARMA SUBROUTINE INITIALISED")
 
-        chats = [id for id, chat in askreddit_messages.items()
-                 if now - chat["last_reply"] > datetime.timedelta(minutes=60)]
+        # Load karma JSON
+        if karma_lock.locked():
+            print("WAITING TO ACCESS KARMIC ARCHIVES, THIS MAY TAKE LONGER THAN USUAL")
+            await reply.edit(content="WAITING TO ACCESS KARMIC ARCHIVES, THIS MAY TAKE LONGER THAN USUAL")
 
-        for chat in chats:
-            del askreddit_messages[chat]
+        async with karma_lock:
+            with open("karma.json", "r") as f:
+                output_dict = defaultdict(lambda: defaultdict(int))
+                for key, value in json.load(f).get(str(ctx.guild.id), {}).items():
+                    output_dict[key] = defaultdict(int, value)
 
+        # Determine which users to analyse
+        users_to_iterate = set()
+
+        # @everyone
+        if "@everyone" in ctx.message.content:
+            users_to_iterate.update([m.name.lower() for m in ctx.guild.members])
+
+        # @here
+        elif "@here" in ctx.message.content:
+            users_to_iterate.update(m.name.lower() for m in ctx.guild.members if m.status != discord.Status.offline)
+
+        else:
+            # @user
+            users_to_iterate.update(m.name.lower() for m in ctx.message.mentions)
+
+            # @role
+            for role in ctx.message.role_mentions:
+                users_to_iterate.update(m.name.lower() for m in role.members)
+
+            # No Arguments
+            if not users_to_iterate:
+                users_to_iterate.add(ctx.author.name.lower())
+
+        print(f"ANALYSING THE FOLLOWING USERS: {users_to_iterate}")
+
+        await asyncio.sleep(random.uniform(2.5, 5))
+        await reply.edit(content="KARMA ANALYSED")
+
+        for user in users_to_iterate:
+            # Skip users with low message count
+            messages = output_dict[user].get("Messages", 1)
+            if messages < 100:
+                continue
+
+            user_obj = discord.utils.find(lambda m: m.name.lower() == user, ctx.guild.members)
+            user_str = user_obj.display_name if user_obj else user
+
+            karma = output_dict[user].get("Karma", 0)
+            karma_ratio = karma / messages
+            karma_str = "<:reddit_upvote:1266139689136689173>" if karma >= 0 else "<:reddit_downvote:1266139651660447744>"
+
+            # Create Karmic analysis embed for each user
+            embed = discord.Embed(
+                title=f"{user_str}",
+                color=0xED001C,
+            )
+
+            embed.add_field(name="Karma", value=f"{karma} {karma_str}", inline=False)
+            embed.add_field(name="Messages", value=f"{messages}", inline=False)
+            embed.add_field(name="Karmic Ratio", value=f"{round(karma_ratio, 4)}", inline=False)
+            embed.add_field(name="Silver", value=f"{output_dict[user].get('reddit_silver', 0)} <:reddit_silver:833677163739480079>", inline=True)
+            embed.add_field(name="Gold", value=f"{output_dict[user].get('reddit_gold', 0)} <:reddit_gold:833675932883484753>", inline=True)
+            embed.add_field(name="Platinum", value=f"{output_dict[user].get('reddit_platinum', 0)} <:reddit_platinum:833678610279563304>", inline=True)
+            embed.add_field(name="Wholesome", value=f"{output_dict[user].get('reddit_wholesome', 0)} <:reddit_wholesome:833669115762835456>", inline=True)
+            embed.add_field(name="Trukes", value=f"{output_dict[user].get('truthnuke', 0)} <:truthnuke:1359507023951298700>", inline=True)
+
+            await ctx.channel.send(embed=embed)
 
 async def setup(bot):
-    await bot.add_cog(Events(bot))
+    await bot.add_cog(Analyse(bot))
