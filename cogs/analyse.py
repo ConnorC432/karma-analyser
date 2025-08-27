@@ -110,6 +110,7 @@ class Analyse(commands.Cog):
             return
 
         guild = self.bot.get_guild(payload.guild_id)
+        guild_id_str = str(payload.guild_id)
         user = guild.get_member(payload.user_id)
         message = await guild.get_channel(payload.channel_id).fetch_message(payload.message_id)
 
@@ -121,26 +122,30 @@ class Analyse(commands.Cog):
                 with open("karma.json", "r") as f:
                     karmic_dict = json.load(f)
             except FileNotFoundError:
+                print("SHIT, I LOST THE KARMIC ARCHIVES")
                 karmic_dict = {}
 
+            if guild_id_str not in karmic_dict:
+                karmic_dict[guild_id_str] = {}
+
             user_name = message.author.name
-            if user_name not in karmic_dict:
-                karmic_dict[user_name] = {}
+            if user_name not in karmic_dict[guild_id_str]:
+                karmic_dict[guild_id_str][user_name] = {}
 
-            if payload.emoji.name not in karmic_dict[user_name]:
-                karmic_dict[user_name][payload.emoji.name] = 0
+            if payload.emoji.name not in karmic_dict[guild_id_str][user_name]:
+                karmic_dict[guild_id_str][user_name][payload.emoji.name] = 0
 
-            if "Karma" not in karmic_dict[user_name]:
-                karmic_dict[user_name]["Karma"] = 0
+            if "Karma" not in karmic_dict[guild_id_str][user_name]:
+                karmic_dict[guild_id_str][user_name]["Karma"] = 0
 
             # Count Reactions
-            karmic_dict[user_name][payload.emoji.name] += 1
-            karmic_dict[user_name]["Karma"] += reaction_dict[payload.emoji.name]
+            karmic_dict[guild_id_str][user_name][payload.emoji.name] += 1
+            karmic_dict[guild_id_str][user_name]["Karma"] += reaction_dict[payload.emoji.name]
 
             with open("karma.json", "w") as f:
                 json.dump(karmic_dict, f, indent=4)
 
-        print(f"ANALYSED KARMA FOR USER {user_name}")
+            print(f"ANALYSED KARMA FOR USER {user_name}")
 
 
     @commands.Cog.listener()
@@ -150,6 +155,7 @@ class Analyse(commands.Cog):
             return
 
         guild = self.bot.get_guild(payload.guild_id)
+        guild_id_str = str(payload.guild_id)
         user = guild.get_member(payload.user_id)
         message = await guild.get_channel(payload.channel_id).fetch_message(payload.message_id)
 
@@ -161,29 +167,34 @@ class Analyse(commands.Cog):
                 with open("karma.json", "r") as f:
                     karmic_dict = json.load(f)
             except FileNotFoundError:
+                print("SHIT, I LOST THE KARMIC ARCHIVES")
                 return
 
+            if guild_id_str not in karmic_dict:
+                karmic_dict[guild_id_str] = {}
+
             user_name = message.author.name
-            if user_name not in karmic_dict:
-                karmic_dict[user_name] = {}
+            if user_name not in karmic_dict[guild_id_str]:
+                karmic_dict[guild_id_str][user_name] = {}
 
-            if payload.emoji.name not in karmic_dict[user_name]:
-                karmic_dict[user_name][payload.emoji.name] = 0
+            if payload.emoji.name not in karmic_dict[guild_id_str][user_name]:
+                karmic_dict[guild_id_str][user_name][payload.emoji.name] = 0
 
-            if "Karma" not in karmic_dict[user_name]:
-                karmic_dict[user_name]["Karma"] = 0
+            if "Karma" not in karmic_dict[guild_id_str][user_name]:
+                karmic_dict[guild_id_str][user_name]["Karma"] = 0
 
             # Count Reactions
-            karmic_dict[user_name][payload.emoji.name] -= 1
-            karmic_dict[user_name]["Karma"] -= reaction_dict[payload.emoji.name]
+            karmic_dict[guild_id_str][user_name][payload.emoji.name] -= 1
+            karmic_dict[guild_id_str][user_name]["Karma"] -= reaction_dict[payload.emoji.name]
 
             with open("karma.json", "w") as f:
                 json.dump(karmic_dict, f, indent=4)
 
-        print(f"ANALYSED KARMA FOR USER {user_name}")
+            print(f"ANALYSED KARMA FOR USER {user_name}")
 
     @commands.Cog.listener()
     async def on_message(self, payload):
+        guild_id_str = str(payload.guild_id)
         # Update message count
         async with karma_lock:
             with open("karma.json", "r") as f:
@@ -191,32 +202,39 @@ class Analyse(commands.Cog):
 
             user_name = payload.author.name
 
-            if user_name not in karmic_dict:
-                karmic_dict[user_name] = {}
+            if guild_id_str not in karmic_dict:
+                karmic_dict[guild_id_str] = {}
 
-            if "Messages" not in karmic_dict[user_name]:
-                karmic_dict[user_name]["Messages"] = 0
+            if user_name not in karmic_dict[guild_id_str]:
+                karmic_dict[guild_id_str][user_name] = {}
 
-            karmic_dict[user_name]["Messages"] += 1
+            if "Messages" not in karmic_dict[guild_id_str][user_name]:
+                karmic_dict[guild_id_str][user_name]["Messages"] = 0
+
+            karmic_dict[guild_id_str][user_name]["Messages"] += 1
 
             with open("karma.json", "w") as f:
                 json.dump(karmic_dict, f, indent=4)
 
     @commands.Cog.listener()
     async def on_message_delete(self, payload):
+        guild_id_str = str(payload.guild_id)
         async with karma_lock:
             with open("karma.json", "r") as f:
                 karmic_dict = json.load(f)
 
             user_name = payload.author.name
 
-            if user_name not in karmic_dict:
-                karmic_dict[user_name] = {}
+            if guild_id_str not in karmic_dict:
+                karmic_dict[guild_id_str] = {}
 
-            if "Messages" not in karmic_dict[user_name]:
-                karmic_dict[user_name]["Messages"] = 0
+            if user_name not in karmic_dict[guild_id_str]:
+                karmic_dict[guild_id_str][user_name] = {}
 
-            karmic_dict[user_name]["Messages"] -= 1
+            if "Messages" not in karmic_dict[guild_id_str][user_name]:
+                karmic_dict[guild_id_str][user_name]["Messages"] = 0
+
+            karmic_dict[guild_id_str][user_name]["Messages"] -= 1
 
             with open("karma.json", "w") as f:
                 json.dump(karmic_dict, f, indent=4)
