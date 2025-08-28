@@ -217,6 +217,8 @@ class Analyse(commands.Cog):
             with open("karma.json", "w") as f:
                 json.dump(karmic_dict, f, indent=4)
 
+        print(f"ANALYSED MESSAGE: {user_name}: {payload.content}")
+
     @commands.Cog.listener()
     async def on_message_delete(self, payload):
         async with karma_lock:
@@ -241,6 +243,8 @@ class Analyse(commands.Cog):
 
             with open("karma.json", "w") as f:
                 json.dump(karmic_dict, f, indent=4)
+
+            print(f"UN-ANALYSED MESSAGE: {user_name}: {payload.content}")
 
     @commands.command(aliases=['analysis'])
     async def analyse(self, ctx):
@@ -304,7 +308,7 @@ class Analyse(commands.Cog):
             # Create Karmic analysis embed for each user
             embed = discord.Embed(
                 title=f"{user_str}",
-                color=0xED001C,
+                color=0xED001C
             )
 
             embed.add_field(name="Karma", value=f"{karma} {karma_str}", inline=False)
