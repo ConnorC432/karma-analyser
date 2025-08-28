@@ -24,7 +24,8 @@ class Analyse(commands.Cog):
             try:
                 with open("deductions.json", "r") as f:
                     deductions = json.load(f)
-            except FileNotFoundError:
+            except FileNotFoundError as e:
+                print(f"SHIT, I LOST THE KARMIC ARCHIVES: {e}")
                 deductions = {}
 
             for guild in self.bot.guilds:
@@ -121,7 +122,7 @@ class Analyse(commands.Cog):
                 with open("karma.json", "r") as f:
                     karmic_dict = json.load(f)
             except FileNotFoundError:
-                print("SHIT, I LOST THE KARMIC ARCHIVES")
+                print(f"SHIT, I LOST THE KARMIC ARCHIVES: {e}")
                 karmic_dict = {}
 
             if payload.guild_id not in karmic_dict:
@@ -165,7 +166,7 @@ class Analyse(commands.Cog):
                 with open("karma.json", "r") as f:
                     karmic_dict = json.load(f)
             except FileNotFoundError:
-                print("SHIT, I LOST THE KARMIC ARCHIVES")
+                print(f"SHIT, I LOST THE KARMIC ARCHIVES: {e}")
                 return
 
             if payload.guild_id not in karmic_dict:
@@ -194,8 +195,11 @@ class Analyse(commands.Cog):
     async def on_message(self, payload):
         # Update message count
         async with karma_lock:
-            with open("karma.json", "r") as f:
-                karmic_dict = json.load(f)
+            try:
+                with open("karma.json", "r") as f:
+                    karmic_dict = json.load(f)
+            except FileNotFoundError as e:
+                print(f"SHIT, I LOST THE KARMIC ARCHIVES: {e}")
 
             user_name = payload.author.name
 
@@ -216,8 +220,11 @@ class Analyse(commands.Cog):
     @commands.Cog.listener()
     async def on_message_delete(self, payload):
         async with karma_lock:
-            with open("karma.json", "r") as f:
-                karmic_dict = json.load(f)
+            try:
+                with open("karma.json", "r") as f:
+                    karmic_dict = json.load(f)
+            except FileNotFoundError as e:
+                print(f"SHIT, I LOST THE KARMIC ARCHIVES: {e}")
 
             user_name = payload.author.name
 
@@ -245,10 +252,14 @@ class Analyse(commands.Cog):
             await reply.edit(content="WAITING TO ACCESS KARMIC ARCHIVES, THIS MAY TAKE LONGER THAN USUAL")
 
         async with karma_lock:
-            with open("karma.json", "r") as f:
-                output_dict = defaultdict(lambda: defaultdict(int))
-                for key, value in json.load(f).get(str(ctx.guild.id), {}).items():
-                    output_dict[key] = defaultdict(int, value)
+            try:
+                with open("karma.json", "r") as f:
+                    output_dict = defaultdict(lambda: defaultdict(int))
+                    for key, value in json.load(f).get(str(ctx.guild.id), {}).items():
+                        output_dict[key] = defaultdict(int, value)
+
+            except FileNotFoundError as e:
+                print(f"SHIT, I LOST THE KARMIC ARCHIVES: {e}")
 
         # Determine which users to analyse
         users_to_iterate = set()
