@@ -10,7 +10,7 @@ with open("settings.json", "r") as f:
     bot_token = settings["bot_token"]
 
 intents = discord.Intents.all()
-bot = commands.Bot(command_prefix="r/", intents=intents)
+bot = commands.Bot(command_prefix=["r/", "R/"], intents=intents)
 
 @bot.event
 async def on_ready():
