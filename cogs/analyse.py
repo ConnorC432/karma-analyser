@@ -128,8 +128,8 @@ class Analyse(commands.Cog):
             user_name = message.author.name
 
             # Count Reactions
-            karmic_dict[payload.guild_id][user_name][payload.emoji.name] += 1
-            karmic_dict[payload.guild_id][user_name]["Karma"] += reaction_dict[payload.emoji.name]
+            karmic_dict[str(payload.guild_id)][user_name][payload.emoji.name] += 1
+            karmic_dict[str(payload.guild_id)][user_name]["Karma"] += reaction_dict[payload.emoji.name]
 
             with open("karma.json", "w") as f:
                 json.dump(dict_to_json(karmic_dict), f, indent=4)
@@ -161,8 +161,8 @@ class Analyse(commands.Cog):
             user_name = message.author.name
 
             # Count Reactions
-            karmic_dict[payload.guild_id][user_name][payload.emoji.name] -= 1
-            karmic_dict[payload.guild_id][user_name]["Karma"] -= reaction_dict[payload.emoji.name]
+            karmic_dict[str(payload.guild_id)][user_name][payload.emoji.name] -= 1
+            karmic_dict[str(payload.guild_id)][user_name]["Karma"] -= reaction_dict[payload.emoji.name]
 
             with open("karma.json", "w") as f:
                 json.dump(dict_to_json(karmic_dict), f, indent=4)
@@ -180,12 +180,9 @@ class Analyse(commands.Cog):
                 print(f"SHIT, I LOST THE KARMIC ARCHIVES: {e}")
                 return
 
-            print(karmic_dict)
-            print(dict_to_json(karmic_dict))
-
             user_name = message.author.name
 
-            karmic_dict[message.guild.id][user_name]["Messages"] += 1
+            karmic_dict[str(message.guild.id)][user_name]["Messages"] += 1
 
             with open("karma.json", "w") as f:
                 json.dump(dict_to_json(karmic_dict), f, indent=4)
@@ -204,7 +201,7 @@ class Analyse(commands.Cog):
 
             user_name = message.author.name
 
-            karmic_dict[message.guild.id][user_name]["Messages"] -= 1
+            karmic_dict[str(message.guild.id)][user_name]["Messages"] -= 1
 
             with open("karma.json", "w") as f:
                 json.dump(dict_to_json(karmic_dict), f, indent=4)
@@ -260,8 +257,6 @@ class Analyse(commands.Cog):
         for user in users_to_iterate:
             # Skip users with low message count
             messages = output_dict[user].get("Messages", 1)
-            # if messages < 100:
-            #     continue
 
             user_obj = discord.utils.find(lambda m: m.name.lower() == user, ctx.guild.members)
             user_str = user_obj.display_name if user_obj else user
