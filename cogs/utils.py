@@ -1,5 +1,19 @@
 import random
 import asyncio
+from collections import defaultdict
+
+
+def dict_to_json(d):
+    if isinstance(d, dict):
+        return {k: dict_to_json(v) for k, v in d.items()}
+    return d
+
+def json_to_dict(d):
+    if isinstance(d, dict):
+        return defaultdict(lambda: defaultdict(lambda: defaultdict(int)),
+                           {k: json_to_dict(v) for k, v in d.items()})
+
+    return d
 
 askreddit_messages = {}
 
