@@ -231,7 +231,11 @@ class Analyse(commands.Cog):
 
         # @everyone
         if "@everyone" in ctx.message.content:
-            users_to_iterate.update([m.name.lower() for m in ctx.guild.members])
+            users_to_iterate.update(
+                m.name
+                for m in ctx.guild.members
+                if output_dict.get(m.name, {}).get("Messages", 0) >= 100
+            )
 
         # @here
         elif "@here" in ctx.message.content:
@@ -255,9 +259,7 @@ class Analyse(commands.Cog):
         await reply.edit(content="KARMA ANALYSED")
 
         for user in users_to_iterate:
-            # Skip users with low message count
             messages = output_dict[user].get("Messages", 1)
-
             user_obj = discord.utils.find(lambda m: m.name.lower() == user, ctx.guild.members)
             user_str = user_obj.display_name if user_obj else user
 
