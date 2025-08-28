@@ -203,16 +203,16 @@ class Analyse(commands.Cog):
 
             user_name = payload.author.name
 
-            if payload.guild_id not in karmic_dict:
-                karmic_dict[payload.guild_id] = {}
+            if payload.guild.id not in karmic_dict:
+                karmic_dict[payload.guild.id] = {}
 
-            if user_name not in karmic_dict[payload.guild_id]:
-                karmic_dict[payload.guild_id][user_name] = {}
+            if user_name not in karmic_dict[payload.guild.id]:
+                karmic_dict[payload.guild.id][user_name] = {}
 
-            if "Messages" not in karmic_dict[payload.guild_id][user_name]:
-                karmic_dict[payload.guild_id][user_name]["Messages"] = 0
+            if "Messages" not in karmic_dict[payload.guild.id][user_name]:
+                karmic_dict[payload.guild.id][user_name]["Messages"] = 0
 
-            karmic_dict[payload.guild_id][user_name]["Messages"] += 1
+            karmic_dict[payload.guild.id][user_name]["Messages"] += 1
 
             with open("karma.json", "w") as f:
                 json.dump(karmic_dict, f, indent=4)
@@ -230,16 +230,16 @@ class Analyse(commands.Cog):
 
             user_name = payload.author.name
 
-            if payload.guild_id not in karmic_dict:
-                karmic_dict[payload.guild_id] = {}
+            if payload.guild.id not in karmic_dict:
+                karmic_dict[payload.guild.id] = {}
 
-            if user_name not in karmic_dict[payload.guild_id]:
-                karmic_dict[payload.guild_id][user_name] = {}
+            if user_name not in karmic_dict[payload.guild.id]:
+                karmic_dict[payload.guild.id][user_name] = {}
 
-            if "Messages" not in karmic_dict[payload.guild_id][user_name]:
-                karmic_dict[payload.guild_id][user_name]["Messages"] = 0
+            if "Messages" not in karmic_dict[payload.guild.id][user_name]:
+                karmic_dict[payload.guild.id][user_name]["Messages"] = 0
 
-            karmic_dict[payload.guild_id][user_name]["Messages"] -= 1
+            karmic_dict[payload.guild.id][user_name]["Messages"] -= 1
 
             with open("karma.json", "w") as f:
                 json.dump(karmic_dict, f, indent=4)
