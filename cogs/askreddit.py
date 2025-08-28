@@ -44,7 +44,7 @@ class AskReddit(commands.Cog):
     async def on_message(self, payload):
         # r/askreddit replies
         if payload.reference and payload.reference.resolved:
-            print(f"RESPONDING TO FELLOW REDDITOR {user_name}")
+            print(f"RESPONDING TO FELLOW REDDITOR {payload.author.name}")
             replied_message = payload.reference.resolved
 
             ai_chat = None

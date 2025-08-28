@@ -61,7 +61,7 @@ class Analyse(commands.Cog):
                             # Count Messages
                             karmic_dict[guild.id][message.author.name]["Messages"] += 1
 
-                            for reaction in message.reactions:  #
+                            for reaction in message.reactions:
                                 emoji_name = reaction.emoji if isinstance(reaction.emoji, str) else reaction.emoji.name
 
                                 # Ignore Non-Karmic Reactions
@@ -145,7 +145,7 @@ class Analyse(commands.Cog):
             with open("karma.json", "w") as f:
                 json.dump(karmic_dict, f, indent=4)
 
-            print(f"ANALYSED KARMA FOR USER {user_name}")
+            print(f"ANALYSED {user.name}'S REACTION TO {user_name}'S POST")
 
 
     @commands.Cog.listener()
@@ -189,7 +189,7 @@ class Analyse(commands.Cog):
             with open("karma.json", "w") as f:
                 json.dump(karmic_dict, f, indent=4)
 
-            print(f"ANALYSED KARMA FOR USER {user_name}")
+            print(f"ANALYSED {user.name}'S REACTION TO {user_name}'S POST")
 
     @commands.Cog.listener()
     async def on_message(self, payload):
@@ -248,7 +248,6 @@ class Analyse(commands.Cog):
 
         # Load karma JSON
         if karma_lock.locked():
-            print("WAITING TO ACCESS KARMIC ARCHIVES, THIS MAY TAKE LONGER THAN USUAL")
             await reply.edit(content="WAITING TO ACCESS KARMIC ARCHIVES, THIS MAY TAKE LONGER THAN USUAL")
 
         async with karma_lock:

@@ -10,8 +10,6 @@ class Ben(commands.Cog):
         if text is None:
             return
 
-        reply = None
-
         match text.lower():
             case "yes":
                 reply = "https://tenor.com/view/yes-gif-24966277"
