@@ -27,7 +27,7 @@ class AskReddit(commands.Cog):
 
         response = await asyncio.to_thread(
             client.chat,
-            model="llama3",
+            model="artifish/llama3.2-uncensored:latest",
             messages=message_history
         )
         clean_response = re.sub(r"<think>.*?</think>\\n\\n", "", response.message.content, flags=re.DOTALL)
@@ -64,7 +64,7 @@ class AskReddit(commands.Cog):
             client = Client(host=settings.get("ollama_endpoint"))
             response = await asyncio.to_thread(
                 client.chat,
-                model="llama3",
+                model="artifish/llama3.2-uncensored:latest",
                 messages=ai_chat["messages"]
             )
             clean_response = re.sub(r"<think>.*?</think>\\n\\n", "", response.message.content, flags=re.DOTALL)
