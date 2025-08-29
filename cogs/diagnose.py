@@ -33,7 +33,7 @@ class Diagnose(commands.Cog):
 
         response = await asyncio.to_thread(
             client.chat,
-            model="llama3",
+            model="artifish/llama3.2-uncensored",
             messages=[
                 {"role": "system", "content": ai_instructions},
                 {"role": "user", "content": prompt}
