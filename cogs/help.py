@@ -25,7 +25,7 @@ class Help(commands.Cog):
                 if not command.hidden:
                     embed.add_field(
                         name=f"r/{command.name}",
-                        value=command.help or "No description available",
+                        value="",
                         inline=False
                     )
 
