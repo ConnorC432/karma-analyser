@@ -27,7 +27,7 @@ class Poll(commands.Cog):
 
         embed = discord.Embed(
             title=question,
-            description="\n".join(f"{emoji_numbers[i]} {opt} \n" for i, opt in enumerate(options)),
+            description="\n".join(f"### {emoji_numbers[i]} {opt} \n" for i, opt in enumerate(options)),
             color=0xED001C
         )
 
