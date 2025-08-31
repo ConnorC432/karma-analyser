@@ -6,8 +6,11 @@ class Template(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
 
-    @commands.command()
+    @commands.command(hidden=True)
     async def purple(self, ctx, *, args=None):
+        """
+        Summon Purple Aki
+        """
         purple_akis = [
             "https://m.media-amazon.com/images/M/MV5BMzFhY2MwOTItZjQ4ZC00MjdmLTgyYWMtOGNjNjcxOTIzYjk1XkEyXkFqcGc@._V1_.jpg",
             "https://www.bbc.co.uk/news/special/2016/newsspec_14877/media/akinwale_rex_landscape-mr.jpg",

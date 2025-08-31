@@ -14,6 +14,10 @@ class AskReddit(commands.Cog):
 
     @commands.command()
     async def askreddit(self, ctx, *, text: str):
+        """
+        Ask the Karma Analyser questions
+        - `text` (required): The question to ask.
+        """
         with open("settings.json", "r") as f:
             settings = json.load(f)
 

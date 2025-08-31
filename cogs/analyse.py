@@ -210,6 +210,10 @@ class Analyse(commands.Cog):
 
     @commands.command(aliases=['analysis'])
     async def analyse(self, ctx):
+        """
+        Analyse a user's karma
+        - `user` (optional): Mention the user(s) to analyse.
+        """
         reply = await ctx.reply("KARMA SUBROUTINE INITIALISED")
 
         # Load karma JSON

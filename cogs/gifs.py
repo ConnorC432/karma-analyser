@@ -10,6 +10,10 @@ class Gifs(commands.Cog):
 
     @commands.command(aliases=["gif", "pic", "pics", "picture", "pictures"])
     async def gifs(self, ctx, *, text: str):
+        """
+        Search for gifs
+        - `text` (required): The gif to search for.
+        """
         with open("settings.json", "r") as f:
             settings = json.load(f)
             giphy_key = settings.get("giphy_key")

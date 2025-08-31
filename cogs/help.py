@@ -9,6 +9,10 @@ class Help(commands.Cog):
 
     @commands.command()
     async def help(self, ctx, *, help_command: str = None):
+        """
+        Shows this menu
+        - `command` (optional): The command to show help for.
+        """
         if help_command is None:
             # Generic Help Menu
             embed = discord.Embed(

@@ -13,6 +13,10 @@ class Diagnose(commands.Cog):
 
     @commands.command(aliases=["diagnosis"])
     async def diagnose(self, ctx, user: discord.Member = None):
+        """
+        Get a user's karmic diagnosis
+        - `user` (optional): Mention the user(s) to diagnose.
+        """
         if user is None:
             user = ctx.author
 
