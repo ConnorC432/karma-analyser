@@ -12,7 +12,7 @@ class Petition(commands.Cog):
         Create a petition
         - `text` (required): The petition text
         """
-        reply = await ctx.message.reply(content=text, file=discord.File("./petition.gif"))
+        reply = await ctx.message.reply(content=f"# {text}", file=discord.File("./petition.gif"))
 
         await reply.add_reaction("🖊️")
 
