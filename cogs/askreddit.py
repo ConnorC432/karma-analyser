@@ -14,6 +14,10 @@ class AskReddit(commands.Cog):
 
     @commands.command()
     async def askreddit(self, ctx, *, text: str):
+        """
+        Ask the Karma Analyser questions
+        - `text` (required): The question to ask.
+        """
         with open("settings.json", "r") as f:
             settings = json.load(f)
 
@@ -27,7 +31,7 @@ class AskReddit(commands.Cog):
 
         response = await asyncio.to_thread(
             client.chat,
-            model="llama3",
+            model="artifish/llama3.2-uncensored",
             messages=message_history
         )
         clean_response = re.sub(r"<think>.*?</think>\\n\\n", "", response.message.content, flags=re.DOTALL)
@@ -44,7 +48,7 @@ class AskReddit(commands.Cog):
     async def on_message(self, payload):
         # r/askreddit replies
         if payload.reference and payload.reference.resolved:
-            print(f"RESPONDING TO FELLOW REDDITOR {user_name}")
+            print(f"RESPONDING TO FELLOW REDDITOR {payload.author.name}")
             replied_message = payload.reference.resolved
 
             ai_chat = None
@@ -64,7 +68,7 @@ class AskReddit(commands.Cog):
             client = Client(host=settings.get("ollama_endpoint"))
             response = await asyncio.to_thread(
                 client.chat,
-                model="llama3",
+                model="artifish/llama3.2-uncensored",
                 messages=ai_chat["messages"]
             )
             clean_response = re.sub(r"<think>.*?</think>\\n\\n", "", response.message.content, flags=re.DOTALL)

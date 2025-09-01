@@ -1,5 +1,21 @@
 import random
 import asyncio
+from collections import defaultdict
+
+
+def dict_to_json(d):
+    if isinstance(d, dict):
+        return {k: dict_to_json(v) for k, v in d.items()}
+    return d
+
+def json_to_dict(d):
+    if isinstance(d, dict):
+        return defaultdict(lambda: defaultdict(lambda: defaultdict(int)),
+                           {k: json_to_dict(v) for k, v in d.items()})
+
+    return d
+
+emoji_numbers = ["1️⃣","2️⃣","3️⃣","4️⃣","5️⃣","6️⃣","7️⃣","8️⃣","9️⃣","🔟"]
 
 askreddit_messages = {}
 

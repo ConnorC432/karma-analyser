@@ -13,6 +13,10 @@ class Diagnose(commands.Cog):
 
     @commands.command(aliases=["diagnosis"])
     async def diagnose(self, ctx, user: discord.Member = None):
+        """
+        Get a user's karmic diagnosis
+        - `user` (optional): Mention the user(s) to diagnose.
+        """
         if user is None:
             user = ctx.author
 
@@ -33,7 +37,7 @@ class Diagnose(commands.Cog):
 
         response = await asyncio.to_thread(
             client.chat,
-            model="llama3",
+            model="artifish/llama3.2-uncensored",
             messages=[
                 {"role": "system", "content": ai_instructions},
                 {"role": "user", "content": prompt}

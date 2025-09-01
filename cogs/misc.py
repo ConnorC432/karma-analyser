@@ -27,6 +27,9 @@ class Misc(commands.Cog):
 
     @commands.command()
     async def gild(self, ctx):
+        """
+        Gild the Karma Analyser
+        """
         await ctx.reply("Thank you kind stranger!")
 
 async def setup(bot):

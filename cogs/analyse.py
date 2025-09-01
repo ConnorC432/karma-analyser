@@ -5,7 +5,7 @@ import discord
 import json
 from collections import defaultdict
 from discord.ext import commands, tasks
-from .utils import reaction_dict, status, karma_lock
+from .utils import reaction_dict, status, karma_lock, json_to_dict, dict_to_json
 
 
 class Analyse(commands.Cog):
@@ -24,7 +24,8 @@ class Analyse(commands.Cog):
             try:
                 with open("deductions.json", "r") as f:
                     deductions = json.load(f)
-            except FileNotFoundError:
+            except FileNotFoundError as e:
+                print(f"SHIT, I LOST THE KARMIC ARCHIVES: {e}")
                 deductions = {}
 
             for guild in self.bot.guilds:
@@ -60,7 +61,7 @@ class Analyse(commands.Cog):
                             # Count Messages
                             karmic_dict[guild.id][message.author.name]["Messages"] += 1
 
-                            for reaction in message.reactions:  #
+                            for reaction in message.reactions:
                                 emoji_name = reaction.emoji if isinstance(reaction.emoji, str) else reaction.emoji.name
 
                                 # Ignore Non-Karmic Reactions
@@ -110,7 +111,6 @@ class Analyse(commands.Cog):
             return
 
         guild = self.bot.get_guild(payload.guild_id)
-        guild_id_str = str(payload.guild_id)
         user = guild.get_member(payload.user_id)
         message = await guild.get_channel(payload.channel_id).fetch_message(payload.message_id)
 
@@ -120,32 +120,21 @@ class Analyse(commands.Cog):
         async with karma_lock:
             try:
                 with open("karma.json", "r") as f:
-                    karmic_dict = json.load(f)
-            except FileNotFoundError:
-                print("SHIT, I LOST THE KARMIC ARCHIVES")
-                karmic_dict = {}
-
-            if guild_id_str not in karmic_dict:
-                karmic_dict[guild_id_str] = {}
+                    karmic_dict = json_to_dict(json.load(f))
+            except FileNotFoundError as e:
+                print(f"SHIT, I LOST THE KARMIC ARCHIVES: {e}")
+                return
 
             user_name = message.author.name
-            if user_name not in karmic_dict[guild_id_str]:
-                karmic_dict[guild_id_str][user_name] = {}
-
-            if payload.emoji.name not in karmic_dict[guild_id_str][user_name]:
-                karmic_dict[guild_id_str][user_name][payload.emoji.name] = 0
-
-            if "Karma" not in karmic_dict[guild_id_str][user_name]:
-                karmic_dict[guild_id_str][user_name]["Karma"] = 0
 
             # Count Reactions
-            karmic_dict[guild_id_str][user_name][payload.emoji.name] += 1
-            karmic_dict[guild_id_str][user_name]["Karma"] += reaction_dict[payload.emoji.name]
+            karmic_dict[str(payload.guild_id)][user_name][payload.emoji.name] += 1
+            karmic_dict[str(payload.guild_id)][user_name]["Karma"] += reaction_dict[payload.emoji.name]
 
             with open("karma.json", "w") as f:
-                json.dump(karmic_dict, f, indent=4)
+                json.dump(dict_to_json(karmic_dict), f, indent=4)
 
-            print(f"ANALYSED KARMA FOR USER {user_name}")
+        print(f"ANALYSED {user.name}'S REACTION TO {user_name}'S POST")
 
 
     @commands.Cog.listener()
@@ -155,7 +144,6 @@ class Analyse(commands.Cog):
             return
 
         guild = self.bot.get_guild(payload.guild_id)
-        guild_id_str = str(payload.guild_id)
         user = guild.get_member(payload.user_id)
         message = await guild.get_channel(payload.channel_id).fetch_message(payload.message_id)
 
@@ -165,101 +153,93 @@ class Analyse(commands.Cog):
         async with karma_lock:
             try:
                 with open("karma.json", "r") as f:
-                    karmic_dict = json.load(f)
-            except FileNotFoundError:
-                print("SHIT, I LOST THE KARMIC ARCHIVES")
+                    karmic_dict = json_to_dict(json.load(f))
+            except FileNotFoundError as e:
+                print(f"SHIT, I LOST THE KARMIC ARCHIVES: {e}")
                 return
 
-            if guild_id_str not in karmic_dict:
-                karmic_dict[guild_id_str] = {}
-
             user_name = message.author.name
-            if user_name not in karmic_dict[guild_id_str]:
-                karmic_dict[guild_id_str][user_name] = {}
-
-            if payload.emoji.name not in karmic_dict[guild_id_str][user_name]:
-                karmic_dict[guild_id_str][user_name][payload.emoji.name] = 0
-
-            if "Karma" not in karmic_dict[guild_id_str][user_name]:
-                karmic_dict[guild_id_str][user_name]["Karma"] = 0
 
             # Count Reactions
-            karmic_dict[guild_id_str][user_name][payload.emoji.name] -= 1
-            karmic_dict[guild_id_str][user_name]["Karma"] -= reaction_dict[payload.emoji.name]
+            karmic_dict[str(payload.guild_id)][user_name][payload.emoji.name] -= 1
+            karmic_dict[str(payload.guild_id)][user_name]["Karma"] -= reaction_dict[payload.emoji.name]
 
             with open("karma.json", "w") as f:
-                json.dump(karmic_dict, f, indent=4)
+                json.dump(dict_to_json(karmic_dict), f, indent=4)
 
-            print(f"ANALYSED KARMA FOR USER {user_name}")
+        print(f"ANALYSED {user.name}'S REACTION TO {user_name}'S POST")
 
     @commands.Cog.listener()
-    async def on_message(self, payload):
-        guild_id_str = str(payload.guild_id)
+    async def on_message(self, message):
         # Update message count
         async with karma_lock:
-            with open("karma.json", "r") as f:
-                karmic_dict = json.load(f)
+            try:
+                with open("karma.json", "r") as f:
+                    karmic_dict = json_to_dict(json.load(f))
+            except FileNotFoundError as e:
+                print(f"SHIT, I LOST THE KARMIC ARCHIVES: {e}")
+                return
 
-            user_name = payload.author.name
+            user_name = message.author.name
 
-            if guild_id_str not in karmic_dict:
-                karmic_dict[guild_id_str] = {}
-
-            if user_name not in karmic_dict[guild_id_str]:
-                karmic_dict[guild_id_str][user_name] = {}
-
-            if "Messages" not in karmic_dict[guild_id_str][user_name]:
-                karmic_dict[guild_id_str][user_name]["Messages"] = 0
-
-            karmic_dict[guild_id_str][user_name]["Messages"] += 1
+            karmic_dict[str(message.guild.id)][user_name]["Messages"] += 1
 
             with open("karma.json", "w") as f:
-                json.dump(karmic_dict, f, indent=4)
+                json.dump(dict_to_json(karmic_dict), f, indent=4)
+
+        print(f"ANALYSING MESSAGE: {user_name}: {message.content}")
 
     @commands.Cog.listener()
-    async def on_message_delete(self, payload):
-        guild_id_str = str(payload.guild_id)
+    async def on_message_delete(self, message):
         async with karma_lock:
-            with open("karma.json", "r") as f:
-                karmic_dict = json.load(f)
+            try:
+                with open("karma.json", "r") as f:
+                    karmic_dict = json_to_dict(json.load(f))
+            except FileNotFoundError as e:
+                print(f"SHIT, I LOST THE KARMIC ARCHIVES: {e}")
+                return
 
-            user_name = payload.author.name
+            user_name = message.author.name
 
-            if guild_id_str not in karmic_dict:
-                karmic_dict[guild_id_str] = {}
-
-            if user_name not in karmic_dict[guild_id_str]:
-                karmic_dict[guild_id_str][user_name] = {}
-
-            if "Messages" not in karmic_dict[guild_id_str][user_name]:
-                karmic_dict[guild_id_str][user_name]["Messages"] = 0
-
-            karmic_dict[guild_id_str][user_name]["Messages"] -= 1
+            karmic_dict[str(message.guild.id)][user_name]["Messages"] -= 1
 
             with open("karma.json", "w") as f:
-                json.dump(karmic_dict, f, indent=4)
+                json.dump(dict_to_json(karmic_dict), f, indent=4)
+
+            print(f"UN-ANALYSED MESSAGE: {user_name}: {message.content}")
 
     @commands.command(aliases=['analysis'])
     async def analyse(self, ctx):
+        """
+        Analyse a user's karma
+        - `user` (optional): Mention the user(s) to analyse.
+        """
         reply = await ctx.reply("KARMA SUBROUTINE INITIALISED")
 
         # Load karma JSON
         if karma_lock.locked():
-            print("WAITING TO ACCESS KARMIC ARCHIVES, THIS MAY TAKE LONGER THAN USUAL")
             await reply.edit(content="WAITING TO ACCESS KARMIC ARCHIVES, THIS MAY TAKE LONGER THAN USUAL")
 
         async with karma_lock:
-            with open("karma.json", "r") as f:
-                output_dict = defaultdict(lambda: defaultdict(int))
-                for key, value in json.load(f).get(str(ctx.guild.id), {}).items():
-                    output_dict[key] = defaultdict(int, value)
+            try:
+                with open("karma.json", "r") as f:
+                    output_dict = defaultdict(lambda: defaultdict(int))
+                    for key, value in json.load(f).get(str(ctx.guild.id), {}).items():
+                        output_dict[key] = defaultdict(int, value)
+
+            except FileNotFoundError as e:
+                print(f"SHIT, I LOST THE KARMIC ARCHIVES: {e}")
 
         # Determine which users to analyse
         users_to_iterate = set()
 
         # @everyone
         if "@everyone" in ctx.message.content:
-            users_to_iterate.update([m.name.lower() for m in ctx.guild.members])
+            users_to_iterate.update(
+                m.name
+                for m in ctx.guild.members
+                if output_dict.get(m.name, {}).get("Messages", 0) >= 100
+            )
 
         # @here
         elif "@here" in ctx.message.content:
@@ -283,11 +263,7 @@ class Analyse(commands.Cog):
         await reply.edit(content="KARMA ANALYSED")
 
         for user in users_to_iterate:
-            # Skip users with low message count
             messages = output_dict[user].get("Messages", 1)
-            if messages < 100:
-                continue
-
             user_obj = discord.utils.find(lambda m: m.name.lower() == user, ctx.guild.members)
             user_str = user_obj.display_name if user_obj else user
 
@@ -298,7 +274,7 @@ class Analyse(commands.Cog):
             # Create Karmic analysis embed for each user
             embed = discord.Embed(
                 title=f"{user_str}",
-                color=0xED001C,
+                color=0xED001C
             )
 
             embed.add_field(name="Karma", value=f"{karma} {karma_str}", inline=False)
@@ -310,7 +286,10 @@ class Analyse(commands.Cog):
             embed.add_field(name="Wholesome", value=f"{output_dict[user].get('reddit_wholesome', 0)} <:reddit_wholesome:833669115762835456>", inline=True)
             embed.add_field(name="Trukes", value=f"{output_dict[user].get('truthnuke', 0)} <:truthnuke:1359507023951298700>", inline=True)
 
-            await ctx.channel.send(embed=embed)
+            try:
+                await ctx.channel.send(embed=embed)
+            except Exception as e:
+                print(f"FAILED TO SEND EMBED: {e}")
 
 async def setup(bot):
     await bot.add_cog(Analyse(bot))

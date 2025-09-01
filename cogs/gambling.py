@@ -13,6 +13,9 @@ class Gambling(commands.Cog):
 
     @commands.command(aliases=['gamble'])
     async def gambling(self, ctx, *, text: str = None):
+        """
+        Gamble for Karma and Awards
+        """
         if ctx.channel.name != "gambling":
             return
 

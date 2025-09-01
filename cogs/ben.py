@@ -7,10 +7,12 @@ class Ben(commands.Cog):
 
     @commands.command(aliases=["talkingben"])
     async def ben(self, ctx, text: str = None):
+        """
+        Talking Ben
+        - `text` (required): Yes, No, Ugh or Hoho.
+        """
         if text is None:
             return
-
-        reply = None
 
         match text.lower():
             case "yes":
