@@ -14,6 +14,7 @@ class Sentence(commands.Cog):
     async def sentence(self, ctx, member: discord.Member):
         """
         Sentence a user for breaches against the Reddiquette
+        ### Requires `Karma Court Judge` Role
         - `user` (required): Mention the user to sentence.
         """
         await ctx.reply(f"ENUMERATING REDDIQUETTE VIOLATIONS FROM u/{member.name}")
