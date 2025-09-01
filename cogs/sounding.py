@@ -10,7 +10,7 @@ class Sounding(commands.Cog):
         """
         Listen to r/sounding
         """
-        await ctx.reply(content="https://open.spotify.com/playlist/6FeuMOuHqcedxUis0NQbch?si=7c243ad39ed4467b&pt=a817fad5119e016fed27308d2ea69e65")
+        await ctx.reply(content="https://open.spotify.com/playlist/6FeuMOuHqcedxUis0NQbch")
 
 
 async def setup(bot):
