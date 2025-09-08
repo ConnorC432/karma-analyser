@@ -1,10 +1,13 @@
+import base64
 import datetime
 import asyncio
 import json
 import re
+
+import aiohttp
 from discord.ext import commands, tasks
 from ollama import Client
-from .utils import reddiquette, askreddit_messages
+from .utils import askreddit_messages
 
 
 class AskReddit(commands.Cog):
@@ -22,7 +25,7 @@ class AskReddit(commands.Cog):
             settings = json.load(f)
 
         client = Client(host=settings.get("ollama_endpoint"))
-        ai_instructions = "You are replying to a post on the subreddit r/askreddit...\n" + reddiquette
+        ai_instructions = "You are replying to a post on the subreddit r/askreddit..."
 
         message_history = [
             {"role": "system", "content": ai_instructions},
@@ -60,7 +63,30 @@ class AskReddit(commands.Cog):
             if not ai_chat:
                 return
 
-            ai_chat["messages"].append({"role": "user", "content": payload.content})
+            images = []
+
+            if payload.attachments:
+                for attachment in payload.attachments:
+                    if attachment.content_type and attachment.content_type.startswith("image/"):
+                        async with aiohttp.ClientSession() as session:
+                            async with session.get(attachment.url) as response:
+                                if response.status == 200:
+                                    image_bytes = await response.read()
+                                    base64_image = base64.b64encode(image_bytes)
+                                    images.append(base64_image)
+
+            if payload.embeds:
+                for embed in payload.embeds:
+                    if embed.image.url:
+                        async with aiohttp.ClientSession() as session:
+                            async with session.get(embed.image.url) as response:
+                                if response.status == 200:
+                                    image_bytes = await response.read()
+                                    base64_image = base64.b64encode(image_bytes)
+                                    images.append(base64_image)
+
+            print(images)
+            ai_chat["messages"].append({"role": "user", "content": payload.content, "images": images})
 
             with open("settings.json", "r") as f:
                 settings = json.load(f)
