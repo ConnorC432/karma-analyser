@@ -67,36 +67,65 @@ class AskReddit(commands.Cog):
 
             if payload.attachments:
                 for attachment in payload.attachments:
-                    if attachment.content_type and attachment.content_type.startswith("image/"):
+                    is_image = False
+                    if attachment.content_type:
+                        is_image = attachment.content_type.startswith("image/")
+                    else:
+                        is_image = any(
+                            attachment.filename.lower().endswith(ext) for ext in [".png", ".jpg", ".jpeg", ".gif"])
+
+                    if is_image:
                         async with aiohttp.ClientSession() as session:
                             async with session.get(attachment.url) as response:
                                 if response.status == 200:
                                     image_bytes = await response.read()
                                     base64_image = base64.b64encode(image_bytes)
-                                    images.append(base64_image)
+                                    images.append(base64_image.decode("utf-8"))
 
             if payload.embeds:
                 for embed in payload.embeds:
-                    if embed.image.url:
-                        async with aiohttp.ClientSession() as session:
-                            async with session.get(embed.image.url) as response:
-                                if response.status == 200:
-                                    image_bytes = await response.read()
-                                    base64_image = base64.b64encode(image_bytes)
-                                    images.append(base64_image)
+                    urls = []
 
-            print(images)
-            ai_chat["messages"].append({"role": "user", "content": payload.content, "images": images})
+                    if getattr(embed, "image", None) and getattr(embed.image, "url", None):
+                        urls.append(embed.image.url)
+
+                    if getattr(embed, "thumbnail", None) and getattr(embed.thumbnail, "url", None):
+                        urls.append(embed.thumbnail.url)
+
+                    if getattr(embed, "url", None):
+                        urls.append(embed.url)
+
+                    if getattr(embed, "video", None) and getattr(embed.video, "url", None):
+                        urls.append(embed.video.url)
+
+                    async with aiohttp.ClientSession() as session:
+                        async with session.get(urls[0]) as response:
+                            if response.status == 200:
+                                image_bytes = await response.read()
+                                base64_image = base64.b64encode(image_bytes)
+                                images.append(base64_image.decode("utf-8"))
+
+            ai_chat["messages"].append({
+                "role": "user",
+                "content": payload.content or "",
+                "images": images
+            })
+
+            print("ANALYSING REDDITOR'S IMAGE" if len(images) > 0 else "REPLYING TO REDDITOR")
 
             with open("settings.json", "r") as f:
                 settings = json.load(f)
 
             client = Client(host=settings.get("ollama_endpoint"))
-            response = await asyncio.to_thread(
-                client.chat,
-                model="artifish/llama3.2-uncensored",
-                messages=ai_chat["messages"]
-            )
+            try:
+                response = await asyncio.to_thread(
+                    client.chat,
+                    model="llava" if len(images) > 0 else "artifish/llama3.2-uncensored",
+                    messages=ai_chat["messages"]
+                )
+            except Exception as e:
+                print(e)
+
             clean_response = re.sub(r"<think>.*?</think>\\n\\n", "", response.message.content, flags=re.DOTALL)
             bot_reply = await payload.reply(clean_response[:2000])
 
@@ -114,6 +143,7 @@ class AskReddit(commands.Cog):
 
         for chat in chats:
             del askreddit_messages[chat]
+
 
 async def setup(bot):
     await bot.add_cog(AskReddit(bot))
