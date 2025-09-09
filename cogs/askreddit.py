@@ -1,19 +1,23 @@
 import base64
-import datetime
 import asyncio
 import json
 import re
-
 import aiohttp
-from discord.ext import commands, tasks
+import discord
+from discord.ext import commands
 from ollama import Client
-from .utils import askreddit_messages
+from bs4 import BeautifulSoup
+from collections import deque
 
 
 class AskReddit(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
-        self.clear_ai_chat.start()
+
+        with open("settings.json", "r") as f:
+            self.settings = json.load(f)
+
+        self.client = Client(host=self.settings.get("ollama_endpoint"))
 
     @commands.command()
     async def askreddit(self, ctx, *, text: str):
@@ -21,128 +25,127 @@ class AskReddit(commands.Cog):
         Ask the Karma Analyser questions
         - `text` (required): The question to ask.
         """
-        with open("settings.json", "r") as f:
-            settings = json.load(f)
-
-        client = Client(host=settings.get("ollama_endpoint"))
-        ai_instructions = "You are replying to a post on the subreddit r/askreddit..."
-
-        message_history = [
-            {"role": "system", "content": ai_instructions},
-            {"role": "user", "content": text}
-        ]
-
-        response = await asyncio.to_thread(
-            client.chat,
-            model="artifish/llama3.2-uncensored",
-            messages=message_history
-        )
-        clean_response = re.sub(r"<think>.*?</think>\\n\\n", "", response.message.content, flags=re.DOTALL)
-        bot_reply = await ctx.reply(clean_response[:2000])
-
-        # Store r/askreddit chats
-        askreddit_messages[bot_reply.id] = {
-            "messages": message_history + [{"role": "assistant", "content": response.message.content}],
-            "bot_replies": {bot_reply.id},
-            "last_reply": datetime.datetime.now(datetime.timezone.utc)
-        }
+        response = await self.ollama_response(image=False, messages=[{
+            "role": "user",
+            "content": text
+        }])
+        await ctx.reply(response[:2000])
 
     @commands.Cog.listener()
     async def on_message(self, payload):
-        # r/askreddit replies
-        if payload.reference and payload.reference.resolved:
-            print(f"RESPONDING TO FELLOW REDDITOR {payload.author.name}")
-            replied_message = payload.reference.resolved
+        if payload.author.bot:
+            # Ignore bot messages
+            return
 
-            ai_chat = None
-            for a in askreddit_messages.values():
-                if replied_message.id in a["bot_replies"]:
-                    ai_chat = a
-                    break
+        if not payload.reference or not payload.reference.resolved:
+            # Ignore messages that dont reply to another message
+            return
 
-            if not ai_chat:
-                return
+        bot_reply = await payload.channel.fetch_message(payload.reference.message_id)
+        if not bot_reply.author.bot:
+            # Ignore replies that don't reference a bot
+            return
 
-            images = []
+        print(f"RESPONDING TO FELLOW REDDITOR {payload.author.name}")
 
-            if payload.attachments:
-                for attachment in payload.attachments:
-                    is_image = False
-                    if attachment.content_type:
-                        is_image = attachment.content_type.startswith("image/")
-                    else:
-                        is_image = any(
-                            attachment.filename.lower().endswith(ext) for ext in [".png", ".jpg", ".jpeg", ".gif"])
+        images = await self.get_images(payload)
+        messages = await self.populate_messages(payload)
 
-                    if is_image:
-                        async with aiohttp.ClientSession() as session:
-                            async with session.get(attachment.url) as response:
-                                if response.status == 200:
-                                    image_bytes = await response.read()
-                                    base64_image = base64.b64encode(image_bytes)
-                                    images.append(base64_image.decode("utf-8"))
+        if "r/askreddit" not in messages[0]["content"].lower():
+            return
 
-            if payload.embeds:
-                for embed in payload.embeds:
-                    urls = []
+        response = await self.ollama_response(image=(True if images else False), messages=messages)
 
-                    if getattr(embed, "image", None) and getattr(embed.image, "url", None):
-                        urls.append(embed.image.url)
+        await payload.reply(response[:2000])
 
-                    if getattr(embed, "thumbnail", None) and getattr(embed.thumbnail, "url", None):
-                        urls.append(embed.thumbnail.url)
+    async def get_images(self, payload):
+        urls = []
 
-                    if getattr(embed, "url", None):
-                        urls.append(embed.url)
+        if payload.attachments:
+            for attachment in payload.attachments:
+                print(f"Attachment: {attachment.url}")
+                urls.append(attachment.url)
 
-                    if getattr(embed, "video", None) and getattr(embed.video, "url", None):
-                        urls.append(embed.video.url)
+        elif payload.embeds:
+            for embed in payload.embeds:
+                print(f"Embed: {embed.url}")
+                urls.append(embed.url)
 
-                    async with aiohttp.ClientSession() as session:
-                        async with session.get(urls[0]) as response:
-                            if response.status == 200:
-                                image_bytes = await response.read()
-                                base64_image = base64.b64encode(image_bytes)
-                                images.append(base64_image.decode("utf-8"))
+        else:
+            print(f"No attachments/embeds found")
+            return []
 
-            ai_chat["messages"].append({
-                "role": "user",
-                "content": payload.content or "",
-                "images": images
+        images = []
+        visited = set()
+        queue = deque(urls)
+
+        async with aiohttp.ClientSession() as session:
+            while queue and len(images) < 4:
+                url = queue.popleft()
+                if url in visited:
+                    continue
+
+                try:
+                    async with session.get(url, timeout=10) as response:
+                        content_type = response.headers["Content-Type"]
+
+                        if "image" in content_type:
+                            print(f"Image found: {url}")
+                            data = await response.content.read()
+                            images.append(base64.b64encode(data).decode("utf-8"))
+                            break
+
+                        elif "text/html" in content_type:
+                            print(f"HTML found: {url}")
+                            html = await response.content.read()
+                            soup = BeautifulSoup(html, "html.parser")
+
+                            og_image = soup.find("meta", property="og:image")
+                            if og_image and og_image.get("content"):
+                                queue.append(og_image["content"])
+
+                except Exception as e:
+                    print(f"FAILED TO GET IMAGE: {e}")
+
+        return images
+
+    async def ollama_response(self, image, messages):
+        response = await asyncio.to_thread(
+            self.client.chat,
+            model="llava" if image else "artifish/llama3.2-uncensored",
+            messages=messages
+        )
+
+        return re.sub(r"<think>.*?</think>\\n\\n", "", response.message.content, flags=re.DOTALL)
+
+    async def populate_messages(self, payload):
+        messages = []
+        current = await payload.channel.fetch_message(payload.reference.message_id)
+
+        while current:
+            messages.append({
+                "role": "assistant" if current.author.bot else "user",
+                "content": current.content
             })
 
-            print("ANALYSING REDDITOR'S IMAGE" if len(images) > 0 else "REPLYING TO REDDITOR")
+            if current.reference:
+                try:
+                    current = await current.channel.fetch_message(current.reference.message_id)
+                except (discord.NotFound, discord.Forbidden):
+                    break
 
-            with open("settings.json", "r") as f:
-                settings = json.load(f)
+            else: break
 
-            client = Client(host=settings.get("ollama_endpoint"))
-            try:
-                response = await asyncio.to_thread(
-                    client.chat,
-                    model="llava" if len(images) > 0 else "artifish/llama3.2-uncensored",
-                    messages=ai_chat["messages"]
-                )
-            except Exception as e:
-                print(e)
+        messages.reverse()
 
-            clean_response = re.sub(r"<think>.*?</think>\\n\\n", "", response.message.content, flags=re.DOTALL)
-            bot_reply = await payload.reply(clean_response[:2000])
+        images = await self.get_images(payload)
+        messages.append({
+            "role": "user",
+            "content": payload.content,
+            "images": images if images else ""
+        })
 
-            ai_chat["messages"].append({"role": "assistant", "content": response.message.content})
-            ai_chat["bot_replies"].add(bot_reply.id)
-            ai_chat["last_reply"] = datetime.datetime.now(datetime.timezone.utc)
-
-    @tasks.loop(minutes=60)
-    async def clear_ai_chat(self):
-        from .utils import askreddit_messages
-        now = datetime.datetime.now()
-
-        chats = [id for id, chat in askreddit_messages.items()
-                 if now - chat["last_reply"] > datetime.timedelta(minutes=60)]
-
-        for chat in chats:
-            del askreddit_messages[chat]
+        return list(messages)
 
 
 async def setup(bot):
