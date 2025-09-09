@@ -32,7 +32,7 @@ class AskReddit(commands.Cog):
             "content": text
         }])
         await ctx.reply(response[:2000])
-        self.logger.info(f"RESPONSE: {response[:2000]}")
+        self.logger.debug(f"RESPONSE: {response[:2000]}")
 
     @commands.Cog.listener()
     async def on_message(self, payload):
