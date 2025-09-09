@@ -6,7 +6,7 @@ import re
 import discord
 from discord.ext import commands
 from ollama import Client
-from .utils import get_gambling_rewards, help_words, gamble_lock
+from .utils import get_gambling_rewards, help_words, gamble_lock, gambling_table
 
 
 class Gambling(commands.Cog):
@@ -18,11 +18,31 @@ class Gambling(commands.Cog):
     async def gambling(self, ctx, *, text: str = None):
         """
         Gamble for Karma and Awards
+        `r/gambling drops` Displays the gambling drops and their respective drop rate percentage
         """
         if ctx.channel.name != "gambling":
             return
 
         if text:
+            if "drops" in text:
+                total_weight = sum(weight for _, weight in gambling_table)
+                chances = [(item, (weight / total_weight) * 100) for item, weight in gambling_table]
+
+                embed = discord.Embed(
+                    title="Gambling Drops",
+                    color=0xED001C
+                )
+
+                for item, chance in chances:
+                    embed.add_field(
+                        name=item,
+                        value=f"{chance:.6f}%",
+                        inline=True
+                    )
+
+                await ctx.reply(embed=embed)
+                return
+
             if any(key in text.lower() for key in help_words):
                 with open("settings.json", "r") as f:
                     settings = json.load(f)
@@ -64,7 +84,10 @@ class Gambling(commands.Cog):
                 await message.edit(content=display)
                 await asyncio.sleep(0.25)
 
-            await ctx.message.add_reaction(karma_case[case_length - 3])
+            try:
+                await ctx.message.add_reaction(karma_case[case_length - 3])
+            except discord.HTTPException as e:
+                self.logger.error(f"ERROR ADDING REACTION {karma_case[case_length - 3]}: {e})")
 
 async def setup(bot):
     await bot.add_cog(Gambling(bot))
