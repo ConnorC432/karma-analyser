@@ -18,6 +18,7 @@ class Gambling(commands.Cog):
     async def gambling(self, ctx, *, text: str = None):
         """
         Gamble for Karma and Awards
+        Can only be used in `#gambling`
         `r/gambling drops` Displays the gambling drops and their respective drop rate percentage
         """
         if ctx.channel.name != "gambling":
