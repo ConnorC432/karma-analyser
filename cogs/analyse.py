@@ -53,13 +53,12 @@ class Analyse(commands.Cog):
                                     activity=discord.Game(name=f"{message_count} MESSAGES ANALYSED"))
                                 self.logger.info(f"CHANGED STATUS: \"{message_count} MESSAGES ANALYSED\"")
 
-                            # Ignore Bots, Deleted Users, and messages sent after bot initialisation.
+                            # Ignore Deleted Users and messages sent after bot initialisation.
                             if (
-                                    message.author.bot and message.author.name != "Karma Analyser"
-                                    or message.author.name == "Deleted User"
+                                    message.author.name == "Deleted User"
                                     or message.created_at > self.init_time
                             ):
-                                self.logger.debug("Ignoring irrelevant messages")
+                                self.logger.debug("Ignoring irrelevant message")
                                 continue
 
                             # Count Messages
