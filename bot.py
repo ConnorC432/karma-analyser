@@ -9,6 +9,7 @@ from discord.ext import commands
 # Parse launch arguments
 parser = argparse.ArgumentParser()
 parser.add_argument("-c", nargs="*", default=[], help="The cogs to load")
+parser.add_argument("-d", help="debug mode", action="store_true")
 args = parser.parse_args()
 
 # Logger
@@ -18,7 +19,10 @@ logging.basicConfig(
 )
 
 logger = logging.getLogger("Bot")
-logger.setLevel(logging.INFO)
+if args.d:
+    logger.setLevel(logging.DEBUG)
+else:
+    logger.setLevel(logging.INFO)
 
 # Load settings
 with open("settings.json", "r") as f:
