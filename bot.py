@@ -3,12 +3,22 @@ import json
 import os
 import asyncio
 import argparse
+import logging
 from discord.ext import commands
 
 # Parse launch arguments
 parser = argparse.ArgumentParser()
 parser.add_argument("-c", nargs="*", default=[], help="The cogs to load")
 args = parser.parse_args()
+
+# Logger
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s - %(name)s - %(levelname)s | %(message)s"
+)
+
+logger = logging.getLogger("Bot")
+logger.setLevel(logging.INFO)
 
 # Load settings
 with open("settings.json", "r") as f:
@@ -20,7 +30,7 @@ bot = commands.Bot(command_prefix=["r/", "R/"], intents=intents, case_insensitiv
 
 @bot.event
 async def on_ready():
-    print(f"{bot.user} IS READY TO ANALYSE REDDIT KARMA")
+    logger.info(f"{bot.user} IS READY TO ANALYSE REDDIT KARMA")
 
 # Load cogs
 async def load_extensions():
@@ -28,17 +38,17 @@ async def load_extensions():
         for cog in args.c:
             try:
                 await bot.load_extension(f"cogs.{cog}")
-                print(f"LOADED COG: {cog}")
+                logger.debug(f"LOADED COG: {cog}")
             except Exception as e:
-                print(f"FAILED TO LOAD COG: {cog}: {e}")
+                logger.critical(f"FAILED TO LOAD COG: {cog}: {e}")
     else:
         for filename in os.listdir("./cogs"):
             if filename.endswith(".py") and not filename.startswith("_") and filename != "utils.py":
                 try:
                     await bot.load_extension(f"cogs.{filename[:-3]}")
-                    print(f"LOADED COG: {filename}")
+                    logger.debug(f"LOADED COG: {filename}")
                 except Exception as e:
-                    print(f"FAILED TO LOAD COG: {filename}: {e}")
+                    logger.critical(f"FAILED TO LOAD COG: {filename}: {e}")
 
 async def main():
     async with bot:

@@ -1,6 +1,7 @@
 import base64
 import asyncio
 import json
+import logging
 import re
 import aiohttp
 import discord
@@ -13,6 +14,7 @@ from collections import deque
 class AskReddit(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
+        self.logger = logging.getLogger(f"{self.__class__.__name__}")
 
         with open("settings.json", "r") as f:
             self.settings = json.load(f)
@@ -30,23 +32,27 @@ class AskReddit(commands.Cog):
             "content": text
         }])
         await ctx.reply(response[:2000])
+        self.logger.info(f"RESPONSE: {response[:2000]}")
 
     @commands.Cog.listener()
     async def on_message(self, payload):
         if payload.author.bot:
             # Ignore bot messages
+            self.logger.debug(f"IGNORING BOT MESSAGE")
             return
 
         if not payload.reference or not payload.reference.resolved:
             # Ignore messages that dont reply to another message
+            self.logger.debug(f"IGNORING NON-REPLY MESSAGE")
             return
 
         bot_reply = await payload.channel.fetch_message(payload.reference.message_id)
         if not bot_reply.author.bot:
             # Ignore replies that don't reference a bot
+            self.logger.debug(f"IGNORING REPLY TO NON BOT MESSAGE")
             return
 
-        print(f"RESPONDING TO FELLOW REDDITOR {payload.author.name}")
+        self.logger.debug(f"RESPONDING TO: {payload.author.name}")
 
         images = await self.get_images(payload)
         messages = await self.populate_messages(payload)
@@ -57,22 +63,23 @@ class AskReddit(commands.Cog):
         response = await self.ollama_response(image=(True if images else False), messages=messages)
 
         await payload.reply(response[:2000])
+        self.logger.info(f"RESPONSE: {response[:2000]}")
 
     async def get_images(self, payload):
         urls = []
 
         if payload.attachments:
             for attachment in payload.attachments:
-                print(f"Attachment: {attachment.url}")
+                self.logger.debug(f"Attachment: {attachment.url}")
                 urls.append(attachment.url)
 
         elif payload.embeds:
             for embed in payload.embeds:
-                print(f"Embed: {embed.url}")
+                self.logger.debug(f"Embed: {embed.url}")
                 urls.append(embed.url)
 
         else:
-            print(f"No attachments/embeds found")
+            self.logger.debug(f"No attachments/embeds found")
             return []
 
         images = []
@@ -90,13 +97,13 @@ class AskReddit(commands.Cog):
                         content_type = response.headers["Content-Type"]
 
                         if "image" in content_type:
-                            print(f"Image found: {url}")
+                            self.logger.debug(f"Image found: {url}")
                             data = await response.content.read()
                             images.append(base64.b64encode(data).decode("utf-8"))
                             break
 
                         elif "text/html" in content_type:
-                            print(f"HTML found: {url}")
+                            self.logger.debug(f"HTML found: {url}")
                             html = await response.content.read()
                             soup = BeautifulSoup(html, "html.parser")
 
@@ -105,7 +112,7 @@ class AskReddit(commands.Cog):
                                 queue.append(og_image["content"])
 
                 except Exception as e:
-                    print(f"FAILED TO GET IMAGE: {e}")
+                    self.logger.error(f"FAILED TO GET IMAGE: {e}")
 
         return images
 
@@ -131,7 +138,8 @@ class AskReddit(commands.Cog):
             if current.reference:
                 try:
                     current = await current.channel.fetch_message(current.reference.message_id)
-                except (discord.NotFound, discord.Forbidden):
+                except (discord.NotFound, discord.Forbidden) as e:
+                    self.logger.error(f"FAILED TO GET MESSAGE: {e}")
                     break
 
             else: break

@@ -1,5 +1,6 @@
 import asyncio
 import datetime
+import logging
 import random
 import discord
 import json
@@ -12,6 +13,7 @@ class Analyse(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
         self.init_time = datetime.datetime.now(datetime.timezone.utc)
+        self.logger = logging.getLogger(f"{self.__class__.__name__}")
 
     @commands.Cog.listener()
     async def on_ready(self):
@@ -25,7 +27,7 @@ class Analyse(commands.Cog):
                 with open("deductions.json", "r") as f:
                     deductions = json.load(f)
             except FileNotFoundError as e:
-                print(f"SHIT, I LOST THE KARMIC ARCHIVES: {e}")
+                self.logger.debug(f"SHIT, I LOST THE KARMIC ARCHIVES: {e}")
                 deductions = {}
 
             for guild in self.bot.guilds:
@@ -36,7 +38,7 @@ class Analyse(commands.Cog):
                     if user_obj is not None:
                         karmic_dict[guild.id][user_obj.name]["Karma"] += deduction
                     else:
-                        print(f"USER {user} NOT IN SUBREDDIT {guild.name}")
+                        self.logger.warning(f"USER {user} NOT IN SUBREDDIT {guild.name}")
 
             print("Counting Karma")
             for guild in self.bot.guilds:
@@ -44,11 +46,12 @@ class Analyse(commands.Cog):
                     try:
                         async for message in channel.history(limit=None, oldest_first=True):
                             message_count += 1
-                            print(f"({message_count}) {message.author}: {message.content}")
+                            self.logger.info(f"({message_count}) {message.author}: {message.content}")
 
                             if message_count % 100 == 0:
                                 await self.bot.change_presence(
                                     activity=discord.Game(name=f"{message_count} MESSAGES ANALYSED"))
+                                self.logger.info(f"CHANGED STATUS: \"{message_count} MESSAGES ANALYSED\"")
 
                             # Ignore Bots, Deleted Users, and messages sent after bot initialisation.
                             if (
@@ -56,6 +59,7 @@ class Analyse(commands.Cog):
                                     or message.author.name == "Deleted User"
                                     or message.created_at > self.init_time
                             ):
+                                self.logger.debug("Ignoring irrelevant messages")
                                 continue
 
                             # Count Messages
@@ -87,21 +91,21 @@ class Analyse(commands.Cog):
                                         karmic_dict[guild.id][message.author.name]["Karma"] += reaction_dict[emoji_name]
 
                                 except discord.HTTPException as e:
-                                    print(e)
+                                    self.logger.error(f"HTTP ERROR: {e}")
 
                     except discord.HTTPException as e:
-                        print(e)
+                        self.logger.error(f"HTTP ERROR: {e}")
 
             with open("karma.json", "w") as f:
                 json.dump(karmic_dict, f, indent=4)
-                print("KARMIC ANALYSIS RESULTS ARCHIVED IN THE JSON")
+                self.logger.info("KARMIC ANALYSIS RESULTS ARCHIVED IN THE JSON")
 
         self.change_status.start()
 
     @tasks.loop(minutes=15)
     async def change_status(self):
         activity = random.choice(status)
-        print(f"CHANGED STATUS: {activity}")
+        self.logger.info(f"CHANGED STATUS: {activity}")
         await self.bot.change_presence(activity=discord.Game(name=activity))
 
     @commands.Cog.listener()
@@ -122,7 +126,7 @@ class Analyse(commands.Cog):
                 with open("karma.json", "r") as f:
                     karmic_dict = json_to_dict(json.load(f))
             except FileNotFoundError as e:
-                print(f"SHIT, I LOST THE KARMIC ARCHIVES: {e}")
+                self.logger.error(f"SHIT, I LOST THE KARMIC ARCHIVES: {e}")
                 return
 
             user_name = message.author.name
@@ -134,8 +138,7 @@ class Analyse(commands.Cog):
             with open("karma.json", "w") as f:
                 json.dump(dict_to_json(karmic_dict), f, indent=4)
 
-        print(f"ANALYSED {user.name}'S REACTION TO {user_name}'S POST")
-
+        self.logger.debug(f"ANALYSED {user.name}'S REACTION TO {user_name}'S POST")
 
     @commands.Cog.listener()
     async def on_raw_reaction_remove(self, payload):
@@ -155,7 +158,7 @@ class Analyse(commands.Cog):
                 with open("karma.json", "r") as f:
                     karmic_dict = json_to_dict(json.load(f))
             except FileNotFoundError as e:
-                print(f"SHIT, I LOST THE KARMIC ARCHIVES: {e}")
+                self.logger.error(f"SHIT, I LOST THE KARMIC ARCHIVES: {e}")
                 return
 
             user_name = message.author.name
@@ -167,7 +170,7 @@ class Analyse(commands.Cog):
             with open("karma.json", "w") as f:
                 json.dump(dict_to_json(karmic_dict), f, indent=4)
 
-        print(f"ANALYSED {user.name}'S REACTION TO {user_name}'S POST")
+        self.logger.debug(f"ANALYSED {user.name}'S REACTION TO {user_name}'S POST")
 
     @commands.Cog.listener()
     async def on_message(self, message):
@@ -177,7 +180,7 @@ class Analyse(commands.Cog):
                 with open("karma.json", "r") as f:
                     karmic_dict = json_to_dict(json.load(f))
             except FileNotFoundError as e:
-                print(f"SHIT, I LOST THE KARMIC ARCHIVES: {e}")
+                self.logger.error(f"SHIT, I LOST THE KARMIC ARCHIVES: {e}")
                 return
 
             user_name = message.author.name
@@ -187,7 +190,7 @@ class Analyse(commands.Cog):
             with open("karma.json", "w") as f:
                 json.dump(dict_to_json(karmic_dict), f, indent=4)
 
-        print(f"ANALYSING MESSAGE: {user_name}: {message.content}")
+        self.logger.debug(f"ANALYSED MESSAGE: {user_name}: {message.content}")
 
     @commands.Cog.listener()
     async def on_message_delete(self, message):
@@ -196,7 +199,7 @@ class Analyse(commands.Cog):
                 with open("karma.json", "r") as f:
                     karmic_dict = json_to_dict(json.load(f))
             except FileNotFoundError as e:
-                print(f"SHIT, I LOST THE KARMIC ARCHIVES: {e}")
+                self.logger.error(f"SHIT, I LOST THE KARMIC ARCHIVES: {e}")
                 return
 
             user_name = message.author.name
@@ -206,7 +209,7 @@ class Analyse(commands.Cog):
             with open("karma.json", "w") as f:
                 json.dump(dict_to_json(karmic_dict), f, indent=4)
 
-            print(f"UN-ANALYSED MESSAGE: {user_name}: {message.content}")
+            self.logger.debug(f"UN-ANALYSED MESSAGE: {user_name}: {message.content}")
 
     @commands.command(aliases=['analysis'])
     async def analyse(self, ctx):
@@ -228,7 +231,7 @@ class Analyse(commands.Cog):
                         output_dict[key] = defaultdict(int, value)
 
             except FileNotFoundError as e:
-                print(f"SHIT, I LOST THE KARMIC ARCHIVES: {e}")
+                self.logger.error(f"SHIT, I LOST THE KARMIC ARCHIVES: {e}")
 
         # Determine which users to analyse
         users_to_iterate = set()
@@ -257,7 +260,7 @@ class Analyse(commands.Cog):
             if not users_to_iterate:
                 users_to_iterate.add(ctx.author.name.lower())
 
-        print(f"ANALYSING THE FOLLOWING USERS: {users_to_iterate}")
+        self.logger.debug(f"ANALYSING USERS: {users_to_iterate}")
 
         await asyncio.sleep(random.uniform(2.5, 5))
         await reply.edit(content="KARMA ANALYSED")
@@ -290,7 +293,7 @@ class Analyse(commands.Cog):
             try:
                 await ctx.channel.send(embed=embed)
             except Exception as e:
-                print(f"FAILED TO SEND EMBED: {e}")
+                self.logger.error(f"FAILED TO SEND EMBED: {e}")
 
 async def setup(bot):
     await bot.add_cog(Analyse(bot))
