@@ -8,7 +8,7 @@ import discord
 from discord.ext import commands
 from ollama import Client
 from bs4 import BeautifulSoup
-from collections import deque
+from collections import deque, OrderedDict
 
 
 class AskReddit(commands.Cog):
@@ -20,6 +20,9 @@ class AskReddit(commands.Cog):
             self.settings = json.load(f)
 
         self.client = Client(host=self.settings.get("ollama_endpoint"))
+
+        self.message_cache = OrderedDict()
+        self.cache_size = 1000
 
     @commands.command()
     async def askreddit(self, ctx, *, text: str):
@@ -136,11 +139,7 @@ class AskReddit(commands.Cog):
             })
 
             if current.reference:
-                try:
-                    current = await current.channel.fetch_message(current.reference.message_id)
-                except (discord.NotFound, discord.Forbidden) as e:
-                    self.logger.error(f"FAILED TO GET MESSAGE: {e}")
-                    break
+                current = await self.get_message(current.channel, current.reference.message_id)
 
             else: break
 
@@ -154,6 +153,23 @@ class AskReddit(commands.Cog):
         })
 
         return list(messages)
+
+    async def get_message(self, channel: discord.TextChannel, message_id: int):
+        if message_id in self.message_cache:
+            return self.message_cache[message_id]
+
+        try:
+            message = await channel.fetch_message(message_id)
+            await self.cache_message(message_id, message)
+            return message
+
+        except (discord.NotFound, discord.Forbidden) as e:
+            self.logger.error(f"FAILED TO GET MESSAGE: {e}")
+
+    async def cache_message(self, message_id, message):
+        self.message_cache[message_id] = message
+        if len(self.message_cache) > self.cache_size:
+            self.message_cache.popitem(last=False)
 
 
 async def setup(bot):
