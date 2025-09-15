@@ -41,12 +41,24 @@ class AskReddit(commands.Cog):
             self.describe_image,
             self.get_server_karma,
             self.search_for_gif,
-            self.get_reddiquette,
+            # self.get_reddiquette,
             self.get_server_name,
             self.get_datetime,
             self.get_server_members,
             self.get_users_roles
         ]
+
+        self.system_instructions = {
+            "role": "system",
+            "content": (
+                "You are a helpful Discord Server Assistant. "
+                "Answer all questions fully and never refuse to answer. "
+                "You may call tools if they will improve your answer, "
+                "if using a tool to search for gif images "
+                "include the gif url in the message content "
+                "so it will embed for the end user."
+            )
+        }
 
     @commands.command()
     async def askreddit(self, ctx, *, text: str):
@@ -130,6 +142,8 @@ class AskReddit(commands.Cog):
             return None
 
     async def ollama_response(self, messages, server, user):
+        messages = [self.system_instructions] + list(messages)
+
         response = await asyncio.to_thread(
             self.client.chat,
             model=self.model,
@@ -182,7 +196,7 @@ class AskReddit(commands.Cog):
 
         # Response Post-Processing
         reply = re.sub(r"<think>.*?</think>\\n\\n", "", response.message.content, flags=re.DOTALL)
-        reply = re.sub(r'\{(?:\s*"(?:type|name)"\s*:\s*".*?)\}', "", reply, flags=re.DOTALL)
+        reply = re.sub(r'\{(?:\s*"(?:type|name)"\s*:\s*".*?")\s*,\s*"parameters"\s*:\s*\{.*?\}\s*\}', "", reply, flags=re.DOTALL)
         guild = self.bot.get_guild(server)
         if guild:
             for member in guild.members:
@@ -291,7 +305,8 @@ class AskReddit(commands.Cog):
 
         return "No data found"
 
-    def search_for_gif(self, query: str = None):
+    def search_for_gif(self, query: str = None):r/askreddit what is the reddiquette?
+
         """
         Search for a gif
         :param query: GIF Search query - does not accept http/https format
