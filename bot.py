@@ -14,15 +14,11 @@ args = parser.parse_args()
 
 # Logger
 logging.basicConfig(
-    level=logging.INFO,
+    level=logging.DEBUG if args.d else logging.INFO,
     format="%(asctime)s - %(name)s - %(levelname)s | %(message)s"
 )
 
 logger = logging.getLogger("Bot")
-if args.d:
-    logger.setLevel(logging.DEBUG)
-else:
-    logger.setLevel(logging.INFO)
 
 # Load settings
 with open("settings.json", "r") as f:
