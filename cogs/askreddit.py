@@ -183,6 +183,7 @@ class AskReddit(commands.Cog):
         # Response Post-Processing
         reply = re.sub(r"<think>.*?</think>\\n\\n", "", response.message.content, flags=re.DOTALL)
         reply = re.sub(r'\{"type":"function".*?\}', "", reply, flags=re.DOTALL)
+        reply = re.sub(r'\{"name":"function".*?\}', "", reply, flags=re.DOTALL)
         guild = self.bot.get_guild(server)
         if guild:
             for member in guild.members:
