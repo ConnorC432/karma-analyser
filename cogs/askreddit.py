@@ -4,6 +4,8 @@ import inspect
 import json
 import logging
 import re
+from zoneinfo import ZoneInfo
+
 import aiohttp
 import discord
 import random
@@ -13,7 +15,7 @@ from bs4 import BeautifulSoup
 from collections import OrderedDict
 from urllib import parse, request
 from .utils import reddiquette
-from datetime import datetime, timezone
+from datetime import datetime
 
 
 class AskReddit(commands.Cog):
@@ -38,10 +40,9 @@ class AskReddit(commands.Cog):
         self.tools = [
             self.describe_image,
             self.get_server_karma,
-            # self.get_gif_url,
+            self.search_for_gif,
             self.get_reddiquette,
-            self.get_message_user,
-            self.get_message_server,
+            self.get_server_name,
             self.get_datetime,
             self.get_server_members,
             self.get_users_roles
@@ -128,39 +129,6 @@ class AskReddit(commands.Cog):
             self.logger.error(f"FAILED TO FETCH URL {url}: {e}")
             return None
 
-    # async def get_images(self, payload):
-    #     urls = []
-    #
-    #     if payload.attachments:
-    #         for attachment in payload.attachments:
-    #             self.logger.debug(f"Attachment: {attachment.url}")
-    #             urls.append(attachment.url)
-    #
-    #     elif payload.embeds:
-    #         for embed in payload.embeds:
-    #             self.logger.debug(f"Embed: {embed.url}")
-    #             urls.append(embed.url)
-    #
-    #     else:
-    #         self.logger.debug(f"No attachments/embeds found")
-    #         return []
-    #
-    #     images = []
-    #     visited = set()
-    #     queue = deque(urls)
-    #
-    #     while queue and len(images) < 4:
-    #         url = queue.popleft()
-    #         if url in visited:
-    #             continue
-    #         visited.add(url)
-    #
-    #         image_b64 = await self.url_to_base64(url)
-    #         if image_b64:
-    #             images.append(image_b64)
-    #
-    #     return images[0] if images else None
-
     async def ollama_response(self, messages, server, user):
         response = await asyncio.to_thread(
             self.client.chat,
@@ -180,22 +148,26 @@ class AskReddit(commands.Cog):
                     kwargs = {}
 
                     for param in sig.parameters.values():
-                        if param.name in ("server", "user"):
-                            kwargs[param.name] = server if param.name == "server" else user
+                        if param.name == "server":
+                            kwargs[param.name] = server
+                        elif param.name == "user":
+                            kwargs[param.name] = args.get("user") or user
                         elif param.name in args:
                             kwargs[param.name] = args[param.name]
+                        elif param.default is not inspect.Parameter.empty:
+                            kwargs[param.name] = param.default
 
                     if inspect.iscoroutinefunction(function):
                         result = await function(**kwargs)
                     else:
                         result = function(**kwargs)
 
-                    self.logger.debug(f"Tool {function.__name__} called with {args}, returning: {result}")
+                    self.logger.debug(f"Tool {function.__name__} called with {kwargs}, returning: {result}")
 
                     messages.append({
                         "role": "tool",
                         "name": function,
-                        "content": f"{function.__name__}: {str(result)}"
+                        "content": str(result)
                     })
 
                     response = await asyncio.to_thread(
@@ -210,13 +182,14 @@ class AskReddit(commands.Cog):
 
         # Response Post-Processing
         reply = re.sub(r"<think>.*?</think>\\n\\n", "", response.message.content, flags=re.DOTALL)
+        reply = re.sub(r'\{"type":"function".*?\}', "", reply, flags=re.DOTALL)
         guild = self.bot.get_guild(server)
         if guild:
             for member in guild.members:
                 reply = re.sub(rf"\b{member}\b", member.mention, reply, flags=re.IGNORECASE)
 
         self.logger.debug(f"REPLY: {reply}")
-        return reply if reply else "RESPONSE GENERATION FAILED, PLEASE DOWNVOTE"
+        return reply if reply.strip() else "RESPONSE GENERATION FAILED, PLEASE DOWNVOTE"
 
     async def populate_messages(self, payload):
         messages = []
@@ -225,7 +198,7 @@ class AskReddit(commands.Cog):
         while current:
             messages.append({
                 "role": "assistant" if current.author.bot else "user",
-                "content": f"{current.author.name} | {current.content}"
+                "content": current.content
             })
 
             if current.reference:
@@ -266,8 +239,8 @@ class AskReddit(commands.Cog):
         """
         Describe an image from its image url, accepts images in the format .png, .jpg, .jpeg, .gif, etc.
         It can also scrape a url's html response for images.
-        :param image: image url
-        :return:
+        :param image: http/https image url
+        :return: Description of
         """
         imageb64 = await self.url_to_base64(image)
 
@@ -295,10 +268,7 @@ class AskReddit(commands.Cog):
             - Messages
             - Karma
             - Karmic Emoji Counts
-
-        :param server: Optional
-        :param user: Optional
-        :return List of all user's statistics (JSON):
+        :return: A JSON formatted list of the stats for all members in the server
         """
         try:
             with open("karma.json", "r") as f:
@@ -321,12 +291,11 @@ class AskReddit(commands.Cog):
 
         return "No data found"
 
-    def get_gif_url(self, query: str = None):
+    def search_for_gif(self, query: str = None):
         """
-        Search for a gif url
-
-        :param query: Required search query
-        :return gif url:
+        Search for a gif
+        :param query: GIF Search query - does not accept http/https format
+        :return: A URL containing the gif
         """
         if not self.giphy_key:
             self.logger.error("GIPHY KEY NOT FOUND")
@@ -359,28 +328,19 @@ class AskReddit(commands.Cog):
             return "No data found"
 
         gif_urls = [item["images"]["original"]["url"] for item in items]
-        return random.choice(gif_urls)
+        return f"INCLUDE THE FULL URL IN YOUR RESPONSE, AS LONG AS THE GIF IS RELEVANT TO THE TEXT: {random.choice(gif_urls)}"
 
     def get_reddiquette(self):
         """
         Returns the reddiquette that users must follow on the server
-        :return reddiquette:
+        :return: Reddiquette
         """
         return str(reddiquette)
 
-    def get_message_user(self, user):
+    def get_server_name(self, server):
         """
-        Gets the User's discord name
-        :param user: Optional
-        :return name:
-        """
-        return user
-
-    def get_message_server(self, server):
-        """
-        Get the server that the chat is taking place in
-        :param server: Optional
-        :return server name:
+        Get the name of the server that the chat is taking place in
+        :return: Server name
         """
         guild = self.bot.get_guild(server)
         return guild.name
@@ -388,16 +348,15 @@ class AskReddit(commands.Cog):
     def get_datetime(self):
         """
         Get the current UTC date & time
-        :return time:
+        :return: Current UTC date & time
         """
-        return str(datetime.now(timezone.utc))
+        return str(datetime.now(ZoneInfo("Europe/London")))
 
     def get_server_members(self, server, online):
         """
         Get the members of the current server
-        :param server: Optional
-        :param online: bool - True to filter by online users
-        :return list of members:
+        :param online: bool - True to filter by online users, False to get all users
+        :return:
         """
         guild = self.bot.get_guild(server)
         if online:
@@ -409,9 +368,8 @@ class AskReddit(commands.Cog):
     def get_users_roles(self, server, user):
         """
         Get the roles of the current user
-        :param server: Optional
-        :param user: Optional
-        :return list of roles:
+        :param user: User to get the roles for
+        :return: Users roles
         """
         guild = self.bot.get_guild(server)
         member = discord.utils.find(lambda m: m.name == user or (m.nick and m.nick == user),
