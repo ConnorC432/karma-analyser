@@ -236,7 +236,11 @@ class AskReddit(commands.Cog):
                         })
 
                     else:
-                        return "Tool not found"
+                        messages.append({
+                            "role": "tool",
+                            "name": function,
+                            "content": "Tool doesn't exist"
+                        })
 
                 continue
 
