@@ -305,7 +305,8 @@ class AskReddit(commands.Cog):
 
         return "No data found"
 
-    def search_for_gif(self, query: str = None):
+    def search_for_gif(self, query: str = None):r/askreddit what is the reddiquette?
+
         """
         Search for a gif
         :param query: GIF Search query - does not accept http/https format
