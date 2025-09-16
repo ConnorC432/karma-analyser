@@ -4,8 +4,7 @@ import inspect
 import json
 import logging
 import re
-from zoneinfo import ZoneInfo
-
+import regex
 import aiohttp
 import discord
 import random
@@ -16,6 +15,7 @@ from collections import OrderedDict
 from urllib import parse, request
 from .utils import reddiquette
 from datetime import datetime
+from zoneinfo import ZoneInfo
 
 
 class AskReddit(commands.Cog):
@@ -56,7 +56,17 @@ class AskReddit(commands.Cog):
                 "You may call tools if they will improve your answer, "
                 "if using a tool to search for gif images "
                 "include the gif url in the message content "
-                "so it will embed for the end user."
+                "so it will embed for the end user.\n\n"
+                "Whenever you want to call a tool, "
+                "**output only JSON** in this exact format: "
+                "{\n"
+                "   \"type\": \"function\",\n"
+                "   \"function\": {\n"
+                "       \"name\": \"TOOL_NAME\",\n"
+                "       \"parameters\": {...}\n"
+                "   }\n"
+                "}\n\n"
+                "Do not write and extra explanatory text before or after the JSON"
             )
         }
 
@@ -118,24 +128,29 @@ class AskReddit(commands.Cog):
     async def url_to_base64(self, url: str) -> str:
         try:
             async with aiohttp.ClientSession() as session:
-                async with session.get(url, timeout=10) as response:
-                    content_type = response.headers.get("Content-Type", "")
-                    if "image" in content_type:
-                        data = await response.read()
-                        return base64.b64encode(data).decode("utf-8")
+                tries = 0
 
-                    elif "text/html" in content_type:
-                        self.logger.debug(f"HTML found: {url}")
-                        html = await response.content.read()
-                        soup = BeautifulSoup(html, "html.parser")
+                while url and tries < 5:
+                    async with session.get(url, timeout=10) as response:
+                        content_type = response.headers.get("Content-Type", "")
+                        if "image" in content_type:
+                            data = await response.read()
+                            return base64.b64encode(data).decode("utf-8")
 
-                        og_image = soup.find("meta", property="og:image")
-                        if og_image and og_image.get("content"):
-                            return base64.b64encode(og_image["content"]).decode("utf-8")
+                        elif "text/html" in content_type:
+                            self.logger.debug(f"HTML found: {url}")
+                            html = await response.content.read()
+                            soup = BeautifulSoup(html, "html.parser")
 
-                    else:
-                        self.logger.debug(f"NO IMAGE IN URL: {url}")
-                        return None
+                            og_image = soup.find("meta", property="og:image")
+                            if og_image and og_image.get("content"):
+                                url = og_image["content"]
+                                tries += 1
+                                continue
+
+                        else:
+                            self.logger.debug(f"NO IMAGE IN URL: {url}")
+                            return None
 
         except Exception as e:
             self.logger.error(f"FAILED TO FETCH URL {url}: {e}")
@@ -144,66 +159,83 @@ class AskReddit(commands.Cog):
     async def ollama_response(self, messages, server, user):
         messages = [self.system_instructions] + list(messages)
 
-        response = await asyncio.to_thread(
-            self.client.chat,
-            model=self.model,
-            messages=messages,
-            tools=self.tools
-        )
+        while True:
+            response = await asyncio.to_thread(
+                self.client.chat,
+                model=self.model,
+                messages=messages,
+                tools=self.tools
+            )
+            self.logger.debug(f"RESPONSE: {response.message.content}")
 
-        if response.message.tool_calls:
-            for call in response.message.tool_calls:
-                function = call.function.name
-                args = call.function.arguments
+            tool_calls = response.message.tool_calls or []
 
-                function = next((f for f in self.tools if f.__name__ == function), None)
-                if function:
-                    sig = inspect.signature(function)
-                    kwargs = {}
+            for j in regex.findall(r'\{(?:[^{}]|(?R))*\}', response.message.content):
+                try:
+                    data = json.loads(j)
+                    if isinstance(data, dict) and data.get("type") == "function":
+                        tool_calls.append(data)
+                except Exception:
+                    continue
 
-                    for param in sig.parameters.values():
-                        if param.name == "server":
-                            kwargs[param.name] = server
-                        elif param.name == "user":
-                            kwargs[param.name] = args.get("user") or user
-                        elif param.name in args:
-                            kwargs[param.name] = args[param.name]
-                        elif param.default is not inspect.Parameter.empty:
-                            kwargs[param.name] = param.default
+            if tool_calls:
+                self.logger.debug(f"TOOL CALLS: {tool_calls}")
 
-                    if inspect.iscoroutinefunction(function):
-                        result = await function(**kwargs)
+                for call in tool_calls:
+                    if isinstance(call, dict):
+                        function = call["function"]["name"]
+                        args = call.get("parameters") or {}
                     else:
-                        result = function(**kwargs)
+                        function = call.function.name
+                        args = call.function.arguments or {}
+                        if isinstance(args, dict) and "parameters" in args:
+                            args = args["parameters"]
 
-                    self.logger.debug(f"Tool {function.__name__} called with {kwargs}, returning: {result}")
+                    function = next((f for f in self.tools if f.__name__ == function), None)
+                    if function:
+                        sig = inspect.signature(function)
+                        kwargs = {}
 
-                    messages.append({
-                        "role": "tool",
-                        "name": function,
-                        "content": str(result)
-                    })
+                        for param in sig.parameters.values():
+                            if param.name == "server":
+                                kwargs[param.name] = server
+                            elif param.name == "user":
+                                kwargs[param.name] = args.get("user") or user
+                            elif param.name in args:
+                                kwargs[param.name] = args[param.name]
+                            elif param.default is not inspect.Parameter.empty:
+                                kwargs[param.name] = param.default
 
-                    response = await asyncio.to_thread(
-                        self.client.chat,
-                        model=self.model,
-                        messages=messages,
-                        tools=self.tools
-                    )
+                        self.logger.debug(f"Tool {function.__name__} called with {kwargs}")
 
-                else:
-                    return "Tool not found"
+                        if inspect.iscoroutinefunction(function):
+                            result = await function(**kwargs)
+                        else:
+                            result = function(**kwargs)
 
-        # Response Post-Processing
-        reply = re.sub(r"<think>.*?</think>\\n\\n", "", response.message.content, flags=re.DOTALL)
-        reply = re.sub(r'\{(?:\s*"(?:type|name)"\s*:\s*".*?")\s*,\s*"parameters"\s*:\s*\{.*?\}\s*\}', "", reply, flags=re.DOTALL)
-        guild = self.bot.get_guild(server)
-        if guild:
-            for member in guild.members:
-                reply = re.sub(rf"\b{member}\b", member.mention, reply, flags=re.IGNORECASE)
+                        self.logger.debug(f"TOOL RESULT: {result}")
 
-        self.logger.debug(f"REPLY: {reply}")
-        return reply if reply.strip() else "RESPONSE GENERATION FAILED, PLEASE DOWNVOTE"
+                        messages.append({
+                            "role": "tool",
+                            "name": function,
+                            "content": str(result)
+                        })
+
+                    else:
+                        return "Tool not found"
+
+                continue
+
+            # Response Post-Processing
+            reply = re.sub(r"<think>.*?</think>\\n\\n", "", response.message.content, flags=re.DOTALL)
+            reply = regex.sub(r'\{(?:[^{}]|(?R))*\}', '', reply)
+            guild = self.bot.get_guild(server)
+            if guild:
+                for member in guild.members:
+                    reply = re.sub(rf"\b{member}\b", member.mention, reply, flags=re.IGNORECASE)
+
+            self.logger.debug(f"FINAL REPLY: {reply}")
+            return reply if reply.strip() else "RESPONSE GENERATION FAILED, PLEASE DOWNVOTE"
 
     async def populate_messages(self, payload):
         messages = []
@@ -317,7 +349,9 @@ class AskReddit(commands.Cog):
 
         if not query:
             self.logger.error("SEARCH QUERY NOT FOUND")
-            return "No search query found"
+            return ("No search query found. "
+                    "Please call this tool with a meaningful query, "
+                    "such as \"cat\", \"reaction\" or \"yes\".")
 
         else:
             giphy_url = "https://api.giphy.com/v1/gifs/search"
