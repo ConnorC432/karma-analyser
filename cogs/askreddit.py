@@ -128,6 +128,11 @@ class AskReddit(commands.Cog):
             self.logger.info(f"RESPONSE: {response[:2000]}")
 
     async def url_to_base64(self, url: str) -> str:
+        """
+        Converts an image URL to a base64 encoded string.
+        :param url: Image URL
+        :return: Base64 encoded string
+        """
         try:
             async with aiohttp.ClientSession() as session:
                 tries = 0
@@ -159,6 +164,13 @@ class AskReddit(commands.Cog):
             return None
 
     async def ollama_response(self, messages, server, user):
+        """
+        Generates an AI response using the ollama API.
+        :param messages: Chat history messages
+        :param server: Server ID the chat is taking place in
+        :param user: user.name who triggered the request
+        :return: AI response string
+        """
         messages = [self.system_instructions] + list(messages)
 
         while True:
@@ -240,6 +252,12 @@ class AskReddit(commands.Cog):
             return reply if reply.strip() else "RESPONSE GENERATION FAILED, PLEASE DOWNVOTE"
 
     async def populate_messages(self, payload):
+        """
+        Creates a message history from a single message,
+        looking through all of it's replies
+        :param payload: Message to start search from
+        :return: Message history
+        """
         messages = []
         current = await payload.channel.fetch_message(payload.reference.message_id)
 
@@ -265,6 +283,13 @@ class AskReddit(commands.Cog):
         return list(messages)
 
     async def get_message(self, channel: discord.TextChannel, message_id: int):
+        """
+        Helper function to find a message object, looks for a cached message
+        first, falling back to the discord API if not found.
+        :param channel: Channel to look in
+        :param message_id: Message ID to look for
+        :return: Message object
+        """
         if message_id in self.message_cache:
             return self.message_cache[message_id]
 
@@ -277,6 +302,12 @@ class AskReddit(commands.Cog):
             self.logger.error(f"FAILED TO GET MESSAGE: {e}")
 
     async def cache_message(self, message_id, message):
+        """
+        Cache a message object
+        :param message_id: message ID to cache
+        :param message: message object to cache
+        :return:
+        """
         self.message_cache[message_id] = message
         if len(self.message_cache) > self.cache_size:
             self.message_cache.popitem(last=False)

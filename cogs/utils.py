@@ -4,16 +4,26 @@ from collections import defaultdict
 
 
 def dict_to_json(d):
+    """
+    Converts a default dict to a JSON string
+    :param d: Dict to convert
+    :return: JSON string
+    """
     if isinstance(d, dict):
         return {k: dict_to_json(v) for k, v in d.items()}
     return d
 
-def json_to_dict(d):
-    if isinstance(d, dict):
+def json_to_dict(j):
+    """
+    Converts a JSON string to a default dict
+    :param j: JSON string to convert
+    :return: Default dict
+    """
+    if isinstance(j, dict):
         return defaultdict(lambda: defaultdict(lambda: defaultdict(int)),
-                           {k: json_to_dict(v) for k, v in d.items()})
+                           {k: json_to_dict(v) for k, v in j.items()})
 
-    return d
+    return j
 
 emoji_numbers = ["1️⃣","2️⃣","3️⃣","4️⃣","5️⃣","6️⃣","7️⃣","8️⃣","9️⃣","🔟"]
 
