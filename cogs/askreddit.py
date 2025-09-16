@@ -42,7 +42,7 @@ class AskReddit(commands.Cog):
             self.describe_image,
             self.get_server_karma,
             self.search_for_gif,
-            # self.get_reddiquette,
+            self.get_reddiquette,
             self.get_server_name,
             self.get_datetime,
             self.get_server_members,
