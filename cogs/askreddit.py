@@ -247,6 +247,7 @@ class AskReddit(commands.Cog):
             # Response Post-Processing
             reply = re.sub(r"<think>.*?</think>\\n\\n", "", response.message.content, flags=re.DOTALL)
             reply = regex.sub(r'\{(?:[^{}]|(?R))*\}', '', reply)
+            reply = "" if reply == "{\"type\": \"function\", \"function\":" else reply
             guild = self.bot.get_guild(server)
             if guild:
                 for member in guild.members:
