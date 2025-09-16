@@ -32,6 +32,7 @@ class AskReddit(commands.Cog):
         self.client = Client(host=self.settings.get("ollama_endpoint"))
 
         self.giphy_key = self.settings.get("giphy_key")
+        self.search_url = f"http://{self.settings.get('searxng_endpoint')}/search"
 
         self.message_cache = OrderedDict()
         self.cache_size = 1000
@@ -45,7 +46,8 @@ class AskReddit(commands.Cog):
             self.get_server_name,
             self.get_datetime,
             self.get_server_members,
-            self.get_users_roles
+            self.get_users_roles,
+            self.google_search
         ]
 
         self.system_instructions = {
@@ -428,6 +430,44 @@ class AskReddit(commands.Cog):
 
         return [role.name for role in member.roles
                 if role.name != "@everyone"]
+
+    async def google_search(self, query: str):
+        """
+        Perform a google search and return the top 5 results.
+        :param query: Search query
+        :return: Formatted string of the top 5 results
+        """
+        if not query:
+            return "No search query found"
+
+        params = {
+            "q": query,
+            "format": "json",
+            "categories": "general",
+            "count": 5
+        }
+
+        results = []
+        async with aiohttp.ClientSession() as session:
+            try:
+                async with session.get(self.search_url, params=params, timeout=10) as response:
+                    if response.status != 200:
+                        return f"Search failed with status {response.status}"
+                    data = await response.json()
+            except Exception as e:
+                self.logger.error(f"SEARCH FAILED: {e}")
+                return "Failed to get search results."
+
+        for item in data.get("results", [])[:5]:
+            title = item.get("title")
+            url = item.get("url")
+            if title and url:
+                results.append(f"{title}: {url}")
+
+        if not results:
+            return "No results found"
+
+        return " | ".join(results)
 
 async def setup(bot):
     await bot.add_cog(AskReddit(bot))
