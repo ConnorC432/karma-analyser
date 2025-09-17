@@ -462,8 +462,8 @@ class AskReddit(commands.Cog):
     @tool
     def get_datetime(self):
         """
-        Get the current date & time
-        :return: Current date & time
+        Get the current date & time for Europe/London
+        :return: Current date & time for Europe/London
         """
         return str(datetime.now(ZoneInfo("Europe/London")))
 
