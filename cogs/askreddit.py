@@ -171,6 +171,7 @@ class AskReddit(commands.Cog):
         :param user: user.name who triggered the request
         :return: AI response string
         """
+        original_messages = messages
         messages = [self.system_instructions] + list(messages)
 
         while True:
@@ -258,12 +259,12 @@ class AskReddit(commands.Cog):
                 response = await asyncio.to_thread(
                     self.client.chat,
                     model=self.model,
-                    messages=messages
+                    messages=original_messages
                 )
+                self.logger.warning("FALLING BACK TO NON-TOOL RESPONSE")
                 reply = re.sub(r"<think>.*?</think>\\n\\n", "", response.message.content, flags=re.DOTALL)
 
             self.logger.debug(f"FINAL REPLY: {reply}")
-            reply = ""
             return reply if reply.strip() else "RESPONSE GENERATION FAILED, PLEASE DOWNVOTE"
 
     async def populate_messages(self, payload):
