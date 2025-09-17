@@ -64,7 +64,8 @@ class AskReddit(commands.Cog):
                 "       \"parameters\": {...}\n"
                 "   }\n"
                 "}\n\n"
-                "Do not write and extra explanatory text before or after the JSON"
+                "Do not write and extra explanatory text before or after the JSON "
+                "wikipedia is not a valid tool"
             )
         }
 
