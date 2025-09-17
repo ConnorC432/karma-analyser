@@ -18,6 +18,10 @@ from datetime import datetime
 from zoneinfo import ZoneInfo
 
 
+def tool(func):
+    func.is_tool = True
+    return func
+
 class AskReddit(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
@@ -37,17 +41,9 @@ class AskReddit(commands.Cog):
         self.message_cache = OrderedDict()
         self.cache_size = 1000
 
-        ## TODO Fix get_gif tool, its intended use confuses the AI
         self.tools = [
-            self.describe_image,
-            self.get_server_karma,
-            self.search_for_gif,
-            self.get_reddiquette,
-            self.get_server_name,
-            self.get_datetime,
-            self.get_server_members,
-            self.get_users_roles,
-            self.google_search
+            function for _, function in inspect.getmembers(self, predicate=inspect.ismethod)
+            if getattr(function, "is_tool", False)
         ]
 
         self.system_instructions = {
@@ -89,8 +85,10 @@ class AskReddit(commands.Cog):
         )
 
         if response:
-            await ctx.reply(content=response[:2000])
+            reply = await ctx.reply(content=response[:2000])
             self.logger.debug(f"RESPONSE: {response[:2000]}")
+            if response == "RESPONSE GENERATION FAILED, PLEASE DOWNVOTE":
+                await reply.add_reaction("<:reddit_downvote:1266139651660447744>")
 
     @commands.Cog.listener()
     async def on_message(self, payload):
@@ -124,8 +122,10 @@ class AskReddit(commands.Cog):
         )
 
         if response:
-            await payload.reply(content=response[:2000])
+            reply = await payload.reply(content=response[:2000])
             self.logger.info(f"RESPONSE: {response[:2000]}")
+            if response == "RESPONSE GENERATION FAILED, PLEASE DOWNVOTE":
+                await reply.add_reaction("<:reddit_downvote:1266139651660447744>")
 
     async def url_to_base64(self, url: str) -> str:
         """
@@ -253,7 +253,17 @@ class AskReddit(commands.Cog):
                 for member in guild.members:
                     reply = re.sub(rf"\b{member}\b", member.mention, reply, flags=re.IGNORECASE)
 
+            # Fall back to response generation without tools if response is empty
+            if reply == "":
+                response = await asyncio.to_thread(
+                    self.client.chat,
+                    model=self.model,
+                    messages=messages
+                )
+                reply = re.sub(r"<think>.*?</think>\\n\\n", "", response.message.content, flags=re.DOTALL)
+
             self.logger.debug(f"FINAL REPLY: {reply}")
+            reply = ""
             return reply if reply.strip() else "RESPONSE GENERATION FAILED, PLEASE DOWNVOTE"
 
     async def populate_messages(self, payload):
@@ -319,16 +329,28 @@ class AskReddit(commands.Cog):
 
 
     ### Ollama Tools
-    async def describe_image(self, image: str) -> str:
+    @tool
+    def respond_to_user(response) -> str:
+        """
+        This function does nothing.
+        Call this function if you have called the same tool multiple times
+        or you have already called all the tools you need.
+        :param response: Response to the user's message
+        :return:
+        """
+        return response
+
+    @tool
+    async def describe_image(self, image_url: str) -> str:
         """
         Describe an image from its image url, accepts images in the format .png, .jpg, .jpeg, .gif, etc.
         It can also scrape a url's html response for images.
-        :param image: http/https image url
+        :param image_url: http/https image url
         :return: Description of
         """
-        imageb64 = await self.url_to_base64(image)
+        imageb64 = await self.url_to_base64(image_url)
 
-        if not image:
+        if not image_url:
             return "No valid image found"
 
         try:
@@ -346,6 +368,7 @@ class AskReddit(commands.Cog):
 
         return response.message.content
 
+    @tool
     def get_server_karma(self, server):
         """
         Get the statistics for all users within the server, containing:
@@ -375,6 +398,7 @@ class AskReddit(commands.Cog):
 
         return "No data found"
 
+    @tool
     def search_for_gif(self, query: str = None):
         """
         Search for a gif
@@ -416,6 +440,7 @@ class AskReddit(commands.Cog):
         gif_urls = [item["images"]["original"]["url"] for item in items]
         return f"INCLUDE THE FULL URL IN YOUR RESPONSE, AS LONG AS THE GIF IS RELEVANT TO THE TEXT: {random.choice(gif_urls)}"
 
+    @tool
     def get_reddiquette(self):
         """
         Returns the reddiquette that users must follow on the server
@@ -423,6 +448,7 @@ class AskReddit(commands.Cog):
         """
         return str(reddiquette)
 
+    @tool
     def get_server_name(self, server):
         """
         Get the name of the server that the chat is taking place in
@@ -431,6 +457,7 @@ class AskReddit(commands.Cog):
         guild = self.bot.get_guild(server)
         return guild.name
 
+    @tool
     def get_datetime(self):
         """
         Get the current date & time
@@ -438,6 +465,7 @@ class AskReddit(commands.Cog):
         """
         return str(datetime.now(ZoneInfo("Europe/London")))
 
+    @tool
     def get_server_members(self, server, online):
         """
         Get the members of the current server
@@ -451,6 +479,7 @@ class AskReddit(commands.Cog):
 
         return guild.members
 
+    @tool
     def get_users_roles(self, server, user):
         """
         Get the roles of the current user
@@ -467,6 +496,7 @@ class AskReddit(commands.Cog):
         return [role.name for role in member.roles
                 if role.name != "@everyone"]
 
+    @tool
     async def google_search(self, query: str):
         """
         Perform a google search and return the top 5 results.
