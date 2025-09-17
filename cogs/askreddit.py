@@ -331,7 +331,7 @@ class AskReddit(commands.Cog):
 
     ### Ollama Tools
     @tool
-    def respond_to_user(response) -> str:
+    def respond_to_user(response = None) -> str:
         """
         This function does nothing.
         Call this function if you have called the same tool multiple times
@@ -339,10 +339,10 @@ class AskReddit(commands.Cog):
         :param response: Response to the user's message
         :return:
         """
-        return response
+        return response if response else "RESPONSE TO USER NOT FOUND, TRY AGAIN"
 
     @tool
-    async def describe_image(self, image_url: str) -> str:
+    async def describe_image(self, image_url: str = None) -> str:
         """
         Describe an image from its image url, accepts images in the format .png, .jpg, .jpeg, .gif, etc.
         It can also scrape a url's html response for images.
@@ -467,7 +467,7 @@ class AskReddit(commands.Cog):
         return str(datetime.now(ZoneInfo("Europe/London")))
 
     @tool
-    def get_server_members(self, server, online):
+    def get_server_members(self, server, online = False):
         """
         Get the members of the current server
         :param online: bool - True to filter by online users, False to get all users
@@ -481,7 +481,7 @@ class AskReddit(commands.Cog):
         return guild.members
 
     @tool
-    def get_users_roles(self, server, user):
+    def get_users_roles(self, server, user = None):
         """
         Get the roles of the current user
         :param user: User to get the roles for
@@ -498,7 +498,7 @@ class AskReddit(commands.Cog):
                 if role.name != "@everyone"]
 
     @tool
-    async def google_search(self, query: str):
+    async def google_search(self, query: str = None):
         """
         Perform a google search and return the top 5 results.
         :param query: Search query
