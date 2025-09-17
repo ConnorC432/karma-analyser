@@ -488,6 +488,9 @@ class AskReddit(commands.Cog):
         :param user: User to get the roles for
         :return: Users roles
         """
+        if not user:
+            return "No user argument given"
+
         guild = self.bot.get_guild(server)
         member = discord.utils.find(lambda m: m.name == user or (m.nick and m.nick == user),
                                     guild.members)
