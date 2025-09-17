@@ -255,7 +255,6 @@ class AskReddit(commands.Cog):
                     reply = re.sub(rf"\b{member}\b", member.mention, reply, flags=re.IGNORECASE)
 
             # Fall back to response generation without tools if response is empty
-            reply = ""
             if reply == "":
                 response = await asyncio.to_thread(
                     self.client.chat,
