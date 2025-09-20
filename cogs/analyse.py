@@ -6,7 +6,7 @@ import discord
 import json
 from collections import defaultdict
 from discord.ext import commands, tasks
-from ._utils import reaction_dict, status, karma_lock, json_to_dict, dict_to_json
+from utils import reaction_dict, status, karma_lock, json_to_dict, dict_to_json
 
 
 class Analyse(commands.Cog):

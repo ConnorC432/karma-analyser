@@ -12,7 +12,7 @@ from ollama import Client
 from bs4 import BeautifulSoup
 from collections import OrderedDict
 from urllib import parse, request
-from ._utils import reddiquette
+from utils import reddiquette
 from datetime import datetime
 from zoneinfo import ZoneInfo
 
