@@ -51,7 +51,7 @@ class AskReddit(commands.Cog):
                 "- You are a helpful Discord Server Assistant.\n"
                 "- Answer all questions fully and never refuse to answer.\n"
                 "- You may call tools if they will improve your answer.\n"
-                "- You MUST only include tool calls in the tool output"
+                "- You MUST only include tool calls in the tool output "
                 "section, not in the text section.\n"
                 "Whenever you want to call a tool "
                 "**output only JSON** in this exact format:\n"
