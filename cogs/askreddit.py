@@ -500,26 +500,6 @@ class AskReddit(commands.Cog):
         return guild.members
 
     @tool
-    def get_users_roles(self, server, user = None):
-        """
-        Get the roles of the current user
-        :param user: User to get the roles for
-        :return: Users roles
-        """
-        if not user:
-            return "No user argument given"
-
-        guild = self.bot.get_guild(server)
-        member = discord.utils.find(lambda m: m.name == user or (m.nick and m.nick == user),
-                                    guild.members)
-
-        if not member:
-            return "Can't find roles"
-
-        return [role.name for role in member.roles
-                if role.name != "@everyone"]
-
-    @tool
     async def google_search(self, query: str = None):
         """
         Perform a google search and return the top 5 results.
