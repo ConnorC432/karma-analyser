@@ -248,8 +248,6 @@ class AskReddit(commands.Cog):
 
                 continue
 
-            ## TODO rearrange post processing to after fallback response and remove <json> tags aswell
-            ## TODO increase model context size to 8k plus
             # Response Post-Processing
             reply = json_pattern.sub("", response.message.content).strip()
 
@@ -267,14 +265,14 @@ class AskReddit(commands.Cog):
             if guild:
                 for member in guild.members:
                     reply = regex.sub(
-                        rf"\b{regex.escape(member)}\b",
+                        rf"\b{regex.escape(member.name)}\b",
                         member.mention,
                         reply,
                         flags=regex.IGNORECASE
                     )
 
             reply = regex.sub(
-                r"<think>.*?</think>\n\n",
+                r"(<think>.*?</think>|<json>.*?</json>)\n\n",
                 "",
                 reply,
                 flags=regex.DOTALL
@@ -296,7 +294,12 @@ class AskReddit(commands.Cog):
         while current:
             messages.append({
                 "role": "assistant" if current.author.bot else "user",
-                "content": current.content
+                "content": regex.sub(
+                    r"<@!?(\d+)>",
+                    lambda m: (current.guild.get_member(int(m.author.id))).name
+                        if payload.guild.get_member(int(m.author.id)) else m.group(0),
+                    current.content
+                )
             })
 
             if current.reference:
