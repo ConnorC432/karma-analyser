@@ -43,7 +43,7 @@ async def load_extensions():
                 logger.critical(f"FAILED TO LOAD COG: {cog}: {e}")
     else:
         for filename in os.listdir("./cogs"):
-            if filename.endswith(".py") and not filename.startswith("_") and filename != "utils.py":
+            if filename.endswith(".py") and not filename.startswith("_"):
                 try:
                     await bot.load_extension(f"cogs.{filename[:-3]}")
                     logger.debug(f"LOADED COG: {filename}")

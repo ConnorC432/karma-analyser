@@ -5,7 +5,7 @@ import json
 import re
 from discord.ext import commands
 from ollama import Client
-from .utils import reddiquette
+from ._utils import reddiquette
 
 
 class Diagnose(commands.Cog):
