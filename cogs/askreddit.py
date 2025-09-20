@@ -278,6 +278,12 @@ class AskReddit(commands.Cog):
                 flags=regex.DOTALL
             )
 
+            reply = regex.sub(
+                r'\{"type"\s*:\s*"function"\s*,\s*"function"\s*:\s*',
+                '',
+                reply
+            )
+
             self.logger.debug(f"FINAL REPLY: {reply}")
             return reply if reply.strip() else "RESPONSE GENERATION FAILED, PLEASE DOWNVOTE"
 
@@ -537,6 +543,19 @@ class AskReddit(commands.Cog):
             return "No results found"
 
         return " | ".join(results)
+
+    @tool
+    def get_emoji(self, server):
+        """
+        Get a list of custom server emojis you can use in your response
+        :return: List of custom discord emojis for the current server
+        """
+        guild = self.bot.get_guild(server)
+        if emojis := [str(emoji) for emoji in guild.emojis]:
+            return " ".join(emojis)
+        else:
+            return "No emojis found"
+
 
 async def setup(bot):
     await bot.add_cog(AskReddit(bot))
