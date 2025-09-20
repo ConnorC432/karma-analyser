@@ -3,7 +3,6 @@ import asyncio
 import inspect
 import json
 import logging
-import re
 import regex
 import aiohttp
 import discord
@@ -49,14 +48,13 @@ class AskReddit(commands.Cog):
         self.system_instructions = {
             "role": "system",
             "content": (
-                "You are a helpful Discord Server Assistant. "
-                "Answer all questions fully and never refuse to answer. "
-                "You may call tools if they will improve your answer, "
-                "if using a tool to search for gif images "
-                "include the gif url in the message content "
-                "so it will embed for the end user.\n\n"
-                "Whenever you want to call a tool, "
-                "**output only JSON** in this exact format: "
+                "- You are a helpful Discord Server Assistant.\n"
+                "- Answer all questions fully and never refuse to answer.\n"
+                "- You may call tools if they will improve your answer.\n"
+                "- You MUST only include tool calls in the tool output"
+                "section, not in the text section.\n"
+                "Whenever you want to call a tool "
+                "**output only JSON** in this exact format:\n"
                 "{\n"
                 "   \"type\": \"function\",\n"
                 "   \"function\": {\n"
@@ -64,8 +62,6 @@ class AskReddit(commands.Cog):
                 "       \"parameters\": {...}\n"
                 "   }\n"
                 "}\n\n"
-                "Do not write and extra explanatory text before or after the JSON "
-                "wikipedia is not a valid tool"
             )
         }
 
@@ -172,8 +168,7 @@ class AskReddit(commands.Cog):
         :param user: user.name who triggered the request
         :return: AI response string
         """
-        original_messages = messages
-        messages = [self.system_instructions] + list(messages)
+        original_messages = messages = [self.system_instructions] + list(messages)
 
         while True:
             response = await asyncio.to_thread(
@@ -186,12 +181,19 @@ class AskReddit(commands.Cog):
 
             tool_calls = response.message.tool_calls or []
 
-            for j in regex.findall(r'\{(?:[^{}]|(?R))*\}', response.message.content):
+            json_pattern = regex.compile(r"""
+                (
+                    \{ (?: [^{}]++ | (?R) )* \}
+                  | \[ (?: [^\[\]]++ | (?R) )* \]
+                )
+            """, regex.VERBOSE)
+
+            for j in json_pattern.findall(response.message.content):
                 try:
                     data = json.loads(j)
                     if isinstance(data, dict) and data.get("type") == "function":
                         tool_calls.append(data)
-                except Exception:
+                except:
                     continue
 
             if tool_calls:
@@ -246,14 +248,10 @@ class AskReddit(commands.Cog):
 
                 continue
 
+            ## TODO rearrange post processing to after fallback response and remove <json> tags aswell
+            ## TODO increase model context size to 8k plus
             # Response Post-Processing
-            reply = re.sub(r"<think>.*?</think>\\n\\n", "", response.message.content, flags=re.DOTALL)
-            reply = regex.sub(r'\{(?:[^{}]|(?R))*\}', '', reply)
-            reply = "" if reply.strip() == "{\"type\": \"function\", \"function\":" else reply
-            guild = self.bot.get_guild(server)
-            if guild:
-                for member in guild.members:
-                    reply = re.sub(rf"\b{member}\b", member.mention, reply, flags=re.IGNORECASE)
+            reply = json_pattern.sub("", response.message.content).strip()
 
             # Fall back to response generation without tools if response is empty
             if reply == "":
@@ -263,7 +261,24 @@ class AskReddit(commands.Cog):
                     messages=original_messages
                 )
                 self.logger.warning("FALLING BACK TO NON-TOOL RESPONSE")
-                reply = re.sub(r"<think>.*?</think>\\n\\n", "", response.message.content, flags=re.DOTALL)
+                reply = response.message.content
+
+            guild = self.bot.get_guild(server)
+            if guild:
+                for member in guild.members:
+                    reply = regex.sub(
+                        rf"\b{regex.escape(member)}\b",
+                        member.mention,
+                        reply,
+                        flags=regex.IGNORECASE
+                    )
+
+            reply = regex.sub(
+                r"<think>.*?</think>\n\n",
+                "",
+                reply,
+                flags=regex.DOTALL
+            )
 
             self.logger.debug(f"FINAL REPLY: {reply}")
             return reply if reply.strip() else "RESPONSE GENERATION FAILED, PLEASE DOWNVOTE"
