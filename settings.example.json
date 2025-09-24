@@ -2,5 +2,6 @@
 {
   "bot_token": "",
   "ollama_endpoint": "localhost:11434",
-  "giphy_key": ""
+  "giphy_key": "",
+  "search_endpoint": ""
 }

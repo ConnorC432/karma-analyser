@@ -1,5 +1,6 @@
 import asyncio
 import datetime
+import logging
 import random
 from discord.ext import commands
 
@@ -8,6 +9,7 @@ class Misc(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
         self.init_time = datetime.datetime.now(datetime.timezone.utc)
+        self.logger = logging.getLogger(f"{self.__class__.__name__}")
 
     @commands.Cog.listener()
     async def on_message(self, payload):
@@ -21,9 +23,11 @@ class Misc(commands.Cog):
 
             await asyncio.sleep(random.uniform(0, 2.5))
             await payload.channel.send(payload.content)
+            self.logger.info(f"PASSING IT ON: {payload.content}")
 
         if "nothing ever happens" in payload.content.lower():
             await payload.reply(content="https://tenor.com/view/nothing-ever-happens-chud-chudjak-soyjak-90-seconds-to-nothing-gif-9277709574191520604")
+            self.logger.info(f"NOTHING EVER HAPPENS")
 
     @commands.command()
     async def gild(self, ctx):

@@ -1,12 +1,15 @@
+import logging
+
 import discord
 from discord.ext import commands
 
-from cogs.utils import emoji_numbers
+from utils import emoji_numbers
 
 
 class Poll(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
+        self.logger = logging.getLogger(f"{self.__class__.__name__}")
 
     @commands.command()
     async def poll(self, ctx, question: str, *options: str) -> None:
@@ -20,9 +23,11 @@ class Poll(commands.Cog):
 
         if len(options) < 2:
             await ctx.message.reply("A poll must have at least 2 options")
+            self.logger.warning("A poll must have at least 2 options")
             return
         if len(options) > 10:
             await ctx.message.reply("A poll can't have more than 10 options")
+            self.logger.warning("A poll can't have more than 10 options")
             return
 
         embed = discord.Embed(
