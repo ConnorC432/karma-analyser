@@ -3,6 +3,8 @@ import asyncio
 import inspect
 import json
 import logging
+from encodings.aliases import aliases
+
 import regex
 import aiohttp
 import discord
@@ -74,7 +76,7 @@ class AskDezza(commands.Cog):
             )
         }
 
-    @commands.command(hidden=True)
+    @commands.command(hidden=True, aliases=['askderry', 'askwayne', 'askwaynedezza', 'askwaynederry'])
     async def askdezza(self, ctx, *, text: str):
         """
         Ask the Karma Analyser questions
