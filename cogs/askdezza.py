@@ -108,6 +108,10 @@ class AskDezza(commands.Cog):
 
     @commands.Cog.listener()
     async def on_message(self, payload):
+        if payload.guild.id != self.valid_server_id:
+            self.logger.debug("IGNORING ASKDEZZA REQUEST")
+            return
+
         if payload.author.bot:
             # Ignore bot messages
             self.logger.debug(f"IGNORING BOT MESSAGE")
