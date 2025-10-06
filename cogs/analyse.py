@@ -245,19 +245,19 @@ class Analyse(commands.Cog):
 
         # @here
         elif "@here" in ctx.message.content:
-            users_to_iterate.update(m.name.lower() for m in ctx.guild.members if m.status != discord.Status.offline)
+            users_to_iterate.update(m.name for m in ctx.guild.members if m.status != discord.Status.offline)
 
         else:
             # @user
-            users_to_iterate.update(m.name.lower() for m in ctx.message.mentions)
+            users_to_iterate.update(m.name for m in ctx.message.mentions)
 
             # @role
             for role in ctx.message.role_mentions:
-                users_to_iterate.update(m.name.lower() for m in role.members)
+                users_to_iterate.update(m.name for m in role.members)
 
             # No Arguments
             if not users_to_iterate:
-                users_to_iterate.add(ctx.author.name.lower())
+                users_to_iterate.add(ctx.author.name)
 
         self.logger.info(f"ANALYSING USERS: {users_to_iterate}")
 
@@ -266,7 +266,7 @@ class Analyse(commands.Cog):
 
         for user in users_to_iterate:
             messages = output_dict[user].get("Messages", 1)
-            user_obj = discord.utils.find(lambda m: m.name.lower() == user, ctx.guild.members)
+            user_obj = discord.utils.find(lambda m: m.name == user, ctx.guild.members)
             user_str = user_obj.display_name if user_obj else user
 
             karma = output_dict[user].get("Karma", 0)
