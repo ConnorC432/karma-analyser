@@ -79,7 +79,7 @@ class AskDezza(commands.Cog):
             )
         }
 
-    @commands.command(hidden=True, aliases=['askderry', 'askwayne', 'askwaynedezza', 'askwaynederry'])
+    @commands.command(hidden=True)
     async def askdezza(self, ctx, *, text: str):
         """
         Ask the Karma Analyser questions
@@ -127,7 +127,7 @@ class AskDezza(commands.Cog):
 
         messages = await self.populate_messages(payload)
 
-        if "r/askreddit" not in messages[0]["content"].lower():
+        if "r/askdezza" not in messages[0]["content"].lower():
             return
 
         response = await self.ollama_response(
