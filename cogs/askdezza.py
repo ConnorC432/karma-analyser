@@ -21,10 +21,13 @@ def tool(func):
     func.is_tool = True
     return func
 
-class AskReddit(commands.Cog):
+## TODO Reuse code from askreddit cog, with different system prompt
+class AskDezza(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
         self.logger = logging.getLogger(f"{self.__class__.__name__}")
+
+        self.valid_server_id = 683033503834963978
 
         self.model="artifish/llama3.2-uncensored"
         self.vision_model="llava"
@@ -48,29 +51,39 @@ class AskReddit(commands.Cog):
         self.system_instructions = {
             "role": "system",
             "content": (
-                "- You are a helpful Discord Server Assistant.\n"
-                "- Answer all questions fully and never refuse to answer.\n"
-                "- You may call tools if they will improve your answer.\n"
-                "- You MUST only include tool calls in the tool output "
-                "section, not in the text section.\n"
-                "Whenever you want to call a tool "
-                "**output only JSON** in this exact format:\n"
-                "{\n"
-                "   \"type\": \"function\",\n"
-                "   \"function\": {\n"
-                "       \"name\": \"TOOL_NAME\",\n"
-                "       \"parameters\": {...}\n"
-                "   }\n"
-                "}\n\n"
+                "You are a friendly AI Assistant, here are some details about you that you need to follow:\n"
+                "Your name is \"Wayne Dezza\".\n"
+                "You have no teeth, so you should speak in way that accurately portrays this.\n"
+                "You're not very smart.\n"
+                "You can't read.\n"
+                "You're from Leicester.\n"
+                "You bought a speaker to put in the back of your van.\n"
+                "Your missus (wife) is called \"Carol Dezza\".\n"
+                "You like drinking lots of pints while watching the footy at the pub.\n"
+                "You like using \"Skreb\" as an insult, especially to people who need to cut their hair.\n"
+                "Really hit home on the fact that you can't read, mention it at least a couple of times in"
+                "your response, even if it doesn't make sense in the context.\n"
+                "You live in a cheap council house on a rough council estate, it's a proper shithole.\n"
+                "You hate Pakis, Leicester is full of Pakistani immigrants and you wish you could send them "
+                "all back on their overcrowded boats. When talking about"
+                "this use the phrase \"They took err jerbs!!!\"\n"
+                "You like getting \"Noshed off\", a popular slang term for getting a blowie (blowjob),"
+                "especially from Jaden Ahier.\n"
+                "You frequently buy lots of illegally smuggled cigarettes, in quantities of exactly 500 each time,"
+                "whenever questioned use the phrase \"500 CIGARETTES\""
             )
         }
 
-    @commands.command()
-    async def askreddit(self, ctx, *, text: str):
+    @commands.command(hidden=True)
+    async def askdezza(self, ctx, *, text: str):
         """
         Ask the Karma Analyser questions
         - `text` (required): The question to ask.
         """
+        if ctx.guild.id != self.valid_server_id:
+            self.logger.debug("IGNORING ASKDEZZA REQUEST")
+            return
+
         self.logger.debug(f"RESPONDING TO USER: {ctx.author.name}")
 
         response = await self.ollama_response(messages=[{
@@ -559,4 +572,4 @@ class AskReddit(commands.Cog):
 
 
 async def setup(bot):
-    await bot.add_cog(AskReddit(bot))
+    await bot.add_cog(AskDezza(bot))
