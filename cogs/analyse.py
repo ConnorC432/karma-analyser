@@ -259,7 +259,7 @@ class Analyse(commands.Cog):
             if not users_to_iterate:
                 users_to_iterate.add(ctx.author.name.lower())
 
-        self.logger.debug(f"ANALYSING USERS: {users_to_iterate}")
+        self.logger.info(f"ANALYSING USERS: {users_to_iterate}")
 
         await asyncio.sleep(random.uniform(2.5, 5))
         await reply.edit(content="KARMA ANALYSED")
