@@ -9,6 +9,8 @@ from discord.ext import commands, tasks
 from utils import reaction_dict, status, karma_lock, json_to_dict, dict_to_json
 
 
+## TODO use user.id instead of user.name for more reliability
+## TODO save karma dict in memory instead of karma.json
 class Analyse(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
