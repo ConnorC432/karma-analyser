@@ -26,6 +26,42 @@ class AITools:
         self.giphy_key = self.settings.get("giphy_key")
         self.search_url = f"http://{self.settings.get('searxng_endpoint')}/search"
 
+    async def url_to_base64(self, url: str) -> str:
+        """
+        Converts an image URL to a base64 encoded string.
+        :param url: Image URL
+        :return: Base64 encoded string
+        """
+        try:
+            async with aiohttp.ClientSession() as session:
+                tries = 0
+
+                while url and tries < 5:
+                    async with session.get(url, timeout=10) as response:
+                        content_type = response.headers.get("Content-Type", "")
+                        if "image" in content_type:
+                            data = await response.read()
+                            return base64.b64encode(data).decode("utf-8")
+
+                        elif "text/html" in content_type:
+                            self.logger.debug(f"HTML found: {url}")
+                            html = await response.content.read()
+                            soup = BeautifulSoup(html, "html.parser")
+
+                            og_image = soup.find("meta", property="og:image")
+                            if og_image and og_image.get("content"):
+                                url = og_image["content"]
+                                tries += 1
+                                continue
+
+                        else:
+                            self.logger.debug(f"NO IMAGE IN URL: {url}")
+                            return None
+
+        except Exception as e:
+            self.logger.error(f"FAILED TO FETCH URL {url}: {e}")
+            return None
+
     @tool
     def respond_to_user(response = None) -> str:
         """
