@@ -1,16 +1,23 @@
+import inspect
 import logging
 from discord.ext import commands
-from cogs.askreddit import AskReddit
+from tools import AITools
 
 
-class AskSeasideMark(AskReddit):
+class AskSeasideMark(commands.Cog):
     def __init__(self, bot):
-        super().__init__(bot)
+        self.bot = bot
         self.logger = logging.getLogger(f"{self.__class__.__name__}")
 
         self.valid_server_id = 683033503834963978
 
-        self.mark_instructions = {
+        self.tools_module = AITools(self.bot)
+        self.tools = [
+            function for _, function in inspect.getmembers(self.tools_module, predicate=inspect.ismethod)
+            if getattr(function, "is_tool", False)
+        ]
+
+        self.system_instructions = {
             "role": "system",
             "content": (
                 "You are a friendly AI Assistant, here are some details about you that you need to follow:\n"
@@ -51,11 +58,17 @@ class AskSeasideMark(AskReddit):
 
         self.logger.debug(f"RESPONDING TO USER: {ctx.author.name}")
 
-        response = await self.ollama_response(
-            system_instructions=self.mark_instructions,
+        image_urls = await AITools.extract_image_urls(ctx.message)
+        images_b64 = set()
+        for url in image_urls:
+            images_b64.add(AITools.url_to_base64(url))
+
+        response = await AITools.ollama_response(
+            system_instructions=self.system_instructions,
             messages=[{
                 "role": "user",
-                "content": text
+                "content": text,
+                "images": images_b64 or ""
         }],
             server=ctx.guild.id,
             user=ctx.author.name
@@ -91,13 +104,13 @@ class AskSeasideMark(AskReddit):
 
         self.logger.debug(f"RESPONDING TO: {payload.author.name}")
 
-        messages = await self.populate_messages(payload)
+        messages = await AITools.populate_messages(payload)
 
         if "r/askseasidemark" not in messages[0]["content"].lower():
             return
 
-        response = await self.ollama_response(
-            system_instructions=self.mark_instructions,
+        response = await AITools.ollama_response(
+            system_instructions=self.system_instructions,
             messages=messages,
             server=payload.guild.id,
             user=payload.author.name

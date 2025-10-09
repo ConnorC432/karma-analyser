@@ -1,3 +1,4 @@
+import inspect
 import json
 import logging
 import discord
@@ -5,12 +6,14 @@ import random
 import base64
 import aiohttp
 import regex
+import asyncio
 from ollama import Client
 from urllib import parse, request
 from utils import reddiquette
 from datetime import datetime
 from zoneinfo import ZoneInfo
 from bs4 import BeautifulSoup
+from collections import OrderedDict
 
 
 def tool(func):
@@ -22,12 +25,222 @@ class AITools:
         self.bot = bot
         self.logger = logging.getLogger(f"{self.__class__.__name__}")
 
+        self.model = "artifish/llama3.2-uncensored"
+        self.vision_model = "llava"
+
+        self.message_cache = OrderedDict()
+        self.cache_size = 1000
+
         with open("settings.json", "r") as f:
             self.settings = json.load(f)
 
         self.client = Client(host=self.settings.get("ollama_endpoint"))
         self.giphy_key = self.settings.get("giphy_key")
         self.search_url = f"http://{self.settings.get('searxng_endpoint')}/search"
+
+    async def ollama_response(self, system_instructions, messages, server, user):
+        """
+        Generates an AI response using the ollama API.
+        :param system_instructions: System instructions for LLM model
+        :param messages: Chat history messages
+        :param server: Server ID the chat is taking place in
+        :param user: user.name who triggered the request
+        :return: AI response string
+        """
+        original_messages = messages = [system_instructions] + list(messages)
+
+        while True:
+            response = await asyncio.to_thread(
+                self.client.chat,
+                model=self.model,
+                messages=messages,
+                tools=self.tools
+            )
+            self.logger.debug(f"RESPONSE: {response.message.content}")
+
+            tool_calls = response.message.tool_calls or []
+
+            json_pattern = regex.compile(r"""
+                (
+                    \{ (?: [^{}]++ | (?R) )* \}
+                  | \[ (?: [^\[\]]++ | (?R) )* \]
+                )
+            """, regex.VERBOSE)
+
+            for j in json_pattern.findall(response.message.content):
+                try:
+                    data = json.loads(j)
+                    if isinstance(data, dict) and data.get("type") == "function":
+                        tool_calls.append(data)
+                except:
+                    continue
+
+            if tool_calls:
+                self.logger.debug(f"TOOL CALLS: {tool_calls}")
+
+                for call in tool_calls:
+                    if isinstance(call, dict):
+                        function = call["function"]["name"]
+                        args = call.get("parameters") or {}
+                    else:
+                        function = call.function.name
+                        args = call.function.arguments or {}
+                        if isinstance(args, dict) and "parameters" in args:
+                            args = args["parameters"]
+
+                    function = next((f for f in self.tools if f.__name__ == function), None)
+                    if function:
+                        sig = inspect.signature(function)
+                        kwargs = {}
+
+                        for param in sig.parameters.values():
+                            if param.name == "server":
+                                kwargs[param.name] = server
+                            elif param.name == "user":
+                                kwargs[param.name] = args.get("user") or user
+                            elif param.name in args:
+                                kwargs[param.name] = args[param.name]
+                            elif param.default is not inspect.Parameter.empty:
+                                kwargs[param.name] = param.default
+
+                        self.logger.debug(f"Tool {function.__name__} called with {kwargs}")
+
+                        if inspect.iscoroutinefunction(function):
+                            result = await function(**kwargs)
+                        else:
+                            result = function(**kwargs)
+
+                        self.logger.debug(f"TOOL RESULT: {result}")
+
+                        messages.append({
+                            "role": "tool",
+                            "name": function,
+                            "content": str(result)
+                        })
+
+                    else:
+                        messages.append({
+                            "role": "tool",
+                            "name": function,
+                            "content": "Tool doesn't exist"
+                        })
+
+                continue
+
+            # Response Post-Processing
+            reply = json_pattern.sub("", response.message.content).strip()
+
+            # Fall back to response generation without tools if response is empty
+            if reply == "":
+                response = await asyncio.to_thread(
+                    self.client.chat,
+                    model=self.model,
+                    messages=original_messages
+                )
+                self.logger.warning("FALLING BACK TO NON-TOOL RESPONSE")
+                reply = response.message.content
+
+            guild = self.bot.get_guild(server)
+            if guild:
+                for member in guild.members:
+                    reply = regex.sub(
+                        rf"\b{regex.escape(member.name)}\b",
+                        member.mention,
+                        reply,
+                        flags=regex.IGNORECASE
+                    )
+
+            reply = regex.sub(
+                r"(<think>.*?</think>|<json>.*?</json>)\n\n",
+                "",
+                reply,
+                flags=regex.DOTALL
+            )
+
+            reply = regex.sub(
+                r'\{"type"\s*:\s*"function"\s*,\s*"function"\s*:\s*',
+                '',
+                reply
+            )
+
+            self.logger.debug(f"FINAL REPLY: {reply}")
+            return reply if reply.strip() else "RESPONSE GENERATION FAILED, PLEASE DOWNVOTE"
+
+    async def populate_messages(self, payload):
+        """
+        Creates a message history from a single message,
+        looking through all of it's replies
+        :param payload: Message to start search from
+        :return: Message history
+        """
+        messages = []
+        current = await payload.channel.fetch_message(payload.reference.message_id)
+
+        while current:
+            image_urls = await AITools.extract_image_urls(current.message)
+            images_b64 = set()
+            for url in image_urls:
+                images_b64.add(AITools.url_to_base64(url))
+
+            messages.append({
+                "role": "assistant" if current.author.bot else "user",
+                "content": regex.sub(
+                    r"<@!?(\d+)>",
+                    lambda m: (current.guild.get_member(int(m.author.id))).name
+                        if payload.guild.get_member(int(m.author.id)) else m.group(0),
+                    current.content
+                ),
+                "images": images_b64 or ""
+            })
+
+            if current.reference:
+                current = await self.get_message(current.channel, current.reference.message_id)
+
+            else: break
+
+        messages.reverse()
+
+        image_urls = await AITools.extract_image_urls(payload.message)
+        images_b64 = set()
+        for url in image_urls:
+            images_b64.add(AITools.url_to_base64(url))
+        messages.append({
+            "role": "user",
+            "content": payload.content,
+            "images": images_b64 or ""
+        })
+
+        return list(messages)
+
+    async def get_message(self, channel: discord.TextChannel, message_id: int):
+        """
+        Helper function to find a message object, looks for a cached message
+        first, falling back to the discord API if not found.
+        :param channel: Channel to look in
+        :param message_id: Message ID to look for
+        :return: Message object
+        """
+        if message_id in self.message_cache:
+            return self.message_cache[message_id]
+
+        try:
+            message = await channel.fetch_message(message_id)
+            await self.cache_message(message_id, message)
+            return message
+
+        except (discord.NotFound, discord.Forbidden) as e:
+            self.logger.error(f"FAILED TO GET MESSAGE: {e}")
+
+    async def cache_message(self, message_id, message):
+        """
+        Cache a message object
+        :param message_id: message ID to cache
+        :param message: message object to cache
+        :return:
+        """
+        self.message_cache[message_id] = message
+        if len(self.message_cache) > self.cache_size:
+            self.message_cache.popitem(last=False)
 
     async def url_to_base64(self, url: str) -> str:
         """
