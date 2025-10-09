@@ -10,7 +10,7 @@ class AskDezza(AskReddit):
 
         self.valid_server_id = 683033503834963978
 
-        self.system_instructions = {
+        self.dezza_instructions = {
             "role": "system",
             "content": (
                 "You are a friendly AI Assistant, here are some details about you that you need to follow:\n"
@@ -53,7 +53,7 @@ class AskDezza(AskReddit):
         self.logger.debug(f"RESPONDING TO USER: {ctx.author.name}")
 
         response = await self.ollama_response(
-            system_instructions=self.system_instructions,
+            system_instructions=self.dezza_instructions,
             messages=[{
                 "role": "user",
                 "content": text
@@ -98,7 +98,7 @@ class AskDezza(AskReddit):
             return
 
         response = await self.ollama_response(
-            system_instructions=self.system_instructions,
+            system_instructions=self.dezza_instructions,
             messages=messages,
             server=payload.guild.id,
             user=payload.author.name
