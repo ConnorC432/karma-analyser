@@ -74,8 +74,8 @@ class Analyse(commands.Cog):
                                     continue
 
                                 # Count multiple truke reactions as a single truke
-                                if emoji_name == "truthnuke":
-                                    karmic_dict[guild.id][message.author.name]["truthnuke"] += 1
+                                if emoji_name == "truthnuke" or "truke":
+                                    karmic_dict[guild.id][message.author.name]["truke"] += 1
                                     continue
 
                                 try:
@@ -289,7 +289,7 @@ class Analyse(commands.Cog):
             embed.add_field(name="Platinum", value=f"{output_dict[user].get('reddit_platinum', 0)} <:reddit_platinum:833678610279563304>", inline=True)
             embed.add_field(name="Wholesome", value=f"{output_dict[user].get('reddit_wholesome', 0)} <:reddit_wholesome:833669115762835456>", inline=True)
             embed.add_field(name="Helpful", value=f"{output_dict[user].get('helpful', 0)} <:helpful:1412197811008704694>", inline=True)
-            embed.add_field(name="Trukes", value=f"{output_dict[user].get('truthnuke', 0)} <:truthnuke:1359507023951298700>", inline=True)
+            embed.add_field(name="Trukes", value=f"{output_dict[user].get('truke', 0)} <:truke:1359507023951298700>", inline=True)
 
             try:
                 await ctx.channel.send(embed=embed)
