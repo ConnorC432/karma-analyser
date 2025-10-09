@@ -9,12 +9,6 @@ class AskReddit(commands.Cog):
         self.bot = bot
         self.logger = logging.getLogger(f"{self.__class__.__name__}")
 
-        self.tools_module = AITools(self.bot)
-        self.tools = [
-            function for _, function in inspect.getmembers(self.tools_module, predicate=inspect.ismethod)
-            if getattr(function, "is_tool", False)
-        ]
-
         self.system_instructions = {
             "role": "system",
             "content": (
@@ -35,6 +29,8 @@ class AskReddit(commands.Cog):
             )
         }
 
+        self.tools = AITools(self.bot)
+
     @commands.command()
     async def askreddit(self, ctx, *, text: str):
         """
@@ -43,12 +39,13 @@ class AskReddit(commands.Cog):
         """
         self.logger.debug(f"RESPONDING TO USER: {ctx.author.name}")
 
-        image_urls = await AITools.extract_image_urls(ctx.message)
+        image_urls = await self.tools.extract_image_urls(ctx.message)
         images_b64 = set()
-        for url in image_urls:
-            images_b64.add(AITools.url_to_base64(url))
+        if image_urls:
+            for url in image_urls:
+                images_b64.add(self.tools.url_to_base64(url))
 
-        response = await AITools.ollama_response(
+        response = await self.tools.ollama_response(
             system_instructions=self.system_instructions,
             messages=[{
                 "role": "user",
@@ -85,12 +82,12 @@ class AskReddit(commands.Cog):
 
         self.logger.debug(f"RESPONDING TO: {payload.author.name}")
 
-        messages = await AITools.populate_messages(payload)
+        messages = await self.tools.populate_messages(payload)
 
         if "r/askreddit" not in messages[0]["content"].lower():
             return
 
-        response = await AITools.ollama_response(
+        response = await self.tools.ollama_response(
             system_instructions=self.system_instructions,
             messages=messages,
             server=payload.guild.id,
