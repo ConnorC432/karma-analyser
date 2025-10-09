@@ -196,7 +196,7 @@ class AITools:
                         if payload.guild.get_member(int(m.author.id)) else m.group(0),
                     current.content
                 ),
-                "images": images_b64 or ""
+                "images": images_b64 if images_b64 else "",
             })
 
             if current.reference:
@@ -214,7 +214,7 @@ class AITools:
         messages.append({
             "role": "user",
             "content": payload.content,
-            "images": images_b64 or ""
+            "images": images_b64 if images_b64 else ""
         })
 
         return list(messages)
@@ -303,9 +303,30 @@ class AITools:
             if embed.image.url:
                 image_urls.add(embed.image.url)
 
-        urls = regex.findall(r"https?://[^\s]+(?:jpg|jpeg|gif|png)", message.content, flags=regex.IGNORECASE)
+        urls = regex.findall(r"https?://[^\s]+", message.content, flags=regex.IGNORECASE)
         for url in urls:
-            image_urls.add(url)
+            if url.lower().endswith((".jpg", ".jpeg", ".png", ".gif")):
+                image_urls.add(url)
+
+            else:
+                try:
+                    async with aiohttp.ClientSession() as session:
+                        async with session.get(url, timeout=10) as response:
+                            content_type = response.headers.get("Content-Type", "")
+                            if "text/html" in content_type:
+                                html = await response.text()
+                                soup = BeautifulSoup(html, "html.parser")
+
+                                # og:image
+                                og_image = soup.find("meta", property="og:image")
+                                if og_image and og_image.get("content"):
+                                    image_urls.add(og_image["content"])
+
+                                elif (img := soup.find("img")) and img.get("src"):
+                                    image_urls.add(img["src"])
+
+                except Exception as e:
+                    self.logger.debug(f"Failed to fetch HTML page {url}: {e}")
 
         if not image_urls:
             self.logger.debug(f"NO IMAGE URLS FOUND")
