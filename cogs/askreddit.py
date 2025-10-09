@@ -1,14 +1,11 @@
-import base64
 import asyncio
 import inspect
 import json
 import logging
 import regex
-import aiohttp
 import discord
 from discord.ext import commands
 from ollama import Client
-from bs4 import BeautifulSoup
 from collections import OrderedDict
 from tools import AITools
 
@@ -116,42 +113,6 @@ class AskReddit(commands.Cog):
             self.logger.info(f"RESPONSE: {response[:2000]}")
             if response == "RESPONSE GENERATION FAILED, PLEASE DOWNVOTE":
                 await reply.add_reaction("<:reddit_downvote:1266139651660447744>")
-
-    async def url_to_base64(self, url: str) -> str:
-        """
-        Converts an image URL to a base64 encoded string.
-        :param url: Image URL
-        :return: Base64 encoded string
-        """
-        try:
-            async with aiohttp.ClientSession() as session:
-                tries = 0
-
-                while url and tries < 5:
-                    async with session.get(url, timeout=10) as response:
-                        content_type = response.headers.get("Content-Type", "")
-                        if "image" in content_type:
-                            data = await response.read()
-                            return base64.b64encode(data).decode("utf-8")
-
-                        elif "text/html" in content_type:
-                            self.logger.debug(f"HTML found: {url}")
-                            html = await response.content.read()
-                            soup = BeautifulSoup(html, "html.parser")
-
-                            og_image = soup.find("meta", property="og:image")
-                            if og_image and og_image.get("content"):
-                                url = og_image["content"]
-                                tries += 1
-                                continue
-
-                        else:
-                            self.logger.debug(f"NO IMAGE IN URL: {url}")
-                            return None
-
-        except Exception as e:
-            self.logger.error(f"FAILED TO FETCH URL {url}: {e}")
-            return None
 
     ## TODO Pass through base64 images straight to model instead of using tool
     async def ollama_response(self, system_instructions, messages, server, user):

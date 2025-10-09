@@ -1,13 +1,15 @@
 import json
 import logging
-import aiohttp
 import discord
 import random
+import base64
+import aiohttp
 from ollama import Client
 from urllib import parse, request
 from utils import reddiquette
 from datetime import datetime
 from zoneinfo import ZoneInfo
+from bs4 import BeautifulSoup
 
 
 def tool(func):
