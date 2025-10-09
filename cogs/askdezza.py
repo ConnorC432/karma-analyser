@@ -40,6 +40,8 @@ class AskDezza(commands.Cog):
             )
         }
 
+        self.tools = AITools(self.bot)
+
     @commands.command(hidden=True)
     async def askdezza(self, ctx, *, text: str):
         """
@@ -55,13 +57,13 @@ class AskDezza(commands.Cog):
 
         self.logger.debug(f"RESPONDING TO USER: {ctx.author.name}")
 
-        image_urls = await AITools.extract_image_urls(ctx.message)
+        image_urls = await self.tools.extract_image_urls(ctx.message)
         images_b64 = set()
         if image_urls:
             for url in image_urls:
-                images_b64.add(AITools.url_to_base64(url))
+                images_b64.add(self.tools.url_to_base64(url))
 
-        response = await AITools.ollama_response(
+        response = await self.tools.ollama_response(
             system_instructions=self.system_instructions,
             messages=[{
                 "role": "user",
@@ -105,12 +107,12 @@ class AskDezza(commands.Cog):
 
         self.logger.debug(f"RESPONDING TO: {payload.author.name}")
 
-        messages = await AITools.populate_messages(payload)
+        messages = await self.tools.populate_messages(payload)
 
         if "r/askdezza" not in messages[0]["content"].lower():
             return
 
-        response = await AITools.ollama_response(
+        response = await self.tools.ollama_response(
             system_instructions=self.system_instructions,
             messages=messages,
             server=payload.guild.id,
