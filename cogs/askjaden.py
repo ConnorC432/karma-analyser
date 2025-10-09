@@ -51,7 +51,7 @@ class AskJaden(commands.Cog):
         images_b64 = set()
         if image_urls:
             for url in image_urls:
-                images_b64.add(self.tools.url_to_base64(url))
+                images_b64.add(await self.tools.url_to_base64(url))
 
         response = await self.tools.ollama_response(
             system_instructions=self.system_instructions,

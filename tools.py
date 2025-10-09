@@ -186,7 +186,7 @@ class AITools:
             images_b64 = set()
             if image_urls:
                 for url in image_urls:
-                    images_b64.add(self.url_to_base64(url))
+                    images_b64.add(await self.url_to_base64(url))
 
             messages.append({
                 "role": "assistant" if current.author.bot else "user",
@@ -210,7 +210,7 @@ class AITools:
         images_b64 = set()
         if image_urls:
             for url in image_urls:
-                images_b64.add(self.url_to_base64(url))
+                images_b64.add(await self.url_to_base64(url))
         messages.append({
             "role": "user",
             "content": payload.content,
