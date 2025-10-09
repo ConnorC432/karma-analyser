@@ -8,7 +8,7 @@ class AskJaden(commands.Cog):
         self.bot = bot
         self.logger = logging.getLogger(f"{self.__class__.__name__}")
 
-        # self.valid_server_id = 683033503834963978
+        self.valid_server_id = 683033503834963978
 
         self.system_instructions = {
             "role": "system",
@@ -41,9 +41,9 @@ class AskJaden(commands.Cog):
         if not ctx.guild:
             return
 
-        # if ctx.guild.id != self.valid_server_id:
-        #     self.logger.debug("IGNORING ASKDEZZA REQUEST")
-        #     return
+        if ctx.guild.id != self.valid_server_id:
+            self.logger.debug("IGNORING ASKJADEN REQUEST")
+            return
 
         self.logger.debug(f"RESPONDING TO USER: {ctx.author.name}")
 
@@ -75,9 +75,9 @@ class AskJaden(commands.Cog):
         if not payload.guild:
             return
 
-        # if payload.guild.id != self.valid_server_id:
-        #     self.logger.debug("IGNORING ASKDEZZA REQUEST")
-        #     return
+        if payload.guild.id != self.valid_server_id:
+            self.logger.debug("IGNORING ASKDEZZA REQUEST")
+            return
 
         if payload.author.bot:
             # Ignore bot messages
