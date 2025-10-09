@@ -51,7 +51,7 @@ class AskReddit(commands.Cog):
                 "content": text,
                 "image": images_b64 or ""
         }],
-            server=ctx.guild.id,
+            server=ctx.guild.id if ctx.guild else None,
             user=ctx.author.name
         )
 
@@ -89,7 +89,7 @@ class AskReddit(commands.Cog):
         response = await self.tools.ollama_response(
             system_instructions=self.system_instructions,
             messages=messages,
-            server=payload.guild.id,
+            server=payload.guild.id if payload.guild else None,
             user=payload.author.name
         )
 

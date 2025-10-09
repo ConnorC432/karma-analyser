@@ -46,6 +46,9 @@ class AskDezza(commands.Cog):
         Ask the Karma Analyser questions
         - `text` (required): The question to ask.
         """
+        if not ctx.guild:
+            return
+
         if ctx.guild.id != self.valid_server_id:
             self.logger.debug("IGNORING ASKDEZZA REQUEST")
             return
@@ -77,6 +80,9 @@ class AskDezza(commands.Cog):
 
     @commands.Cog.listener()
     async def on_message(self, payload):
+        if not payload.guild:
+            return
+
         if payload.guild.id != self.valid_server_id:
             self.logger.debug("IGNORING ASKDEZZA REQUEST")
             return
