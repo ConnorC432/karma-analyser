@@ -316,7 +316,6 @@ class AITools:
     @tool
     def respond_to_user(self, response = None) -> str:
         """
-        This function does nothing.
         Call this function if you have called the same tool multiple times
         or you have already called all the tools you need.
         :param response: Response to the user's message
