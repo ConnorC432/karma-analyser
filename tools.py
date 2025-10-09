@@ -382,9 +382,9 @@ class AITools:
         return "No data found"
 
     @tool
-    def search_for_gif(self, query: str = None):
+    def get_gif(self, query: str = None):
         """
-        Search for a gif
+        Get a gif
         :param query: GIF Search query - does not accept http/https format
         :return: A URL containing the gif
         """
