@@ -4,6 +4,7 @@ import discord
 import random
 import base64
 import aiohttp
+import regex
 from ollama import Client
 from urllib import parse, request
 from utils import reddiquette
@@ -63,6 +64,34 @@ class AITools:
         except Exception as e:
             self.logger.error(f"FAILED TO FETCH URL {url}: {e}")
             return None
+
+    async def extract_image_urls(self, message: discord.Message):
+        """
+        Extracts image URLs from a message and stores them in a set.
+        :param message: Message object to extract image URLs from
+        :return: Image URLs
+        """
+        image_urls = set()
+
+        for attachment in message.attachments:
+            if attachment.content_type == "image":
+                image_urls.add(attachment.url)
+
+        for embed in message.embeds:
+            if embed.thumbnail.url:
+                image_urls.add(embed.thumbnail.url)
+            if embed.image.url:
+                image_urls.add(embed.image.url)
+
+        urls = regex.findall(r"https?://[^\s]+(?:jpg|jpeg|gif|png)", message.content, flags=regex.IGNORECASE)
+        for url in urls:
+            image_urls.add(url)
+
+        if not image_urls:
+            self.logger.debug(f"NO IMAGE URLS FOUND")
+            return None
+
+        return image_urls
 
     @tool
     def respond_to_user(response = None) -> str:

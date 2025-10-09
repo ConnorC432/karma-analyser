@@ -60,11 +60,17 @@ class AskReddit(commands.Cog):
         """
         self.logger.debug(f"RESPONDING TO USER: {ctx.author.name}")
 
+        image_urls = await AITools.extract_image_urls(ctx.message)
+        images_b64 = set()
+        for url in image_urls:
+            images_b64.add(AITools.url_to_base64(url))
+
         response = await self.ollama_response(
             system_instructions=self.system_instructions,
             messages=[{
                 "role": "user",
-                "content": text
+                "content": text,
+                "image": images_b64 or ""
         }],
             server=ctx.guild.id,
             user=ctx.author.name
@@ -114,7 +120,6 @@ class AskReddit(commands.Cog):
             if response == "RESPONSE GENERATION FAILED, PLEASE DOWNVOTE":
                 await reply.add_reaction("<:reddit_downvote:1266139651660447744>")
 
-    ## TODO Pass through base64 images straight to model instead of using tool
     async def ollama_response(self, system_instructions, messages, server, user):
         """
         Generates an AI response using the ollama API.
@@ -253,6 +258,11 @@ class AskReddit(commands.Cog):
         current = await payload.channel.fetch_message(payload.reference.message_id)
 
         while current:
+            image_urls = await AITools.extract_image_urls(current.message)
+            images_b64 = set()
+            for url in image_urls:
+                images_b64.add(AITools.url_to_base64(url))
+
             messages.append({
                 "role": "assistant" if current.author.bot else "user",
                 "content": regex.sub(
@@ -260,7 +270,8 @@ class AskReddit(commands.Cog):
                     lambda m: (current.guild.get_member(int(m.author.id))).name
                         if payload.guild.get_member(int(m.author.id)) else m.group(0),
                     current.content
-                )
+                ),
+                "images": images_b64 or ""
             })
 
             if current.reference:
