@@ -1,4 +1,3 @@
-import inspect
 import logging
 from discord.ext import commands
 from tools import AITools
@@ -10,12 +9,6 @@ class AskDezza(commands.Cog):
         self.logger = logging.getLogger(f"{self.__class__.__name__}")
 
         self.valid_server_id = 683033503834963978
-
-        self.tools_module = AITools(self.bot)
-        self.tools = [
-            function for _, function in inspect.getmembers(self.tools_module, predicate=inspect.ismethod)
-            if getattr(function, "is_tool", False)
-        ]
 
         self.system_instructions = {
             "role": "system",
@@ -61,8 +54,9 @@ class AskDezza(commands.Cog):
 
         image_urls = await AITools.extract_image_urls(ctx.message)
         images_b64 = set()
-        for url in image_urls:
-            images_b64.add(AITools.url_to_base64(url))
+        if image_urls:
+            for url in image_urls:
+                images_b64.add(AITools.url_to_base64(url))
 
         response = await AITools.ollama_response(
             system_instructions=self.system_instructions,

@@ -38,6 +38,11 @@ class AITools:
         self.giphy_key = self.settings.get("giphy_key")
         self.search_url = f"http://{self.settings.get('searxng_endpoint')}/search"
 
+        self.tools = [
+            function for _, function in inspect.getmembers(self, predicate=inspect.ismethod)
+            if getattr(function, "is_tool", False)
+        ]
+
     async def ollama_response(self, system_instructions, messages, server, user):
         """
         Generates an AI response using the ollama API.
@@ -177,10 +182,11 @@ class AITools:
         current = await payload.channel.fetch_message(payload.reference.message_id)
 
         while current:
-            image_urls = await AITools.extract_image_urls(current.message)
+            image_urls = await AITools.extract_image_urls(current)
             images_b64 = set()
-            for url in image_urls:
-                images_b64.add(AITools.url_to_base64(url))
+            if image_urls:
+                for url in image_urls:
+                    images_b64.add(AITools.url_to_base64(url))
 
             messages.append({
                 "role": "assistant" if current.author.bot else "user",
@@ -200,10 +206,11 @@ class AITools:
 
         messages.reverse()
 
-        image_urls = await AITools.extract_image_urls(payload.message)
+        image_urls = await AITools.extract_image_urls(payload)
         images_b64 = set()
-        for url in image_urls:
-            images_b64.add(AITools.url_to_base64(url))
+        if image_urls:
+            for url in image_urls:
+                images_b64.add(AITools.url_to_base64(url))
         messages.append({
             "role": "user",
             "content": payload.content,
@@ -307,7 +314,7 @@ class AITools:
         return image_urls
 
     @tool
-    def respond_to_user(response = None) -> str:
+    def respond_to_user(self, response = None) -> str:
         """
         This function does nothing.
         Call this function if you have called the same tool multiple times
