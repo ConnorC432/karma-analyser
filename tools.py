@@ -43,23 +43,29 @@ class AITools:
             if getattr(function, "is_tool", False)
         ]
 
-    async def ollama_response(self, system_instructions, messages, server, user):
+    async def ollama_response(self, system_instructions, messages, server, user, model : str | None = None) -> str | None:
         """
         Generates an AI response using the ollama API.
         :param system_instructions: System instructions for LLM model
         :param messages: Chat history messages
         :param server: Server ID the chat is taking place in
         :param user: user.name who triggered the request
+        :param model: Optional - model to use for text generation
         :return: AI response string
         """
+        use_tools = False
+        if model is None:
+            model = self.model
+            use_tools = True
+
         original_messages = messages = [system_instructions] + list(messages)
 
         while True:
             response = await asyncio.to_thread(
                 self.client.chat,
-                model=self.model,
+                model=model,
                 messages=messages,
-                tools=self.tools
+                tools=self.tools if use_tools else ""
             )
             self.logger.debug(f"RESPONSE: {response.message.content}")
 
