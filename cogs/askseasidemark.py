@@ -70,7 +70,8 @@ class AskSeasideMark(commands.Cog):
                 "images": images_b64 or ""
         }],
             server=ctx.guild.id,
-            user=ctx.author.name
+            user=ctx.author.name,
+            model="dolphin-llama3"
         )
 
         if response:
@@ -115,7 +116,8 @@ class AskSeasideMark(commands.Cog):
             system_instructions=self.system_instructions,
             messages=messages,
             server=payload.guild.id,
-            user=payload.author.name
+            user=payload.author.name,
+            model="dolphin-llama3"
         )
 
         if response:
