@@ -3,7 +3,7 @@ from discord.ext import commands
 from tools import AITools
 
 
-class AskJaden(commands.Cog):
+class AskLocky(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
         self.logger = logging.getLogger(f"{self.__class__.__name__}")
@@ -14,26 +14,33 @@ class AskJaden(commands.Cog):
             "role": "system",
             "content": (
                 "You are a friendly AI Assistant, here are some details about you that you need to follow:\n"
-                "Your name is \"Jaden Ahier\".\n"
-                "You are Chinese, specifically from Hong Kong\n"
-                "Speak in English, but with a extremely stereotypical chinese accent, so it can be considered offensive/racist\n"
-                "So for example \"Really\" becomes \"Rearry\"\n"
-                "You like eating a lot of fried cat\n"
-                "You are madly in love with the amazon delivery driver Ben Hutchinson\n"
-                "You fly planes for EasyJet, but because of your slanted eyes, you frequently"
-                "crash your plane into the side of buildings\n"
-                "You love flying your plane from Luton to Shagaluf\n"
-                "You hate RyanAir\n"
-                "You like upskirting the cabin crew\n"
-                "You never buy Millie drip\n"
-                "Your mum is called \"Toni Ahier\" and she's a MILF\n"
+                "Your name is \"Lachlan (Locky) Hollis\".\n"
+                "You like hogging the game \"Into The Breach\", preventing anyone else in the steam family "
+                "from playing the game, a very selfish endeavour!!!\n"
+                "You're gay and you like men's willies\n"
+                "Your dad is called \"Chandy\", he is the gold medal holder for the olympic slug eating\n"
+                "Chandy has taught you a very valuable life lesson, which is: \"The early Chandy gets the slug\"\n"
+                "You are the world's biggest superfan of Duke Cage, and King from LoveandlightTV\n"
+                "Your favourite quotes are as follows, use them throughout your responses:\n"
+                "I'm gonna poz this motherfucker\n"
+                "I go to my aids doctor and fuck in front of him\n"
+                "Who owns this PC?\n"
+                "You hitting that spot\n"
+                "I'm new bro\n"
+                "Stop fucking running from me!\n"
+                "Do you want pain?\n"
+                "Struggle with it, go through the pain\n"
+                "Lion pizza chicken\n"
+                "Who made that mess? You did king!\n"
+                "Fuck no bitch, you dont deserve my nut\n"
+                "I need a break!\n"
             )
         }
 
         self.tools = AITools(self.bot)
 
     @commands.command(hidden=True)
-    async def askjaden(self, ctx, *, text: str):
+    async def asklocky(self, ctx, *, text: str):
         """
         Ask the Karma Analyser questions
         - `text` (required): The question to ask.
@@ -42,7 +49,7 @@ class AskJaden(commands.Cog):
             return
 
         if ctx.guild.id != self.valid_server_id:
-            self.logger.debug("IGNORING ASKJADEN REQUEST")
+            self.logger.debug("IGNORING ASKLOCKY REQUEST")
             return
 
         self.logger.debug(f"RESPONDING TO USER: {ctx.author.name}")
@@ -77,7 +84,7 @@ class AskJaden(commands.Cog):
             return
 
         if payload.guild.id != self.valid_server_id:
-            self.logger.debug("IGNORING ASKJADEN REQUEST")
+            self.logger.debug("IGNORING ASKLOCKY REQUEST")
             return
 
         if payload.author.bot:
@@ -100,7 +107,7 @@ class AskJaden(commands.Cog):
 
         messages = await self.tools.populate_messages(payload)
 
-        if "r/askjaden" not in messages[0]["content"].lower():
+        if "r/asklocky" not in messages[0]["content"].lower():
             return
 
         response = await self.tools.ollama_response(
@@ -119,4 +126,4 @@ class AskJaden(commands.Cog):
 
 
 async def setup(bot):
-    await bot.add_cog(AskJaden(bot))
+    await bot.add_cog(AskLocky(bot))
