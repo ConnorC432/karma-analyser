@@ -8,7 +8,7 @@ class AskMillie(commands.Cog):
         self.bot = bot
         self.logger = logging.getLogger(f"{self.__class__.__name__}")
 
-        self.valid_server_id = 1184181874592063528
+        self.valid_server_id = 683033503834963978
 
         self.system_instructions = {
             "role": "system",
