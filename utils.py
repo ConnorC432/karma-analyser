@@ -95,6 +95,7 @@ reaction_dict = {
     "reddit_wholesome": 0,
     "helpful": 0,
     "truthnuke": 0,
+    "truke": 0,
     "up" : 0.25,
     "arrow_up" : 0.5,
     "arrow_down" : -0.5

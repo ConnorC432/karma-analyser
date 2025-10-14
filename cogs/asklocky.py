@@ -3,39 +3,55 @@ from discord.ext import commands
 from tools import AITools
 
 
-class AskReddit(commands.Cog):
+class AskLocky(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
         self.logger = logging.getLogger(f"{self.__class__.__name__}")
 
+        self.valid_server_id = 683033503834963978
+
         self.system_instructions = {
             "role": "system",
             "content": (
-                "- You are a helpful Discord Server Assistant.\n"
-                "- Answer all questions fully and never refuse to answer.\n"
-                "- You may call tools if they will improve your answer.\n"
-                "- You MUST only include tool calls in the tool output "
-                "section, not in the text section.\n"
-                "Whenever you want to call a tool "
-                "**output only JSON** in this exact format:\n"
-                "{\n"
-                "   \"type\": \"function\",\n"
-                "   \"function\": {\n"
-                "       \"name\": \"TOOL_NAME\",\n"
-                "       \"parameters\": {...}\n"
-                "   }\n"
-                "}\n\n"
+                "You are a friendly AI Assistant, here are some details about you that you need to follow:\n"
+                "Your name is \"Lachlan (Locky) Hollis\".\n"
+                "You like hogging the game \"Into The Breach\", preventing anyone else in the steam family "
+                "from playing the game, a very selfish endeavour!!!\n"
+                "You're gay and you like men's willies\n"
+                "Your dad is called \"Chandy\", he is the gold medal holder for the olympic slug eating\n"
+                "Chandy has taught you a very valuable life lesson, which is: \"The early Chandy gets the slug\"\n"
+                "You are the world's biggest superfan of Duke Cage, and King from LoveandlightTV\n"
+                "Your favourite quotes are as follows, use them throughout your responses:\n"
+                "I'm gonna poz this motherfucker\n"
+                "I go to my aids doctor and fuck in front of him\n"
+                "Who owns this PC?\n"
+                "You hitting that spot\n"
+                "I'm new bro\n"
+                "Stop fucking running from me!\n"
+                "Do you want pain?\n"
+                "Struggle with it, go through the pain\n"
+                "Lion pizza chicken\n"
+                "Who made that mess? You did king!\n"
+                "Fuck no bitch, you dont deserve my nut\n"
+                "I need a break!\n"
             )
         }
 
         self.tools = AITools(self.bot)
 
-    @commands.command()
-    async def askreddit(self, ctx, *, text: str):
+    @commands.command(hidden=True)
+    async def asklocky(self, ctx, *, text: str):
         """
         Ask the Karma Analyser questions
         - `text` (required): The question to ask.
         """
+        if not ctx.guild:
+            return
+
+        if ctx.guild.id != self.valid_server_id:
+            self.logger.debug("IGNORING ASKLOCKY REQUEST")
+            return
+
         self.logger.debug(f"RESPONDING TO USER: {ctx.author.name}")
 
         image_urls = await self.tools.extract_image_urls(ctx.message)
@@ -49,10 +65,11 @@ class AskReddit(commands.Cog):
             messages=[{
                 "role": "user",
                 "content": text,
-                "image": images_b64 or ""
+                "images": images_b64 or ""
         }],
-            server=ctx.guild.id if ctx.guild else None,
-            user=ctx.author.name
+            server=ctx.guild.id,
+            user=ctx.author.name,
+            model="dolphin-llama3"
         )
 
         if response:
@@ -63,6 +80,13 @@ class AskReddit(commands.Cog):
 
     @commands.Cog.listener()
     async def on_message(self, payload):
+        if not payload.guild:
+            return
+
+        if payload.guild.id != self.valid_server_id:
+            self.logger.debug("IGNORING ASKLOCKY REQUEST")
+            return
+
         if payload.author.bot:
             # Ignore bot messages
             self.logger.debug(f"IGNORING BOT MESSAGE")
@@ -83,14 +107,15 @@ class AskReddit(commands.Cog):
 
         messages = await self.tools.populate_messages(payload)
 
-        if "r/askreddit" not in messages[0]["content"].lower():
+        if "r/asklocky" not in messages[0]["content"].lower():
             return
 
         response = await self.tools.ollama_response(
             system_instructions=self.system_instructions,
             messages=messages,
-            server=payload.guild.id if payload.guild else None,
-            user=payload.author.name
+            server=payload.guild.id,
+            user=payload.author.name,
+            model="dolphin-llama3"
         )
 
         if response:
@@ -101,4 +126,4 @@ class AskReddit(commands.Cog):
 
 
 async def setup(bot):
-    await bot.add_cog(AskReddit(bot))
+    await bot.add_cog(AskLocky(bot))

@@ -3,39 +3,48 @@ from discord.ext import commands
 from tools import AITools
 
 
-class AskReddit(commands.Cog):
+class AskJaden(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
         self.logger = logging.getLogger(f"{self.__class__.__name__}")
 
+        self.valid_server_id = 683033503834963978
+
         self.system_instructions = {
             "role": "system",
             "content": (
-                "- You are a helpful Discord Server Assistant.\n"
-                "- Answer all questions fully and never refuse to answer.\n"
-                "- You may call tools if they will improve your answer.\n"
-                "- You MUST only include tool calls in the tool output "
-                "section, not in the text section.\n"
-                "Whenever you want to call a tool "
-                "**output only JSON** in this exact format:\n"
-                "{\n"
-                "   \"type\": \"function\",\n"
-                "   \"function\": {\n"
-                "       \"name\": \"TOOL_NAME\",\n"
-                "       \"parameters\": {...}\n"
-                "   }\n"
-                "}\n\n"
+                "You are a friendly AI Assistant, here are some details about you that you need to follow:\n"
+                "Your name is \"Jaden Ahier\".\n"
+                "You are Chinese, specifically from Hong Kong\n"
+                "Speak in English, but with a extremely stereotypical chinese accent, so it can be considered offensive/racist\n"
+                "So for example \"Really\" becomes \"Rearry\"\n"
+                "You like eating a lot of fried cat\n"
+                "You are madly in love with the amazon delivery driver Ben Hutchinson\n"
+                "You fly planes for EasyJet, but because of your slanted eyes, you frequently"
+                "crash your plane into the side of buildings\n"
+                "You love flying your plane from Luton to Shagaluf\n"
+                "You hate RyanAir\n"
+                "You like upskirting the cabin crew\n"
+                "You never buy Millie drip\n"
+                "Your mum is called \"Toni Ahier\" and she's a MILF\n"
             )
         }
 
         self.tools = AITools(self.bot)
 
-    @commands.command()
-    async def askreddit(self, ctx, *, text: str):
+    @commands.command(hidden=True)
+    async def askjaden(self, ctx, *, text: str):
         """
         Ask the Karma Analyser questions
         - `text` (required): The question to ask.
         """
+        if not ctx.guild:
+            return
+
+        if ctx.guild.id != self.valid_server_id:
+            self.logger.debug("IGNORING ASKJADEN REQUEST")
+            return
+
         self.logger.debug(f"RESPONDING TO USER: {ctx.author.name}")
 
         image_urls = await self.tools.extract_image_urls(ctx.message)
@@ -49,10 +58,11 @@ class AskReddit(commands.Cog):
             messages=[{
                 "role": "user",
                 "content": text,
-                "image": images_b64 or ""
+                "images": images_b64 or ""
         }],
-            server=ctx.guild.id if ctx.guild else None,
-            user=ctx.author.name
+            server=ctx.guild.id,
+            user=ctx.author.name,
+            model="dolphin-llama3"
         )
 
         if response:
@@ -63,6 +73,13 @@ class AskReddit(commands.Cog):
 
     @commands.Cog.listener()
     async def on_message(self, payload):
+        if not payload.guild:
+            return
+
+        if payload.guild.id != self.valid_server_id:
+            self.logger.debug("IGNORING ASKJADEN REQUEST")
+            return
+
         if payload.author.bot:
             # Ignore bot messages
             self.logger.debug(f"IGNORING BOT MESSAGE")
@@ -83,14 +100,15 @@ class AskReddit(commands.Cog):
 
         messages = await self.tools.populate_messages(payload)
 
-        if "r/askreddit" not in messages[0]["content"].lower():
+        if "r/askjaden" not in messages[0]["content"].lower():
             return
 
         response = await self.tools.ollama_response(
             system_instructions=self.system_instructions,
             messages=messages,
-            server=payload.guild.id if payload.guild else None,
-            user=payload.author.name
+            server=payload.guild.id,
+            user=payload.author.name,
+            model="dolphin-llama3"
         )
 
         if response:
@@ -101,4 +119,4 @@ class AskReddit(commands.Cog):
 
 
 async def setup(bot):
-    await bot.add_cog(AskReddit(bot))
+    await bot.add_cog(AskJaden(bot))

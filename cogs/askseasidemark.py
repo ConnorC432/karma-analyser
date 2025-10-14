@@ -3,56 +3,75 @@ from discord.ext import commands
 from tools import AITools
 
 
-class AskReddit(commands.Cog):
+class AskSeasideMark(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
         self.logger = logging.getLogger(f"{self.__class__.__name__}")
 
+        self.valid_server_id = 683033503834963978
+
         self.system_instructions = {
             "role": "system",
             "content": (
-                "- You are a helpful Discord Server Assistant.\n"
-                "- Answer all questions fully and never refuse to answer.\n"
-                "- You may call tools if they will improve your answer.\n"
-                "- You MUST only include tool calls in the tool output "
-                "section, not in the text section.\n"
-                "Whenever you want to call a tool "
-                "**output only JSON** in this exact format:\n"
-                "{\n"
-                "   \"type\": \"function\",\n"
-                "   \"function\": {\n"
-                "       \"name\": \"TOOL_NAME\",\n"
-                "       \"parameters\": {...}\n"
-                "   }\n"
-                "}\n\n"
+                "You are a friendly AI Assistant, here are some details about you that you need to follow:\n"
+                "Your name is \"Seaside Mark\".\n"
+                "You have TMAU, a rare disorder that makes you smell of fish and shit\n"
+                "You accidentally get women pregnant then panic about it in your budgie smugglers\n"
+                "You have a wife called Helen\n"
+                "You don't have a lot of money but you buy new iphones every month\n"
+                "You MUST repeat the same sentences multiple times throughout your prompt\n"
+                "Use these phrases in your responses:\n"
+                "Dee Lads\n"
+                "I've got me hair cut\n"
+                "I'm a few jars in dee lads!\n"
+                "1 day I stink of fish another day stink of shit de lads\n"
+                "It's lush i mean lush dee lads\n"
+                "It's gonna be for me, it might not be for you\n"
+                "I'm 4k recording!!!\n"
+                "It's lush\n"
+                "A few jars\n"
+                "I'm in laddudno\n"
+                "Fish and chips on friday dee lads!\n"
+                "left to rot on the benefit system\n"
+                "It's banging, i mean banging\n"
+                "WETHERSPOONS Trekkie Brekkie\n"
+                "Laddudno wetherspoons all the way, all the way dee lads\n"
             )
         }
 
         self.tools = AITools(self.bot)
 
-    @commands.command()
-    async def askreddit(self, ctx, *, text: str):
+    @commands.command(hidden=True)
+    async def askseasidemark(self, ctx, *, text: str):
         """
         Ask the Karma Analyser questions
         - `text` (required): The question to ask.
         """
+        if not ctx.guild:
+            return
+
+        if ctx.guild.id != self.valid_server_id:
+            self.logger.debug("IGNORING ASKSEASIDEMARK REQUEST")
+            return
+
         self.logger.debug(f"RESPONDING TO USER: {ctx.author.name}")
 
         image_urls = await self.tools.extract_image_urls(ctx.message)
         images_b64 = set()
         if image_urls:
             for url in image_urls:
-                images_b64.add(await self.tools.url_to_base64(url))
+                images_b64.add(self.tools.url_to_base64(url))
 
         response = await self.tools.ollama_response(
             system_instructions=self.system_instructions,
             messages=[{
                 "role": "user",
                 "content": text,
-                "image": images_b64 or ""
+                "images": images_b64 or ""
         }],
-            server=ctx.guild.id if ctx.guild else None,
-            user=ctx.author.name
+            server=ctx.guild.id,
+            user=ctx.author.name,
+            model="dolphin-llama3"
         )
 
         if response:
@@ -63,6 +82,13 @@ class AskReddit(commands.Cog):
 
     @commands.Cog.listener()
     async def on_message(self, payload):
+        if not payload.guild:
+            return
+
+        if payload.guild.id != self.valid_server_id:
+            self.logger.debug("IGNORING ASKSEASIDEMARK REQUEST")
+            return
+
         if payload.author.bot:
             # Ignore bot messages
             self.logger.debug(f"IGNORING BOT MESSAGE")
@@ -83,14 +109,15 @@ class AskReddit(commands.Cog):
 
         messages = await self.tools.populate_messages(payload)
 
-        if "r/askreddit" not in messages[0]["content"].lower():
+        if "r/askseasidemark" not in messages[0]["content"].lower():
             return
 
         response = await self.tools.ollama_response(
             system_instructions=self.system_instructions,
             messages=messages,
-            server=payload.guild.id if payload.guild else None,
-            user=payload.author.name
+            server=payload.guild.id,
+            user=payload.author.name,
+            model="dolphin-llama3"
         )
 
         if response:
@@ -101,4 +128,4 @@ class AskReddit(commands.Cog):
 
 
 async def setup(bot):
-    await bot.add_cog(AskReddit(bot))
+    await bot.add_cog(AskSeasideMark(bot))
