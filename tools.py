@@ -16,7 +16,7 @@ import regex
 from bs4 import BeautifulSoup
 from ollama import Client
 
-from utils import karmic_dict, REDDIQUETTE
+from utils import REDDIQUETTE, karmic_dict
 
 
 def tool(func):

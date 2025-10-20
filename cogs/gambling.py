@@ -8,7 +8,7 @@ import discord
 from discord.ext import commands
 from ollama import Client
 
-from utils import gamble_lock, gambling_table, get_gambling_rewards, help_words, REDDIT_RED
+from utils import REDDIT_RED, gamble_lock, gambling_table, get_gambling_rewards, help_words
 
 
 class Gambling(commands.Cog):

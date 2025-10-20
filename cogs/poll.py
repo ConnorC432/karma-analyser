@@ -3,7 +3,7 @@ import logging
 import discord
 from discord.ext import commands
 
-from utils import emoji_numbers, REDDIT_RED
+from utils import REDDIT_RED, emoji_numbers
 
 
 class Poll(commands.Cog):
