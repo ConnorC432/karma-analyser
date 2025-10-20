@@ -4,6 +4,7 @@ import asyncio
 import json
 import random
 from discord.ext import commands
+from utils import karma_lock, karmic_dict
 
 
 class Sentence(commands.Cog):
@@ -45,6 +46,9 @@ class Sentence(commands.Cog):
 
         with open("deductions.json", "w") as f:
             json.dump(data, f, indent=4)
+
+        with karma_lock:
+            karmic_dict[ctx.guild.id][member.id]["Karma"] -= ded
 
 async def setup(bot):
     await bot.add_cog(Sentence(bot))
