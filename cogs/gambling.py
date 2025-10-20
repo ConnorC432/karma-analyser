@@ -4,10 +4,9 @@ import logging
 import random
 import re
 import discord
-import utils
 from discord.ext import commands
 from ollama import Client
-from utils import get_gambling_rewards, help_words, gamble_lock, gambling_table
+from utils import get_gambling_rewards, help_words, gamble_lock, gambling_table, reddit_red
 
 
 class Gambling(commands.Cog):
@@ -32,7 +31,7 @@ class Gambling(commands.Cog):
 
                 embed = discord.Embed(
                     title="Gambling Drops",
-                    color=utils.reddit_red
+                    color=reddit_red
                 )
 
                 for item, chance in chances:
