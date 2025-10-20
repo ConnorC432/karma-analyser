@@ -4,14 +4,10 @@ import logging
 import random
 import discord
 import json
-import utils
-from collections import defaultdict
 from discord.ext import commands, tasks
-from utils import reaction_dict, status, karma_lock, json_to_dict, dict_to_json
+from utils import reaction_dict, status, karma_lock, karmic_dict, reddit_red
 
 
-## TODO use user.id instead of user.name for more reliability
-## TODO save karma dict in memory instead of karma.json
 class Analyse(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
@@ -21,8 +17,6 @@ class Analyse(commands.Cog):
     @commands.Cog.listener()
     async def on_ready(self):
         async with karma_lock:
-
-            karmic_dict = defaultdict(lambda: defaultdict(lambda: defaultdict(int)))
             message_count = 0
 
             # Load Karmic Deductions
@@ -39,7 +33,7 @@ class Analyse(commands.Cog):
                 for user, deduction in guild_deductions.items():
                     user_obj = guild.get_member_named(user)
                     if user_obj is not None:
-                        karmic_dict[guild.id][user_obj.name]["Karma"] += deduction
+                        karmic_dict[guild.id][user_obj.id]["Karma"] += deduction
                     else:
                         self.logger.warning(f"USER {user} NOT IN SUBREDDIT {guild.name}")
 
@@ -49,7 +43,7 @@ class Analyse(commands.Cog):
                     try:
                         async for message in channel.history(limit=None, oldest_first=True):
                             message_count += 1
-                            self.logger.info(f"({message_count}) {message.author}: {message.content}")
+                            self.logger.debug(f"({message_count}) {message.author}: {message.content}")
 
                             if message_count % 100 == 0:
                                 await self.bot.change_presence(
@@ -65,7 +59,7 @@ class Analyse(commands.Cog):
                                 continue
 
                             # Count Messages
-                            karmic_dict[guild.id][message.author.name]["Messages"] += 1
+                            karmic_dict[guild.id][message.author.id]["Messages"] += 1
 
                             for reaction in message.reactions:
                                 emoji_name = reaction.emoji if isinstance(reaction.emoji, str) else reaction.emoji.name
@@ -76,7 +70,7 @@ class Analyse(commands.Cog):
 
                                 # Count multiple truke reactions as a single truke
                                 if emoji_name == "truthnuke" or "truke":
-                                    karmic_dict[guild.id][message.author.name]["truke"] += 1
+                                    karmic_dict[guild.id][message.author.id]["truke"] += 1
                                     continue
 
                                 try:
@@ -87,20 +81,16 @@ class Analyse(commands.Cog):
                                             continue
 
                                         # Add Reaction Count
-                                        karmic_dict[guild.id][message.author.name][emoji_name] += 1
+                                        karmic_dict[guild.id][message.author.id][emoji_name] += 1
 
                                         # Add Weighted Karma Value
-                                        karmic_dict[guild.id][message.author.name]["Karma"] += reaction_dict[emoji_name]
+                                        karmic_dict[guild.id][message.author.id]["Karma"] += reaction_dict[emoji_name]
 
                                 except discord.HTTPException as e:
                                     self.logger.error(f"HTTP ERROR: {e}")
 
                     except discord.HTTPException as e:
                         self.logger.error(f"HTTP ERROR: {e}")
-
-            with open("karma.json", "w") as f:
-                json.dump(karmic_dict, f, indent=4)
-                self.logger.info("KARMIC ANALYSIS RESULTS ARCHIVED IN THE JSON")
 
         self.change_status.start()
 
@@ -124,23 +114,11 @@ class Analyse(commands.Cog):
             return
 
         async with karma_lock:
-            try:
-                with open("karma.json", "r") as f:
-                    karmic_dict = json_to_dict(json.load(f))
-            except FileNotFoundError as e:
-                self.logger.error(f"SHIT, I LOST THE KARMIC ARCHIVES: {e}")
-                return
-
-            user_name = message.author.name
-
             # Count Reactions
-            karmic_dict[str(payload.guild_id)][user_name][payload.emoji.name] += 1
-            karmic_dict[str(payload.guild_id)][user_name]["Karma"] += reaction_dict[payload.emoji.name]
+            karmic_dict[payload.guild_id][message.author.id][payload.emoji.name] += 1
+            karmic_dict[payload.guild_id][message.author.id]["Karma"] += reaction_dict[payload.emoji.name]
 
-            with open("karma.json", "w") as f:
-                json.dump(dict_to_json(karmic_dict), f, indent=4)
-
-        self.logger.debug(f"ANALYSED {user.name}'S REACTION TO {user_name}'S POST")
+        self.logger.debug(f"ANALYSED {user.name}'S REACTION TO {message.author.name}'S POST")
 
     @commands.Cog.listener()
     async def on_raw_reaction_remove(self, payload):
@@ -156,62 +134,26 @@ class Analyse(commands.Cog):
             return
 
         async with karma_lock:
-            try:
-                with open("karma.json", "r") as f:
-                    karmic_dict = json_to_dict(json.load(f))
-            except FileNotFoundError as e:
-                self.logger.error(f"SHIT, I LOST THE KARMIC ARCHIVES: {e}")
-                return
-
-            user_name = message.author.name
-
             # Count Reactions
-            karmic_dict[str(payload.guild_id)][user_name][payload.emoji.name] -= 1
-            karmic_dict[str(payload.guild_id)][user_name]["Karma"] -= reaction_dict[payload.emoji.name]
+            karmic_dict[payload.guild_id][message.author.id][payload.emoji.name] -= 1
+            karmic_dict[payload.guild_id][message.author.id]["Karma"] -= reaction_dict[payload.emoji.name]
 
-            with open("karma.json", "w") as f:
-                json.dump(dict_to_json(karmic_dict), f, indent=4)
-
-        self.logger.debug(f"ANALYSED {user.name}'S REACTION TO {user_name}'S POST")
+        self.logger.debug(f"ANALYSED {user.name}'S REACTION TO {message.author.name}'S POST")
 
     @commands.Cog.listener()
     async def on_message(self, message):
         # Update message count
         async with karma_lock:
-            try:
-                with open("karma.json", "r") as f:
-                    karmic_dict = json_to_dict(json.load(f))
-            except FileNotFoundError as e:
-                self.logger.error(f"SHIT, I LOST THE KARMIC ARCHIVES: {e}")
-                return
+            karmic_dict[message.guild.id][message.author.id]["Messages"] += 1
 
-            user_name = message.author.name
-
-            karmic_dict[str(message.guild.id)][user_name]["Messages"] += 1
-
-            with open("karma.json", "w") as f:
-                json.dump(dict_to_json(karmic_dict), f, indent=4)
-
-        self.logger.debug(f"ANALYSED MESSAGE: {user_name}: {message.content}")
+        self.logger.debug(f"ANALYSED MESSAGE: {message.author.name}: {message.content}")
 
     @commands.Cog.listener()
     async def on_message_delete(self, message):
         async with karma_lock:
-            try:
-                with open("karma.json", "r") as f:
-                    karmic_dict = json_to_dict(json.load(f))
-            except FileNotFoundError as e:
-                self.logger.error(f"SHIT, I LOST THE KARMIC ARCHIVES: {e}")
-                return
+            karmic_dict[message.guild.id][message.author.id]["Messages"] -= 1
 
-            user_name = message.author.name
-
-            karmic_dict[str(message.guild.id)][user_name]["Messages"] -= 1
-
-            with open("karma.json", "w") as f:
-                json.dump(dict_to_json(karmic_dict), f, indent=4)
-
-            self.logger.debug(f"UN-ANALYSED MESSAGE: {user_name}: {message.content}")
+            self.logger.debug(f"UN-ANALYSED MESSAGE: {message.author.name}: {message.content}")
 
     @commands.command(aliases=['analysis'])
     async def analyse(self, ctx):
@@ -226,76 +168,69 @@ class Analyse(commands.Cog):
             await reply.edit(content="WAITING TO ACCESS KARMIC ARCHIVES, THIS MAY TAKE LONGER THAN USUAL")
 
         async with karma_lock:
-            try:
-                with open("karma.json", "r") as f:
-                    output_dict = defaultdict(lambda: defaultdict(int))
-                    for key, value in json.load(f).get(str(ctx.guild.id), {}).items():
-                        output_dict[key] = defaultdict(int, value)
+            # Determine which users to analyse
+            users_to_iterate = set()
 
-            except FileNotFoundError as e:
-                self.logger.error(f"SHIT, I LOST THE KARMIC ARCHIVES: {e}")
+            # @everyone
+            if "@everyone" in ctx.message.content:
+                users_to_iterate.update(
+                    m.id
+                    for m in ctx.guild.members
+                    if karmic_dict[ctx.guild.id][m.id]["Messages"] >= 100
+                )
 
-        # Determine which users to analyse
-        users_to_iterate = set()
+            # @here
+            elif "@here" in ctx.message.content:
+                users_to_iterate.update(m.id for m in ctx.guild.members if m.status != discord.Status.offline)
 
-        # @everyone
-        if "@everyone" in ctx.message.content:
-            users_to_iterate.update(
-                m.name
-                for m in ctx.guild.members
-                if output_dict.get(m.name, {}).get("Messages", 0) >= 100
-            )
+            else:
+                # @user
+                users_to_iterate.update(m.id for m in ctx.message.mentions)
 
-        # @here
-        elif "@here" in ctx.message.content:
-            users_to_iterate.update(m.name for m in ctx.guild.members if m.status != discord.Status.offline)
+                # @role
+                for role in ctx.message.role_mentions:
+                    users_to_iterate.update(m.id for m in role.members)
 
-        else:
-            # @user
-            users_to_iterate.update(m.name for m in ctx.message.mentions)
+                # No Arguments
+                if not users_to_iterate:
+                    users_to_iterate.add(ctx.author.id)
 
-            # @role
-            for role in ctx.message.role_mentions:
-                users_to_iterate.update(m.name for m in role.members)
+            self.logger.info(f"ANALYSING USERS: {users_to_iterate}")
 
-            # No Arguments
-            if not users_to_iterate:
-                users_to_iterate.add(ctx.author.name)
+            await asyncio.sleep(random.uniform(2.5, 5))
+            await reply.edit(content="KARMA ANALYSED")
 
-        self.logger.info(f"ANALYSING USERS: {users_to_iterate}")
+            for user in users_to_iterate:
+                user_data = karmic_dict[ctx.guild.id][user]
+                messages = user_data["Messages"]
+                karma = user_data["Karma"]
 
-        await asyncio.sleep(random.uniform(2.5, 5))
-        await reply.edit(content="KARMA ANALYSED")
+                user_obj = discord.utils.find(lambda m: m.id == user, ctx.guild.members)
+                user_str = user_obj.display_name if user_obj else user
 
-        for user in users_to_iterate:
-            messages = output_dict[user].get("Messages", 1)
-            user_obj = discord.utils.find(lambda m: m.name == user, ctx.guild.members)
-            user_str = user_obj.display_name if user_obj else user
+                karma_ratio = karma / messages if messages != 0 else 0
+                karma_str = "<:reddit_upvote:1266139689136689173>" if karma >= 0 else "<:reddit_downvote:1266139651660447744>"
 
-            karma = output_dict[user].get("Karma", 0)
-            karma_ratio = karma / messages
-            karma_str = "<:reddit_upvote:1266139689136689173>" if karma >= 0 else "<:reddit_downvote:1266139651660447744>"
+                # Create Karmic analysis embed for each user
+                embed = discord.Embed(
+                    title=f"{user_str}",
+                    color=reddit_red
+                )
 
-            # Create Karmic analysis embed for each user
-            embed = discord.Embed(
-                title=f"{user_str}",
-                color=utils.reddit_red
-            )
+                embed.add_field(name="Karma", value=f"{karma} {karma_str}", inline=False)
+                embed.add_field(name="Messages", value=f"{messages}", inline=False)
+                embed.add_field(name="Karmic Ratio", value=f"{round(karma_ratio, 4)}", inline=False)
+                embed.add_field(name="Silver", value=f"{karmic_dict[ctx.guild.id][user]['reddit_silver']} <:reddit_silver:833677163739480079>", inline=True)
+                embed.add_field(name="Gold", value=f"{karmic_dict[ctx.guild.id][user]['reddit_gold']} <:reddit_gold:833675932883484753>", inline=True)
+                embed.add_field(name="Platinum", value=f"{karmic_dict[ctx.guild.id][user]['reddit_platinum']} <:reddit_platinum:833678610279563304>", inline=True)
+                embed.add_field(name="Wholesome", value=f"{karmic_dict[ctx.guild.id][user]['reddit_wholesome']} <:reddit_wholesome:833669115762835456>", inline=True)
+                embed.add_field(name="Helpful", value=f"{karmic_dict[ctx.guild.id][user]['helpful']} <:helpful:1412197811008704694>", inline=True)
+                embed.add_field(name="Trukes", value=f"{karmic_dict[ctx.guild.id][user]['truke']} <:truke:1359507023951298700>", inline=True)
 
-            embed.add_field(name="Karma", value=f"{karma} {karma_str}", inline=False)
-            embed.add_field(name="Messages", value=f"{messages}", inline=False)
-            embed.add_field(name="Karmic Ratio", value=f"{round(karma_ratio, 4)}", inline=False)
-            embed.add_field(name="Silver", value=f"{output_dict[user].get('reddit_silver', 0)} <:reddit_silver:833677163739480079>", inline=True)
-            embed.add_field(name="Gold", value=f"{output_dict[user].get('reddit_gold', 0)} <:reddit_gold:833675932883484753>", inline=True)
-            embed.add_field(name="Platinum", value=f"{output_dict[user].get('reddit_platinum', 0)} <:reddit_platinum:833678610279563304>", inline=True)
-            embed.add_field(name="Wholesome", value=f"{output_dict[user].get('reddit_wholesome', 0)} <:reddit_wholesome:833669115762835456>", inline=True)
-            embed.add_field(name="Helpful", value=f"{output_dict[user].get('helpful', 0)} <:helpful:1412197811008704694>", inline=True)
-            embed.add_field(name="Trukes", value=f"{output_dict[user].get('truke', 0)} <:truke:1359507023951298700>", inline=True)
-
-            try:
-                await ctx.channel.send(embed=embed)
-            except Exception as e:
-                self.logger.error(f"FAILED TO SEND EMBED: {e}")
+                try:
+                    await ctx.channel.send(embed=embed)
+                except Exception as e:
+                    self.logger.error(f"FAILED TO SEND EMBED: {e}")
 
 async def setup(bot):
     await bot.add_cog(Analyse(bot))

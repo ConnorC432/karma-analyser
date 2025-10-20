@@ -9,7 +9,7 @@ import regex
 import asyncio
 from ollama import Client
 from urllib import parse, request
-from utils import reddiquette
+from utils import reddiquette, karmic_dict
 from datetime import datetime
 from zoneinfo import ZoneInfo
 from bs4 import BeautifulSoup
@@ -387,24 +387,8 @@ class AITools:
             - Karmic Emoji Counts
         :return: A JSON formatted list of the stats for all members in the server
         """
-        try:
-            with open("karma.json", "r") as f:
-                data = json.load(f)
-        except FileNotFoundError as e:
-            self.logger.error(f"karma.json NOT FOUND: {e}")
-            return "No data found"
-        except json.decoder.JSONDecodeError as e:
-            self.logger.error(f"INVALID karma.json: {e}")
-            return "No data found"
-
-        try:
-            karma = data[str(server)]
-        except KeyError as e:
-            self.logger.error(f"USER'S KARMA NOT FOUND: {e}")
-            return "No data found"
-
-        if karma:
-            return str(karma)
+        if karmic_dict:
+            return karmic_dict[server.id]
 
         return "No data found"
 
