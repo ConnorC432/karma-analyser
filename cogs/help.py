@@ -1,9 +1,11 @@
 import discord
-import utils
 from discord.ext import commands
+
+import utils
 
 
 class Help(commands.Cog):
+
     def __init__(self, bot):
         self.bot = bot
         self.bot.remove_command('help')
@@ -19,7 +21,7 @@ class Help(commands.Cog):
             embed = discord.Embed(
                 title="r/help",
                 description="Use r/help *command* to see help for a specific command",
-                color=utils.reddit_red
+                color=utils.REDDIT_RED
             )
 
             for command in self.bot.commands:
@@ -36,19 +38,19 @@ class Help(commands.Cog):
                 embed = discord.Embed(
                     title="Help",
                     description=f"The command `r/{help_command}` doesn't exist.",
-                    color=utils.reddit_red
+                    color=utils.REDDIT_RED
                 )
 
             else:
                 embed = discord.Embed(
                     title=f"r/{command.name}",
                     description=command.help or "No description available",
-                    color=utils.reddit_red
+                    color=utils.REDDIT_RED
                 )
 
                 if command.aliases:
                     embed.add_field(
-                        name=f"Aliases",
+                        name="Aliases",
                         value=", ".join(command.aliases),
                         inline=False
                     )

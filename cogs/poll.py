@@ -1,10 +1,13 @@
 import logging
+
 import discord
 from discord.ext import commands
-from utils import emoji_numbers, reddit_red
+
+from utils import emoji_numbers, REDDIT_RED
 
 
 class Poll(commands.Cog):
+
     def __init__(self, bot):
         self.bot = bot
         self.logger = logging.getLogger(f"{self.__class__.__name__}")
@@ -31,7 +34,7 @@ class Poll(commands.Cog):
         embed = discord.Embed(
             title=question,
             description="\n".join(f"### {emoji_numbers[i]} {opt} \n" for i, opt in enumerate(options)),
-            color=reddit_red
+            color=REDDIT_RED
         )
 
         poll_message = await ctx.message.reply(embed=embed)

@@ -1,7 +1,7 @@
 ### Remove this line and rename file to settings.json
 {
-  "bot_token": "",
-  "ollama_endpoint": "localhost:11434",
-  "giphy_key": "",
-  "search_endpoint": ""
+"bot_token": "",
+"ollama_endpoint": "localhost:11434",
+"giphy_key": "",
+"search_endpoint": ""
 }

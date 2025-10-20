@@ -1,12 +1,15 @@
 import logging
 import random
 import re
-import utils
+
 import discord
 from discord.ext import commands
 
+import utils
+
 
 class Dice(commands.Cog):
+
     def __init__(self, bot):
         self.bot = bot
         self.logger = logging.getLogger(f"{self.__class__.__name__}")
@@ -20,14 +23,14 @@ class Dice(commands.Cog):
             return
 
         content = payload.content[2:].strip()
-        pattern = r"^(\d+)d(\d+)((?:\+|\-)\d+)?$"   # Match the XdY+Z format
+        pattern = r"^(\d+)d(\d+)((?:\+|\-)\d+)?$"  # Match the XdY+Z format
         match = re.match(pattern, content)
         if not match:
             return
 
-        num = int(match.group(1))   # Number of dice to roll
-        sides = int(match.group(2)) # Number of sides on the dice
-        modifier = match.group(3)   # Modifier +/-
+        num = int(match.group(1))  # Number of dice to roll
+        sides = int(match.group(2))  # Number of sides on the dice
+        modifier = match.group(3)  # Modifier +/-
 
         self.logger.info(f"Rolling: {num}d{sides}{modifier or ''}")
 
@@ -42,7 +45,7 @@ class Dice(commands.Cog):
 
         embed = discord.Embed(
             title=total,
-            color=utils.reddit_red
+            color=utils.REDDIT_RED
         )
         embed.add_field(
             name="🎲 Die" if num == 1 else "🎲 Dice",

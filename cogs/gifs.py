@@ -1,11 +1,13 @@
 import json
 import logging
 import random
-from discord.ext import commands
 from urllib import parse, request
+
+from discord.ext import commands
 
 
 class Gifs(commands.Cog):
+
     def __init__(self, bot):
         self.bot = bot
         self.logger = logging.getLogger(f"{self.__class__.__name__}")
@@ -16,24 +18,28 @@ class Gifs(commands.Cog):
         Search for gifs
         - `text` (required): The gif to search for. Defaults to a random gif.
         """
-        with open("settings.json", "r") as f:
+        with open("settings.json", "r", encoding="utf-8") as f:
             settings = json.load(f)
             giphy_key = settings.get("giphy_key")
 
         if not text:
             giphy_url = "https://api.giphy.com/v1/gifs/random"
-            params = parse.urlencode({
-                "api_key": giphy_key
-            })
-            self.logger.debug(f"GETTING RANDOM GIF")
+            params = parse.urlencode(
+                {
+                    "api_key": giphy_key
+                }
+            )
+            self.logger.debug("GETTING RANDOM GIF")
         else:
             giphy_url = "https://api.giphy.com/v1/gifs/search"
-            params = parse.urlencode({
-                "q": text,
-                "api_key": giphy_key,
-                "limit": 5
-            })
-            self.logger.debug(f"GETTING 5 GIFS")
+            params = parse.urlencode(
+                {
+                    "q"      : text,
+                    "api_key": giphy_key,
+                    "limit"  : 5
+                }
+            )
+            self.logger.debug("GETTING 5 GIFS")
 
         with request.urlopen(f"{giphy_url}?{params}") as response:
             data = json.loads(response.read())
@@ -51,6 +57,7 @@ class Gifs(commands.Cog):
 
         self.logger.info(f"SENDING GIF: {gif_url}")
         await ctx.message.reply(gif_url)
+
 
 async def setup(bot):
     await bot.add_cog(Gifs(bot))

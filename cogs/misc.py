@@ -2,10 +2,12 @@ import asyncio
 import datetime
 import logging
 import random
+
 from discord.ext import commands
 
 
 class Misc(commands.Cog):
+
     def __init__(self, bot):
         self.bot = bot
         self.init_time = datetime.datetime.now(datetime.timezone.utc)
@@ -26,8 +28,10 @@ class Misc(commands.Cog):
             self.logger.info(f"PASSING IT ON: {payload.content}")
 
         if "nothing ever happens" in payload.content.lower():
-            await payload.reply(content="https://tenor.com/view/nothing-ever-happens-chud-chudjak-soyjak-90-seconds-to-nothing-gif-9277709574191520604")
-            self.logger.info(f"NOTHING EVER HAPPENS")
+            await payload.reply(
+                content="https://tenor.com/view/nothing-ever-happens-chud-chudjak-soyjak-90-seconds-to-nothing-gif-9277709574191520604"
+            )
+            self.logger.info("NOTHING EVER HAPPENS")
 
     @commands.command()
     async def gild(self, ctx):
@@ -35,6 +39,7 @@ class Misc(commands.Cog):
         Gild the Karma Analyser
         """
         await ctx.reply("Thank you kind stranger!")
+
 
 async def setup(bot):
     await bot.add_cog(Misc(bot))

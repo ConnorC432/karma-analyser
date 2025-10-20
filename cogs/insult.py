@@ -1,10 +1,12 @@
 import logging
+
 import aiohttp
 import discord
 from discord.ext import commands
 
 
 class Insult(commands.Cog):
+
     def __init__(self, bot):
         self.bot = bot
         self.logger = logging.getLogger(f"{self.__class__.__name__}")
