@@ -4,6 +4,7 @@ import logging
 import random
 import discord
 import json
+import utils
 from collections import defaultdict
 from discord.ext import commands, tasks
 from utils import reaction_dict, status, karma_lock, json_to_dict, dict_to_json
@@ -278,7 +279,7 @@ class Analyse(commands.Cog):
             # Create Karmic analysis embed for each user
             embed = discord.Embed(
                 title=f"{user_str}",
-                color=0xED001C
+                color=utils.reddit_red
             )
 
             embed.add_field(name="Karma", value=f"{karma} {karma_str}", inline=False)

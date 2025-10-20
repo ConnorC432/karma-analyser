@@ -1,4 +1,5 @@
 import discord
+import utils
 from discord.ext import commands
 
 
@@ -18,7 +19,7 @@ class Help(commands.Cog):
             embed = discord.Embed(
                 title="r/help",
                 description="Use r/help *command* to see help for a specific command",
-                color=0xED001C
+                color=utils.reddit_red
             )
 
             for command in self.bot.commands:
@@ -35,14 +36,14 @@ class Help(commands.Cog):
                 embed = discord.Embed(
                     title="Help",
                     description=f"The command `r/{help_command}` doesn't exist.",
-                    color=0xED001C
+                    color=utils.reddit_red
                 )
 
             else:
                 embed = discord.Embed(
                     title=f"r/{command.name}",
                     description=command.help or "No description available",
-                    color=0xED001C
+                    color=utils.reddit_red
                 )
 
                 if command.aliases:
