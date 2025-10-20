@@ -7,7 +7,7 @@ import random
 import discord
 from discord.ext import commands, tasks
 
-from utils import karma_lock, karmic_dict, reaction_dict, REDDIT_RED, status
+from utils import REDDIT_RED, karma_lock, karmic_dict, reaction_dict, status
 
 
 UPVOTE_STR = "<:reddit_upvote:1266139689136689173>"
@@ -18,6 +18,7 @@ PLAT_STR = "<:reddit_platinum:833678610279563304>"
 WHOLESOME_STR = "<:reddit_wholesome:833669115762835456>"
 HELPFUL_STR = "<:helpful:1412197811008704694>"
 TRUKE_STR = "<:truke:1359507023951298700>"
+
 
 class Analyse(commands.Cog):
 
@@ -55,21 +56,24 @@ class Analyse(commands.Cog):
                         async for message in channel.history(limit=None, oldest_first=True):
                             await self.analyse_message(guild, message)
 
+                            self.message_count += 1
+
+                            if self.message_count % 100 == 0:
+                                await self.bot.change_presence(
+                                    activity=discord.Game(name=f"{self.message_count} MESSAGES ANALYSED"),
+                                )
+                                self.logger.info(
+                                    "CHANGED STATUS: "
+                                    "\"%s MESSAGES ANALYSED\"", self.message_count
+                                )
+
                     except discord.HTTPException as e:
                         self.logger.error("HTTP ERROR: %s", e)
 
         self.change_status.start()
 
     async def analyse_message(self, guild, message):
-        self.message_count += 1
         self.logger.debug("(%s) %s: %s", self.message_count, message.author, message.content)
-
-        if self.message_count % 100 == 0:
-            await self.bot.change_presence(
-                activity=discord.Game(name=f"{self.message_count} MESSAGES ANALYSED"),
-            )
-            self.logger.info("CHANGED STATUS: \"%s MESSAGES ANALYSED\"", self.message_count)
-
         # Ignore Deleted Users and messages sent after bot initialisation.
         if (
                 message.author.name == "Deleted User"
@@ -190,8 +194,10 @@ class Analyse(commands.Cog):
 
         # Load karma JSON
         if karma_lock.locked():
-            await reply.edit(content="WAITING TO ACCESS KARMIC ARCHIVES, "
-                                     "THIS MAY TAKE LONGER THAN USUAL")
+            await reply.edit(
+                content="WAITING TO ACCESS KARMIC ARCHIVES, "
+                        "THIS MAY TAKE LONGER THAN USUAL"
+            )
 
         async with karma_lock:
             # Determine which users to analyse
@@ -207,8 +213,10 @@ class Analyse(commands.Cog):
 
             # @here
             elif "@here" in ctx.message.content:
-                users_to_iterate.update(m.id for m in ctx.guild.members
-                                        if m.status != discord.Status.offline)
+                users_to_iterate.update(
+                    m.id for m in ctx.guild.members
+                    if m.status != discord.Status.offline
+                )
 
             else:
                 # @user
