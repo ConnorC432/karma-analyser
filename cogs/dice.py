@@ -36,7 +36,12 @@ class Dice(commands.Cog):
 
         mod_int = int(modifier) if modifier else 0
 
-        if num > 1000000 or sides > 1000000 or abs(mod_int) > 1000000:
+        if (
+            num > 1000000
+            or sides > 1000000
+            or sides < 2
+            or abs(mod_int) > 1000000
+        ):
             return
 
         rolls = [random.randint(1, sides) for _ in range(num)]
@@ -48,7 +53,7 @@ class Dice(commands.Cog):
             color=utils.REDDIT_RED
         )
         embed.add_field(
-            name="🎲 Die" if num == 1 else "🎲 Dice",
+            name=self.dice_name(num, sides),
             value=f"{num}d{sides}{modifier or ''}",
             inline=True
         )
@@ -60,6 +65,22 @@ class Dice(commands.Cog):
             )
 
         await payload.reply(embed=embed)
+
+    def dice_name(self, num, sides):
+        output = ""
+
+        dice_info = {
+            2: {"emoji": "🪙", "singular": "Coin", "plural": "Coins"},
+            52: {"emoji": "🃏", "singular": "Deck of Cards", "plural": "Decks of Cards"},
+            69: {"emoji": "🍆", "singular": "Nice", "plural": "Nice"},
+            777: {"emoji": "🎰", "singular": "Slot Machine", "plural": "Slot machines"},
+        }
+
+        info = dice_info.get(sides, {"emoji": "🎲", "singular": "Die", "plural": "Dice"})
+
+        name = info["singular"] if num == 1 else info["plural"]
+
+        return f"{info['emoji']} {name}"
 
 
 async def setup(bot):
