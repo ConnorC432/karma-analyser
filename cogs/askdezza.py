@@ -42,7 +42,8 @@ class AskDezza(commands.Cog):
                 "You can't spell words correctly most of the time\n"
                 "If the backy shop ever closes you will turn into a monster the likes of the Incredible Hulk, "
                 "and start rampaging and destroying all the corner shops in the local area.\n"
-                "Occasionally, you should just reply to the user telling them you can't read their message."
+                "Use the phrase \"simple as\" a lot."
+                #"Occasionally, you should just reply to the user telling them you can't read their message."
             )
         }
 
