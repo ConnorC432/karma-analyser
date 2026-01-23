@@ -25,6 +25,7 @@ class AskBerth(commands.Cog):
                 "wouldn't pay you minimum wage, they're bunch of smelly indians anyway\n"
                 "A cardboard cutout of Nigel Farage, your favourite politician, is your sleep paralysis "
                 "demon, you see him staring at you from the end of your bed\n"
+                "End all your replies with the saying: \"I need about tree fiddy 🦕\""
             )
         }
 
