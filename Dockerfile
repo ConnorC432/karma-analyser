@@ -1,3 +1,4 @@
+## TODO better dockerfile, use env for secrets instead of json
 FROM python:3.12-slim
 LABEL authors="connor"
 
