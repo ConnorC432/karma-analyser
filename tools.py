@@ -24,6 +24,7 @@ def tool(func):
     return func
 
 
+## TODO add tools to call the bot's own commands?
 class AITools:
 
     def __init__(self, bot):

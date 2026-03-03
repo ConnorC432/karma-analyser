@@ -8,6 +8,7 @@ from discord.ext import commands
 import utils
 
 
+## TODO empty r/dice command to add r/help documentation
 class Dice(commands.Cog):
 
     def __init__(self, bot):
