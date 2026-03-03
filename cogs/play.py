@@ -1,8 +1,8 @@
-import logging
 import asyncio
+import logging
+
 import discord
 import yt_dlp
-
 from discord.ext import commands
 
 import utils
@@ -109,6 +109,7 @@ class MusicPlayer:
         else:
             self.voice_client = await channel.connect()
 
+
 class Play(commands.Cog):
 
     def __init__(self, bot):
@@ -201,13 +202,14 @@ class Play(commands.Cog):
             await ctx.reply("COULD NOT FIND A RELEVANT VIDEO")
             return
 
-        await player.queue.put({
-            "ctx": ctx,
-            "info": info
-        })
+        await player.queue.put(
+            {
+                "ctx" : ctx,
+                "info": info
+            }
+        )
 
         await ctx.reply(f"QUEUED: **{info['title']}**")
-
 
     @commands.command(name="skip")
     async def skip(self, ctx):
@@ -230,8 +232,6 @@ class Play(commands.Cog):
 
         player.voice_client.stop()
         await ctx.reply("SKIPPED")
-
-
 
     @commands.command(name="queue")
     async def queue(self, ctx):
@@ -285,6 +285,7 @@ class Play(commands.Cog):
             )
 
         await ctx.reply(embed=embed)
+
 
 async def setup(bot):
     await bot.add_cog(Play(bot))
