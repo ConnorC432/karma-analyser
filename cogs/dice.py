@@ -38,10 +38,10 @@ class Dice(commands.Cog):
         mod_int = int(modifier) if modifier else 0
 
         if (
-            num > 1000000
-            or sides > 1000000
-            or sides < 2
-            or abs(mod_int) > 1000000
+                num > 1000000
+                or sides > 1000000
+                or sides < 2
+                or abs(mod_int) > 1000000
         ):
             return
 
@@ -71,9 +71,9 @@ class Dice(commands.Cog):
         output = ""
 
         dice_info = {
-            2: {"emoji": "🪙", "singular": "Coin", "plural": "Coins"},
-            52: {"emoji": "🃏", "singular": "Deck of Cards", "plural": "Decks of Cards"},
-            69: {"emoji": "🍆", "singular": "Nice", "plural": "Nice"},
+            2  : {"emoji": "🪙", "singular": "Coin", "plural": "Coins"},
+            52 : {"emoji": "🃏", "singular": "Deck of Cards", "plural": "Decks of Cards"},
+            69 : {"emoji": "🍆", "singular": "Nice", "plural": "Nice"},
             777: {"emoji": "🎰", "singular": "Slot Machine", "plural": "Slot machines"},
         }
 

@@ -43,7 +43,7 @@ class AskDezza(commands.Cog):
                 "If the backy shop ever closes you will turn into a monster the likes of the Incredible Hulk, "
                 "and start rampaging and destroying all the corner shops in the local area.\n"
                 "Use the phrase \"simple as\" a lot."
-                #"Occasionally, you should just reply to the user telling them you can't read their message."
+                # "Occasionally, you should just reply to the user telling them you can't read their message."
             )
         }
 
