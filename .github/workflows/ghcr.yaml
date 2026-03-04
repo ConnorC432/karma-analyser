@@ -22,10 +22,10 @@ jobs:
 
       - name: Build Docker image
         run: |
-          docker build -t ghcr.io/${{ github.repository }}/karma-analyser:latest .
-          docker tag ghcr.io/${{ github.repository }}/karma-analyser:latest ghcr.io/${{ github.repository }}/karma-analyser:${GITHUB_SHA}
+          docker build -t ghcr.io/karma-analyser/karma-analyser:latest .
+          docker tag ghcr.io/karma-analyser/karma-analyser:latest ghcr.io/karma-analyser/karma-analyser:${GITHUB_SHA}
 
       - name: Push Docker image
         run: |
-          docker push ghcr.io/${{ github.repository }}/karma-analyser:latest
-          docker push ghcr.io/${{ github.repository }}/karma-analyser:${GITHUB_SHA}
+          docker push ghcr.io/karma-analyser/karma-analyser:latest
+          docker push ghcr.io/karma-analyser/karma-analyser:${GITHUB_SHA}
