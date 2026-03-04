@@ -158,10 +158,6 @@ class MusicPlayer:
             await self.play_next_event.wait()
             self.play_next_event.clear()
 
-            if self.queue.empty():
-                await self.voice_client.disconnect()
-                self.voice_client = None
-
         except Exception as e:
             await ctx.reply("ERROR PLAYING SONG")
             self.logger.error(f"ERROR PLAYING SONG: {e}")
@@ -197,6 +193,11 @@ class Play(commands.Cog):
         return self.players[guild.id]
 
     async def search_youtube(self, query: str):
+        """
+        Search YouTube for audio
+        :param query: YouTube search query
+        :return: yt-dlp info object
+        """
         ytdl_opts = {
             "format"        : "bestaudio/best[ext=m4a]/best",
             "noplaylist"    : True,
@@ -205,6 +206,8 @@ class Play(commands.Cog):
             "ignoreerrors"  : True,
             "logger"        : self.logger,
             "progress_hooks": [lambda d: self.logger.debug(d)],
+            ## TODO use cookies to get around youtube's bot filter
+            # "cookiesfrombrowser": ("firefox",),
         }
 
         loop = asyncio.get_running_loop()
@@ -226,17 +229,13 @@ class Play(commands.Cog):
                     if not entry:
                         continue
 
-                    # log for debugging
-                    self.logger.info(f"YT entry found: title={entry.get('title')} url={entry.get('webpage_url')}")
-
                     if entry.get("webpage_url") and entry.get("url"):
-                        return entry  # first valid video
+                        return entry
 
                 # none valid
                 self.logger.warning(f"No valid videos found for query: {query}")
                 return None
 
-            # single video case
             if info.get("webpage_url") and info.get("url"):
                 self.logger.info(f"YT video found: title={info.get('title')} url={info.get('webpage_url')}")
                 return info
@@ -252,6 +251,7 @@ class Play(commands.Cog):
     async def play(self, ctx, *, query: str):
         """
         Play a YouTube video in a voice channel
+        You must be in a voice channel
         - `Query` (required): Video search query
         """
         if not ctx.author.voice or not ctx.author.voice.channel:
@@ -276,12 +276,13 @@ class Play(commands.Cog):
             }
         )
 
-        await ctx.reply(f"QUEUED: **{info['title']}**")
+        await ctx.reply(f"QUEUED: [{info['title']}]")
 
     @commands.command(name="skip")
     async def skip(self, ctx):
         """
         Skip the currently playing song
+        You must be in the same voice channel as the bot
         """
         player = self.get_music_player(ctx.guild)
 
