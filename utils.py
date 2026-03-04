@@ -6,6 +6,10 @@ from collections import defaultdict
 karmic_dict = defaultdict(lambda: defaultdict(lambda: defaultdict(int)))
 
 REDDIT_RED = 0xED001C
+REDDIT_ORANGE =0xFF8700
+REDDIT_GREEN = 0x3BCB56
+REDDIT_BLUE = 0x149EF0
+REDDIT_GRAY =0xA5A4A4
 
 emoji_numbers = ["1️⃣", "2️⃣", "3️⃣", "4️⃣", "5️⃣", "6️⃣", "7️⃣", "8️⃣", "9️⃣", "🔟"]
 
