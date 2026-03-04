@@ -247,6 +247,7 @@ class Play(commands.Cog):
             self.logger.error(f"YouTube search failed for query {query}: {e}")
             return None
 
+    ## TODO limit command usage to song-requests channel
     @commands.command(name="play", aliases=["music", "song", "listen"])
     async def play(self, ctx, *, query: str):
         """
