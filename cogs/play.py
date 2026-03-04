@@ -247,7 +247,7 @@ class Play(commands.Cog):
             self.logger.error(f"YouTube search failed for query {query}: {e}")
             return None
 
-    @commands.command(name="play")
+    @commands.command(name="play", aliases=["music", "song", "listen"])
     async def play(self, ctx, *, query: str):
         """
         Play a YouTube video in a voice channel
@@ -278,7 +278,7 @@ class Play(commands.Cog):
 
         await ctx.reply(f"QUEUED: [{info['title']}]")
 
-    @commands.command(name="skip")
+    @commands.command(name="skip", aliases=["next", "fastforward"])
     async def skip(self, ctx):
         """
         Skip the currently playing song
@@ -301,7 +301,7 @@ class Play(commands.Cog):
         player.voice_client.stop()
         await ctx.reply("SKIPPED")
 
-    @commands.command(name="queue")
+    @commands.command(name="queue", aliases=["playlist", "upnext"])
     async def queue(self, ctx):
         """
         Show the song queue
