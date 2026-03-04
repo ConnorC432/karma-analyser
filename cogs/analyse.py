@@ -135,7 +135,7 @@ class Analyse(commands.Cog):
         async with karma_lock:
             # Count Reactions
             guild_id = payload.guild_id
-            author_id = payload.author_id
+            author_id = payload.message_author_id
 
             karmic_dict[guild_id][author_id][payload.emoji.name] += 1
             karmic_dict[guild_id][author_id]["Karma"] += reaction_dict[payload.emoji.name]
@@ -158,7 +158,7 @@ class Analyse(commands.Cog):
         async with karma_lock:
             # Count Reactions
             guild_id = payload.guild_id
-            author_id = payload.author_id
+            author_id = payload.message_author_id
 
             karmic_dict[guild_id][author_id][payload.emoji.name] -= 1
             karmic_dict[guild_id][author_id]["Karma"] -= reaction_dict[payload.emoji.name]
