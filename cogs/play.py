@@ -9,7 +9,6 @@ import utils
 
 
 ## TODO playlist playback
-## TODO video playback?
 ## TODO fix url in query option failing to play
 class MusicPlayer:
     """
