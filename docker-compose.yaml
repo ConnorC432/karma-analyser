@@ -1,0 +1,10 @@
+services:
+  karma-analyser:
+    image: karma-analyser:latest
+    container_name: karma-analyser
+    restart: unless-stopped
+    environment:
+      BOT_TOKEN: "${BOT_TOKEN}"
+      GIPHY_KEY: "${GIPHY_KEY}"
+      OLLAMA_ENDPOINT: "${OLLAMA_ENDPOINT}"
+      SEARXNG_ENDPOINT: "${SEARXNG_ENDPOINT}"
