@@ -1,19 +1,36 @@
-## TODO better dockerfile
 FROM python:3.12-slim
-LABEL authors="connor"
 
 ENV DEBIAN_FRONTEND=noninteractive
-
 WORKDIR /app
-COPY . /app
 
+# Copy source code in layers
+COPY requirements.txt .
+COPY bot.py .
+COPY deductions.json .
+COPY petition.gif .
+COPY tools.py .
+COPY utils.py .
+COPY cogs/ ./cogs/
+
+# Install Deno runtime
+RUN apt update && \
+    apt install -y \
+    	unzip \
+    	curl && \
+    curl -L -o deno.zip https://github.com/denoland/deno/releases/download/v2.7.1/deno-x86_64-unknown-linux-gnu.zip && \
+	unzip deno.zip -d /usr/bin && \
+    rm deno.zip && \
+    rm -rf /var/lib/apt/lists/*
+
+# discord.py voice client requirements
 RUN apt update && \
     apt install -y \
     	libffi-dev \
     	libnacl-dev \
     	python3-dev \
-    	build-essential
+    	ffmpeg && \
+    rm -rf /var/lib/apt/lists/*
 
-RUN pip install --no-cache-dir -r requirements.txt || true
+RUN pip install --no-cache-dir -r requirements.txt
 
 CMD ["python", "bot.py"]
