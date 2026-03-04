@@ -10,6 +10,59 @@ import utils
 
 ## TODO playlist playback
 ## TODO fix url in query option failing to play
+class MusicControls(discord.ui.View):
+    """
+    Music Controls class to provide controls view underneath song embed
+    """
+
+    def __init__(self, bot: commands.Bot, player: "MusicPlayer"):
+        super().__init__(timeout=None)
+        self.bot = bot
+        self.logger = logging.getLogger(f"{self.__class__.__name__}")
+
+        self.player = player
+
+    async def interaction_check(self, interaction: discord.Interaction):
+        if (
+            not interaction.user.voice
+            or not self.player.voice_client
+            or interaction.user.voice.channel != self.player.voice_client.channel
+        ):
+            await interaction.response.send_message(
+                "YOU MUST BE IN THE SAME VOICE CHANNEL",
+                ephemeral=True,
+            )
+            return False
+        return True
+
+    @discord.ui.button(label="⏭ SKIP", style=discord.ButtonStyle.primary)
+    async def skip(self, interaction: discord.Interaction, button: discord.ui.Button) -> bool:
+        self.player.voice_client.stop()
+
+        await interaction.response.defer()
+
+    @discord.ui.button(label="▶ PLAY", style=discord.ButtonStyle.success)
+    async def play_pause(self, interaction: discord.Interaction, button: discord.ui.Button) -> bool:
+        if self.player.voice_client.is_paused():
+            self.player.voice_client.resume()
+
+        await interaction.response.defer()
+
+    @discord.ui.button(label="⏸ PAUSE", style=discord.ButtonStyle.secondary)
+    async def pause(self, interaction: discord.Interaction, button: discord.ui.Button) -> bool:
+        if self.player.voice_client.is_playing():
+            self.player.voice_client.pause()
+
+        await interaction.response.defer()
+
+    @discord.ui.button(label="⏹ STOP", style=discord.ButtonStyle.danger)
+    async def stop(self, interaction: discord.Interaction, button: discord.ui.Button) -> bool:
+        self.player.queue = asyncio.Queue()
+        self.player.voice_client.stop()
+
+        await interaction.response.defer()
+
+
 class MusicPlayer:
     """
     Music Player class to allow for server independent voice clients/song queues
@@ -32,13 +85,44 @@ class MusicPlayer:
 
         self.loop_task = bot.loop.create_task(self.player_loop())
 
+    def create_embed(self, ctx, info) -> discord.Embed:
+        """
+        Create an embed for a given song
+        :return: discord embed
+        """
+        duration = info.get("duration", 0)
+        minutes, seconds = divmod(duration, 60)
+        duration_str = f"{minutes}:{seconds:02d}"
+
+        embed = discord.Embed(
+            title=f"NOW PLAYING: {info.get('title', 'Unknown Title')}",
+            url=info.get("webpage_url", "Unknown URL"),
+            description=f"By **{info.get('uploader', 'Unknown User')}**",
+            colour=utils.REDDIT_RED
+        )
+
+        embed.add_field(name="Duration", value=duration_str)
+        embed.add_field(name="Views", value=f"{info.get("view_count", 0):,}")
+
+        if info.get("thumbnail"):
+            embed.set_thumbnail(url=info["thumbnail"])
+
+        embed.set_footer(text=f"Requested by {ctx.author.display_name}")
+
+        return embed
+
     async def player_loop(self):
         while True:
             self.current = await self.queue.get()
+
             try:
                 await self.start_next_song()
             except Exception as e:
                 self.logger.error(f"ERROR IN PLAYBACK LOOP: {e}")
+
+            if self.queue.empty() and self.voice_client:
+                await self.voice_client.disconnect()
+                self.voice_client = None
 
     async def start_next_song(self):
         ctx = self.current["ctx"]
@@ -56,29 +140,13 @@ class MusicPlayer:
             )
 
             ### Create Embed
-            duration = info.get("duration", 0)
-            minutes, seconds = divmod(duration, 60)
-            duration_str = f"{minutes}:{seconds:02d}"
+            embed = self.create_embed(ctx, info)
+            view = MusicControls(self.bot, self)
 
-            embed = discord.Embed(
-                title=f"NOW PLAYING: {info.get("title", "Unknown Title")}",
-                url=info.get("webpage_url", "Unknown URL"),
-                description=f"By **{info.get("uploader", "Unknown User")}**",
-                colour=utils.REDDIT_RED
-            )
-
-            embed.add_field(name="Duration", value=duration_str)
-            embed.add_field(name="Views", value=f"{info.get("view_count", 0):,}")
-
-            if info.get("thumbnail"):
-                embed.set_thumbnail(url=info["thumbnail"])
-
-            embed.set_footer(text=f"Requested by {ctx.author.display_name}")
-
-            await ctx.send(embed=embed)
+            await ctx.reply(embed=embed, view=view)
 
             ### Wait for song to end and check VC still populated
-            while self.voice_client.is_playing():
+            while self.voice_client and self.voice_client.is_playing():
                 users = [m for m in self.voice_client.channel.members if not m.bot]
                 if not users:
                     self.logger.info("NO ONE LEFT IN VC. STOPPING PLAYBACK")
