@@ -26,9 +26,9 @@ logging.basicConfig(
 logger = logging.getLogger("Bot")
 
 # Load settings
-with open("settings.json", "r", encoding="utf-8") as f:
-    settings = json.load(f)
-    bot_token = settings["bot_token"]
+bot_token = os.environ.get("BOT_TOKEN")
+if not bot_token:
+    raise ValueError("BOT_TOKEN environment variable is not set")
 
 intents = discord.Intents.all()
 bot = commands.Bot(command_prefix=["r/", "R/"], intents=intents, case_insensitive=True)

@@ -3,6 +3,7 @@ import base64
 import inspect
 import json
 import logging
+import os
 import random
 from collections import OrderedDict
 from datetime import datetime
@@ -37,12 +38,18 @@ class AITools:
         self.message_cache = OrderedDict()
         self.cache_size = 1000
 
-        with open("settings.json", "r", encoding="utf-8") as f:
-            self.settings = json.load(f)
+        self.ollama_endpoint = os.getenv("OLLAMA_ENDPOINT")
+        self.giphy_key = os.getenv("GIPHY_KEY")
+        self.searxng_endpoint = os.getenv("SEARXNG_ENDPOINT")
 
-        self.client = Client(host=self.settings.get("ollama_endpoint"))
-        self.giphy_key = self.settings.get("giphy_key")
-        self.search_url = f"http://{self.settings.get('searxng_endpoint')}/search"
+        if not self.ollama_endpoint:
+            raise ValueError("OLLAMA_ENDPOINT environment variable is not set")
+
+        if not self.searxng_endpoint:
+            raise ValueError("SEARXNG_ENDPOINT environment variable is not set")
+
+        self.client = Client(host=self.ollama_endpoint)
+        self.search_url = f"http://{self.searxng_endpoint}/search"
 
         self.tools = [
             function for _, function in inspect.getmembers(self, predicate=inspect.ismethod)

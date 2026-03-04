@@ -1,10 +1,9 @@
-## TODO better dockerfile, use env for secrets instead of json
+## TODO better dockerfile
 FROM python:3.12-slim
 LABEL authors="connor"
 
 ENV DEBIAN_FRONTEND=noninteractive
 
-# Use images for development only rn, it will contain secrets from settings.json
 WORKDIR /app
 COPY . /app
 
@@ -13,8 +12,7 @@ RUN apt update && \
     	libffi-dev \
     	libnacl-dev \
     	python3-dev \
-    	build-essential \
-    	deno
+    	build-essential
 
 RUN pip install --no-cache-dir -r requirements.txt || true
 
