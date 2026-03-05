@@ -252,7 +252,6 @@ class Play(commands.Cog):
             self.logger.error(f"YouTube search failed for query {query}: {e}")
             return None
 
-    ## TODO limit command usage to song-requests channel
     @commands.command(name="play", aliases=["music", "song", "listen"])
     async def play(self, ctx, *, query: str):
         """
@@ -260,6 +259,9 @@ class Play(commands.Cog):
         You must be in a voice channel
         - `Query` (required): Video search query
         """
+        if ctx.channel.name != "song-requests":
+            return
+
         if not ctx.author.voice or not ctx.author.voice.channel:
             await ctx.reply("YOU ARE NOT IN A VOICE CHANNEL")
             return
@@ -290,6 +292,9 @@ class Play(commands.Cog):
         Skip the currently playing song
         You must be in the same voice channel as the bot
         """
+        if ctx.channel.name != "song-requests":
+            return
+
         player = self.get_music_player(ctx.guild)
 
         if not player:
@@ -312,6 +317,9 @@ class Play(commands.Cog):
         """
         Show the song queue
         """
+        if ctx.channel.name != "song-requests":
+            return
+
         player = self.get_music_player(ctx.guild)
 
         if not player:
