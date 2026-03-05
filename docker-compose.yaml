@@ -8,3 +8,5 @@ services:
       GIPHY_KEY: "${GIPHY_KEY}"
       OLLAMA_ENDPOINT: "${OLLAMA_ENDPOINT}"
       SEARXNG_ENDPOINT: "${SEARXNG_ENDPOINT}"
+    volumes:
+      - ./cookies.txt:/app/cookies.txt:ro

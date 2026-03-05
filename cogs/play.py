@@ -1,5 +1,6 @@
 import asyncio
 import logging
+from pathlib import Path
 
 import discord
 import yt_dlp
@@ -198,6 +199,8 @@ class Play(commands.Cog):
         :param query: YouTube search query
         :return: yt-dlp info object
         """
+        cookie_path = Path("cookies.txt").resolve()
+
         ytdl_opts = {
             "format"        : "bestaudio/best[ext=m4a]/best",
             "noplaylist"    : True,
@@ -206,9 +209,11 @@ class Play(commands.Cog):
             "ignoreerrors"  : True,
             "logger"        : self.logger,
             "progress_hooks": [lambda d: self.logger.debug(d)],
-            ## TODO use cookies to get around youtube's bot filter
-            # "cookiesfrombrowser": ("firefox",),
         }
+
+        if cookie_path.exists():
+            self.logger.debug(f"FOUND COOKIES: {cookie_path}")
+            ytdl_opts["cookies"] = str(cookie_path)
 
         loop = asyncio.get_running_loop()
 
