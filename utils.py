@@ -183,7 +183,9 @@ async def gif_search(query: str):
         async with session.get(url, params=params) as resp:
             try:
                 data = await resp.json()
-            except Exception:
+
+            except ConnectionError:
+                logger.debug("KLIPY Connection Error")
                 return None
 
     gifs = data.get("data", {}).get("data", [])

@@ -53,6 +53,7 @@ class Gambling(commands.Cog):
 
                 client = Client(host=settings.get("ollama_endpoint"))
                 ai_instructions = "You are trying to convince a fellow redditor to keep gambling, they don't know that they are close to their big win, which is why you need to convince them!"
+                response = None
 
                 try:
                     response = await asyncio.to_thread(

@@ -37,27 +37,27 @@ class MusicControls(discord.ui.View):
         return True
 
     @discord.ui.button(label="⏭ SKIP", style=discord.ButtonStyle.primary)
-    async def skip(self, interaction: discord.Interaction, button: discord.ui.Button) -> bool:
+    async def skip(self, interaction: discord.Interaction, button: discord.ui.Button) -> None:
         self.player.voice_client.stop()
 
         await interaction.response.defer()
 
     @discord.ui.button(label="▶ PLAY", style=discord.ButtonStyle.success)
-    async def play_pause(self, interaction: discord.Interaction, button: discord.ui.Button) -> bool:
+    async def play_pause(self, interaction: discord.Interaction, button: discord.ui.Button) -> None:
         if self.player.voice_client.is_paused():
             self.player.voice_client.resume()
 
         await interaction.response.defer()
 
     @discord.ui.button(label="⏸ PAUSE", style=discord.ButtonStyle.secondary)
-    async def pause(self, interaction: discord.Interaction, button: discord.ui.Button) -> bool:
+    async def pause(self, interaction: discord.Interaction, button: discord.ui.Button) -> None:
         if self.player.voice_client.is_playing():
             self.player.voice_client.pause()
 
         await interaction.response.defer()
 
     @discord.ui.button(label="⏹ STOP", style=discord.ButtonStyle.danger)
-    async def stop(self, interaction: discord.Interaction, button: discord.ui.Button) -> bool:
+    async def stop(self, interaction: discord.Interaction, button: discord.ui.Button) -> None:
         self.player.queue = asyncio.Queue()
         self.player.voice_client.stop()
 
@@ -86,7 +86,8 @@ class MusicPlayer:
 
         self.loop_task = bot.loop.create_task(self.player_loop())
 
-    def create_embed(self, ctx, info) -> discord.Embed:
+    @staticmethod
+    def create_embed(ctx, info) -> discord.Embed:
         """
         Create an embed for a given song
         :return: discord embed

@@ -35,7 +35,8 @@ class Dice(commands.Cog):
 
         return num, sides, modifier
 
-    def roll_dice(self, num: int, sides: int, modifier: int = None):
+    @staticmethod
+    def roll_dice(num: int, sides: int, modifier: int = None):
         rolls = [random.randint(1, sides) for _ in range(num)]
         total = sum(rolls) + modifier
         return rolls, total
@@ -59,9 +60,8 @@ class Dice(commands.Cog):
 
         return embed
 
-    def dice_name(self, num, sides):
-        output = ""
-
+    @staticmethod
+    def dice_name(num, sides):
         dice_info = {
             2  : {"emoji": "🪙", "singular": "Coin", "plural": "Coins"},
             52 : {"emoji": "🃏", "singular": "Deck of Cards", "plural": "Decks of Cards"},
@@ -102,15 +102,10 @@ class Dice(commands.Cog):
         if ctx.author.bot:
             return
 
-        parsed = self.parse_roll_string(ctx.content)
-
         if not ctx.content.startswith("r/"):
             return
 
         dice = ctx.content[2:].strip()
-
-        if dice.startswith(("roll", "dice")):
-            return
 
         parsed = self.parse_roll_string(dice)
 
