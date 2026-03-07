@@ -84,13 +84,11 @@ class Dice(commands.Cog):
         - `Z` (optional): Total value modifier
         """
         if ctx.author.bot:
-            await ctx.reply("NOTHING HAPPENS...")
             return
 
         parsed = self.parse_roll_string(dice)
 
         if not parsed:
-            await ctx.reply("NOTHING HAPPENS...")
             return
 
         num, sides, modifier = parsed
@@ -117,7 +115,6 @@ class Dice(commands.Cog):
         parsed = self.parse_roll_string(dice)
 
         if not parsed:
-            await ctx.reply("NOTHING HAPPENS...")
             return
 
         num, sides, modifier = parsed
