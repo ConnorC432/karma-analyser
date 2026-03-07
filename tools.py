@@ -4,11 +4,9 @@ import inspect
 import json
 import logging
 import os
-import random
 from collections import OrderedDict
 from datetime import datetime
 from json import JSONDecodeError
-from urllib import parse, request
 from zoneinfo import ZoneInfo
 
 import aiohttp
@@ -17,6 +15,7 @@ import regex
 from bs4 import BeautifulSoup
 from ollama import Client
 
+import utils
 from utils import REDDIQUETTE, karmic_dict
 
 
@@ -39,7 +38,6 @@ class AITools:
         self.cache_size = 1000
 
         self.ollama_endpoint = os.getenv("OLLAMA_ENDPOINT")
-        self.giphy_key = os.getenv("GIPHY_KEY")
         self.searxng_endpoint = os.getenv("SEARXNG_ENDPOINT")
 
         if not self.ollama_endpoint:
@@ -419,50 +417,15 @@ class AITools:
 
         return "No data found"
 
-    ## TODO Use klipy api
     @tool
-    def get_gif(self, query: str = None):
+    async def get_gif(self, query: str = None):
         """
         Get a gif
         :param query: GIF Search query - does not accept http/https format
         :return: A URL containing the gif
         """
-        if not self.giphy_key:
-            self.logger.error("GIPHY KEY NOT FOUND")
-            return "No giphy API key found"
-
-        if not query:
-            self.logger.error("SEARCH QUERY NOT FOUND")
-            return ("No search query found. "
-                    "Please call this tool with a meaningful query, "
-                    "such as \"cat\", \"reaction\" or \"yes\".")
-
-        else:
-            giphy_url = "https://api.giphy.com/v1/gifs/search"
-            params = parse.urlencode(
-                {
-                    "q"      : query,
-                    "api_key": self.giphy_key,
-                    "limit"  : 5
-                }
-            )
-            self.logger.debug(f"GETTING 5 GIFS: {query}")
-
-        try:
-            with request.urlopen(f"{giphy_url}?{params}") as response:
-                data = json.loads(response.read())
-
-        except request.HTTPError as e:
-            self.logger.error(f"FAILED TO GET GIF: {e}")
-            return "Failed to get gif."
-
-        items = data.get("data", [])
-        if not items:
-            self.logger.error("GIFS NOT FOUND")
-            return "No data found"
-
-        gif_urls = [item["images"]["original"]["url"] for item in items]
-        return f"INCLUDE THE FULL URL IN YOUR RESPONSE, AS LONG AS THE GIF IS RELEVANT TO THE TEXT: {random.choice(gif_urls)}"
+        gif_url = await utils.gif_search(query)
+        return f"INCLUDE THE FULL URL IN YOUR RESPONSE, AS LONG AS THE GIF IS RELEVANT TO THE TEXT: {gif_url}"
 
     @tool
     def get_reddiquette(self):

@@ -5,7 +5,7 @@ services:
     restart: unless-stopped
     environment:
       BOT_TOKEN: "${BOT_TOKEN}"
-      GIPHY_KEY: "${GIPHY_KEY}"
+      KLIPY_KEY: "${KLIPY_KEY}"
       OLLAMA_ENDPOINT: "${OLLAMA_ENDPOINT}"
       SEARXNG_ENDPOINT: "${SEARXNG_ENDPOINT}"
     volumes:

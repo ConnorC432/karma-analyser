@@ -1,7 +1,13 @@
 import asyncio
+import logging
+import os
 import random
 from collections import defaultdict
 
+import aiohttp
+
+
+logger = logging.getLogger("UTILS")
 
 karmic_dict = defaultdict(lambda: defaultdict(lambda: defaultdict(int)))
 
@@ -156,3 +162,33 @@ REDDIQUETTE = (
     "⦁ Troll. Trolling does not contribute to the conversation. \n"
     "⦁ Take moderation positions in a community where your profession, employment, or biases could pose a direct conflict of interest to the neutral and user driven nature of Reddit. \n"
 )
+
+
+async def gif_search(query: str):
+    api_key = os.getenv("KLIPY_KEY")
+    if not api_key:
+        raise ValueError("KLIPY_KEY environment variable is not set")
+
+    url = f"https://api.klipy.com/api/v1/{api_key}/gifs/search"
+    params = {
+        "q"             : query or "reddit",
+        "page"          : 1,
+        "per_page"      : 8,
+        "customer_id"   : 0,
+        "locale"        : "GB",
+        "content_filter": "off"
+    }
+
+    async with aiohttp.ClientSession() as session:
+        async with session.get(url, params=params) as resp:
+            try:
+                data = await resp.json()
+            except Exception:
+                return None
+
+    gifs = data.get("data", {}).get("data", [])
+    if not gifs:
+        return None
+
+    gif = random.choice(gifs)
+    return gif.get("file", {}).get("md", {}).get("gif", {}).get("url")
