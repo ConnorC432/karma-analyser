@@ -8,47 +8,39 @@ from discord.ext import commands
 import utils
 
 
-## TODO empty r/dice command to add r/help documentation
 class Dice(commands.Cog):
 
     def __init__(self, bot):
         self.bot = bot
         self.logger = logging.getLogger(f"{self.__class__.__name__}")
+        self.pattern = re.compile(r"^(\d+)d(\d+)([+\-]\d+)?$")
 
-    @commands.Cog.listener()
-    async def on_message(self, payload):
-        if payload.author.bot:
-            return
+    def parse_roll_string(self, dice: str):
+        match = self.pattern.match(dice)
 
-        if not payload.content.startswith("r/"):
-            return
-
-        content = payload.content[2:].strip()
-        pattern = r"^(\d+)d(\d+)((?:\+|\-)\d+)?$"  # Match the XdY+Z format
-        match = re.match(pattern, content)
         if not match:
-            return
+            return None
 
-        num = int(match.group(1))  # Number of dice to roll
-        sides = int(match.group(2))  # Number of sides on the dice
-        modifier = match.group(3)  # Modifier +/-
-
-        self.logger.info(f"Rolling: {num}d{sides}{modifier or ''}")
-
-        mod_int = int(modifier) if modifier else 0
+        num = int(match.group(1))                                   # Number of dice to roll
+        sides = int(match.group(2))                                 # Number of sides on the dice
+        modifier = int(match.group(3)) if match.group(3) else 0     # Modifier +/-
 
         if (
                 num > 1000000
                 or sides > 1000000
                 or sides < 2
-                or abs(mod_int) > 1000000
+                or abs(modifier) > 1000000
         ):
-            return
+            return None
 
+        return num, sides, modifier
+
+    def roll_dice(self, num: int, sides: int, modifier: int = None):
         rolls = [random.randint(1, sides) for _ in range(num)]
-        total = sum(rolls)
-        total += mod_int
+        total = sum(rolls) + modifier
+        return rolls, total
 
+    def create_embed(self, num, sides, modifier, rolls, total):
         embed = discord.Embed(
             title=total,
             color=utils.REDDIT_RED
@@ -65,7 +57,7 @@ class Dice(commands.Cog):
                 inline=False
             )
 
-        await payload.reply(embed=embed)
+        return embed
 
     def dice_name(self, num, sides):
         output = ""
@@ -82,6 +74,57 @@ class Dice(commands.Cog):
         name = info["singular"] if num == 1 else info["plural"]
 
         return f"{info['emoji']} {name}"
+
+    @commands.command(name="dice", aliases=["roll"])
+    async def dice(self, ctx, dice: str | None = None):
+        """
+        Roll dice with the format XdY(+/-)Z
+        - `X` (required): Number of dice to roll
+        - `Y` (required): Number of sides on the die/dice
+        - `Z` (optional): Total value modifier
+        """
+        if ctx.author.bot:
+            await ctx.reply("NOTHING HAPPENS...")
+            return
+
+        parsed = self.parse_roll_string(dice)
+
+        if not parsed:
+            await ctx.reply("NOTHING HAPPENS...")
+            return
+
+        num, sides, modifier = parsed
+        rolls, total = self.roll_dice(num, sides, modifier)
+        embed = self.create_embed(num, sides, modifier, rolls, total)
+
+        await ctx.reply(embed=embed)
+
+    @commands.Cog.listener()
+    async def on_message(self, ctx):
+        if ctx.author.bot:
+            return
+
+        parsed = self.parse_roll_string(ctx.content)
+
+        if not ctx.content.startswith("r/"):
+            return
+
+        dice = ctx.content[2:].strip()
+
+        if dice.startswith(("roll", "dice")):
+            return
+
+        parsed = self.parse_roll_string(dice)
+
+        if not parsed:
+            await ctx.reply("NOTHING HAPPENS...")
+            return
+
+        num, sides, modifier = parsed
+        rolls, total = self.roll_dice(num, sides, modifier)
+        embed = self.create_embed(num, sides, modifier, rolls, total)
+
+        await ctx.reply(embed=embed)
 
 
 async def setup(bot):
