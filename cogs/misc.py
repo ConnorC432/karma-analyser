@@ -11,7 +11,7 @@ class Misc(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
         self.init_time = datetime.datetime.now(datetime.timezone.utc)
-        self.logger = logging.getLogger(f"{self.__class__.__name__}")
+        self.logger = logging.getLogger(self.__class__.__name__)
 
     @commands.Cog.listener()
     async def on_message(self, payload):

@@ -29,7 +29,7 @@ class AITools:
 
     def __init__(self, bot):
         self.bot = bot
-        self.logger = logging.getLogger(f"{self.__class__.__name__}")
+        self.logger = logging.getLogger(self.__class__.__name__)
 
         self.model = "artifish/llama3.2-uncensored"
         self.vision_model = "llava"

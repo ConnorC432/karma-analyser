@@ -35,7 +35,7 @@ bot = commands.Bot(command_prefix=["r/", "R/"], intents=intents, case_insensitiv
 
 @bot.event
 async def on_ready():
-    logger.info("%s IS READY TO ANALYSE REDDIT KARMA", bot.user)
+    logger.info(f"{bot.user} IS READY TO ANALYSE REDDIT KARMA")
 
 
 # Load cogs
@@ -44,17 +44,17 @@ async def load_extensions():
         for cog in args.c:
             try:
                 await bot.load_extension(f"cogs.{cog}")
-                logger.debug("LOADED COG: %s", cog)
+                logger.debug(f"LOADED COG: {cog}",)
             except ExtensionError as e:
-                logger.critical("FAILED TO LOAD COG: %s: %s", cog, e)
+                logger.critical(f"FAILED TO LOAD COG: {cog}: {e}")
     else:
         for filename in os.listdir("./cogs"):
             if filename.endswith(".py") and not filename.startswith("_"):
                 try:
                     await bot.load_extension(f"cogs.{filename[:-3]}")
-                    logger.debug("LOADED COG: %s", filename)
+                    logger.debug(f"LOADED COG: {filename}")
                 except ExtensionError as e:
-                    logger.critical("FAILED TO LOAD COG: %s: %s", filename, e)
+                    logger.critical(f"FAILED TO LOAD COG: {filename}: {e}")
 
 
 async def main():

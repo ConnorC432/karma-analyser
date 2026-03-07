@@ -25,7 +25,7 @@ class Analyse(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
         self.init_time = datetime.datetime.now(datetime.timezone.utc)
-        self.logger = logging.getLogger(f"{self.__class__.__name__}")
+        self.logger = logging.getLogger(self.__class__.__name__)
         self.message_count = 0
 
     @commands.Cog.listener()
@@ -36,7 +36,7 @@ class Analyse(commands.Cog):
                 with open("deductions.json", "r", encoding="utf-8") as f:
                     deductions = json.load(f)
             except FileNotFoundError as e:
-                self.logger.debug("SHIT, I LOST THE KARMIC ARCHIVES: %s", e)
+                self.logger.debug(f"SHIT, I LOST THE KARMIC ARCHIVES: {e}")
                 deductions = {}
 
             for guild in self.bot.guilds:
@@ -47,9 +47,9 @@ class Analyse(commands.Cog):
                     if user_obj is not None:
                         karmic_dict[guild.id][user_obj.id]["Karma"] += deduction
                     else:
-                        self.logger.warning("USER %s NOT IN SUBREDDIT %s", user, guild.name)
+                        self.logger.warning(f"USER {user} NOT IN SUBREDDIT {guild.name}")
 
-            print("Counting Karma")
+            self.logger.info("COUNTING KARMA...")
             for guild in self.bot.guilds:
                 for channel in guild.text_channels:
                     try:
@@ -62,18 +62,15 @@ class Analyse(commands.Cog):
                                 await self.bot.change_presence(
                                     activity=discord.Game(name=f"{self.message_count} MESSAGES ANALYSED"),
                                 )
-                                self.logger.info(
-                                    "CHANGED STATUS: "
-                                    "\"%s MESSAGES ANALYSED\"", self.message_count
-                                )
+                                self.logger.info(f"CHANGED STATUS: \"{self.message_count} MESSAGES ANALYSED\"")
 
                     except discord.HTTPException as e:
-                        self.logger.error("HTTP ERROR: %s", e)
+                        self.logger.error(f"HTTP ERROR: {e}")
 
         self.change_status.start()
 
     async def analyse_message(self, guild, message):
-        self.logger.debug("(%s) %s: %s", self.message_count, message.author, message.content)
+        self.logger.debug(f"({self.message_count}) {message.author}: {message.content}")
         # Ignore Deleted Users and messages sent after bot initialisation.
         if (
                 message.author.name == "Deleted User"
@@ -111,12 +108,12 @@ class Analyse(commands.Cog):
                     karmic_dict[guild.id][message.author.id]["Karma"] += reaction_dict[emoji_name]
 
             except discord.HTTPException as e:
-                self.logger.error("HTTP ERROR: %s", e)
+                self.logger.error(f"HTTP ERROR: {e}")
 
     @tasks.loop(minutes=15)
     async def change_status(self):
         activity = random.choice(status)
-        self.logger.info("CHANGED STATUS: %s", activity)
+        self.logger.info(f"CHANGED STATUS: {activity}")
         await self.bot.change_presence(activity=discord.Game(name=activity))
 
     @commands.Cog.listener()
@@ -140,7 +137,7 @@ class Analyse(commands.Cog):
             karmic_dict[guild_id][author_id][payload.emoji.name] += 1
             karmic_dict[guild_id][author_id]["Karma"] += reaction_dict[payload.emoji.name]
 
-        self.logger.debug("ANALYSED %s'S REACTION TO %s'S POST", user.name, message.author.name)
+        self.logger.debug(f"ANALYSED {user.name}'S REACTION TO {message.author.name}'S POST")
 
     @commands.Cog.listener()
     async def on_raw_reaction_remove(self, payload):
@@ -163,7 +160,7 @@ class Analyse(commands.Cog):
             karmic_dict[guild_id][author_id][payload.emoji.name] -= 1
             karmic_dict[guild_id][author_id]["Karma"] -= reaction_dict[payload.emoji.name]
 
-        self.logger.debug("ANALYSED %s'S REACTION TO %s'S POST", user.name, message.author.name)
+        self.logger.debug(f"ANALYSED {user.name}'S REACTION TO {message.author.name}'S POST")
 
     @commands.Cog.listener()
     async def on_message(self, message):
@@ -173,7 +170,7 @@ class Analyse(commands.Cog):
         async with karma_lock:
             karmic_dict[message.guild.id][message.author.id]["Messages"] += 1
 
-        self.logger.debug("ANALYSED MESSAGE: %s: %s", message.author.name, message.content)
+        self.logger.debug(f"ANALYSED MESSAGE: {message.author.name}: {message.content}")
 
     @commands.Cog.listener()
     async def on_message_delete(self, message):
@@ -182,7 +179,7 @@ class Analyse(commands.Cog):
         async with karma_lock:
             karmic_dict[message.guild.id][message.author.id]["Messages"] -= 1
 
-        self.logger.debug("UN-ANALYSED MESSAGE: %s: %s", message.author.name, message.content)
+        self.logger.debug(f"UN-ANALYSED MESSAGE: {message.author.name}: {message.content}")
 
     @commands.command(aliases=['analysis'])
     async def analyse(self, ctx):
@@ -230,7 +227,7 @@ class Analyse(commands.Cog):
                 if not users_to_iterate:
                     users_to_iterate.add(ctx.author.id)
 
-            self.logger.info("ANALYSING USERS: %s", users_to_iterate)
+            self.logger.info(f"ANALYSING USERS: {users_to_iterate}")
 
             await asyncio.sleep(random.uniform(2.5, 5))
             await reply.edit(content="KARMA ANALYSED")
@@ -300,7 +297,7 @@ class Analyse(commands.Cog):
                 try:
                     await ctx.channel.send(embed=embed)
                 except discord.HTTPException as e:
-                    self.logger.error("FAILED TO SEND EMBED: %s", e)
+                    self.logger.error(f"FAILED TO SEND EMBED: {e}")
 
 
 async def setup(bot):
