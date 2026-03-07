@@ -20,12 +20,12 @@ from ollama import Client
 from utils import REDDIQUETTE, karmic_dict
 
 
+## Tool decorator
 def tool(func):
     func.is_tool = True
     return func
 
 
-## TODO add tools to call the bot's own commands?
 class AITools:
 
     def __init__(self, bot):
@@ -105,7 +105,7 @@ class AITools:
                     continue
 
             if tool_calls:
-                self.logger.debug(f"TOOL CALLS: {tool_calls}")
+                # self.logger.debug(f"TOOL CALLS: {tool_calls}")
 
                 for call in tool_calls:
                     if isinstance(call, dict):
