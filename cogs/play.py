@@ -25,9 +25,9 @@ class MusicControls(discord.ui.View):
 
     async def interaction_check(self, interaction: discord.Interaction):
         if (
-            not interaction.user.voice
-            or not self.player.voice_client
-            or interaction.user.voice.channel != self.player.voice_client.channel
+                not interaction.user.voice
+                or not self.player.voice_client
+                or interaction.user.voice.channel != self.player.voice_client.channel
         ):
             await interaction.response.send_message(
                 "YOU MUST BE IN THE SAME VOICE CHANNEL",
