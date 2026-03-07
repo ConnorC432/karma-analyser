@@ -1,4 +1,4 @@
-name: Build Karma Analyser image and push it to the GitHub Container Registry.
+name: Create Docker Image
 
 on:
   push:
