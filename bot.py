@@ -1,10 +1,14 @@
-import discord
-import json
-import os
-import asyncio
+#!/usr/bin/env python
+
 import argparse
+import asyncio
 import logging
+import os
+
+import discord
 from discord.ext import commands
+from discord.ext.commands import ExtensionError
+
 
 # Parse launch arguments
 parser = argparse.ArgumentParser()
@@ -21,16 +25,18 @@ logging.basicConfig(
 logger = logging.getLogger("Bot")
 
 # Load settings
-with open("settings.json", "r") as f:
-    settings = json.load(f)
-    bot_token = settings["bot_token"]
+bot_token = os.environ.get("BOT_TOKEN")
+if not bot_token:
+    raise ValueError("BOT_TOKEN environment variable is not set")
 
 intents = discord.Intents.all()
 bot = commands.Bot(command_prefix=["r/", "R/"], intents=intents, case_insensitive=True)
 
+
 @bot.event
 async def on_ready():
     logger.info(f"{bot.user} IS READY TO ANALYSE REDDIT KARMA")
+
 
 # Load cogs
 async def load_extensions():
@@ -38,8 +44,8 @@ async def load_extensions():
         for cog in args.c:
             try:
                 await bot.load_extension(f"cogs.{cog}")
-                logger.debug(f"LOADED COG: {cog}")
-            except Exception as e:
+                logger.debug(f"LOADED COG: {cog}",)
+            except ExtensionError as e:
                 logger.critical(f"FAILED TO LOAD COG: {cog}: {e}")
     else:
         for filename in os.listdir("./cogs"):
@@ -47,12 +53,14 @@ async def load_extensions():
                 try:
                     await bot.load_extension(f"cogs.{filename[:-3]}")
                     logger.debug(f"LOADED COG: {filename}")
-                except Exception as e:
+                except ExtensionError as e:
                     logger.critical(f"FAILED TO LOAD COG: {filename}: {e}")
+
 
 async def main():
     async with bot:
         await load_extensions()
         await bot.start(bot_token)
+
 
 asyncio.run(main())

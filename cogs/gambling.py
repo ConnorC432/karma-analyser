@@ -3,16 +3,19 @@ import json
 import logging
 import random
 import re
+
 import discord
 from discord.ext import commands
 from ollama import Client
-from utils import get_gambling_rewards, help_words, gamble_lock, gambling_table
+
+from utils import REDDIT_RED, gamble_lock, gambling_table, get_gambling_rewards, help_words
 
 
 class Gambling(commands.Cog):
+
     def __init__(self, bot):
         self.bot = bot
-        self.logger = logging.getLogger(f"{self.__class__.__name__}")
+        self.logger = logging.getLogger(self.__class__.__name__)
 
     @commands.command(aliases=['gamble'])
     async def gambling(self, ctx, *, text: str = None):
@@ -31,7 +34,7 @@ class Gambling(commands.Cog):
 
                 embed = discord.Embed(
                     title="Gambling Drops",
-                    color=0xED001C
+                    color=REDDIT_RED
                 )
 
                 for item, chance in chances:
@@ -45,11 +48,12 @@ class Gambling(commands.Cog):
                 return
 
             if any(key in text.lower() for key in help_words):
-                with open("settings.json", "r") as f:
+                with open("settings.json", "r", encoding="utf-8") as f:
                     settings = json.load(f)
 
                 client = Client(host=settings.get("ollama_endpoint"))
                 ai_instructions = "You are trying to convince a fellow redditor to keep gambling, they don't know that they are close to their big win, which is why you need to convince them!"
+                response = None
 
                 try:
                     response = await asyncio.to_thread(
@@ -57,10 +61,13 @@ class Gambling(commands.Cog):
                         model="llama3",
                         messages=[
                             {"role": "system", "content": ai_instructions},
-                            {"role": "user", "content": "Convince your fellow redditor to keep gambling, so they can get their biggest jackpot yet!!!"}
+                            {
+                                "role"   : "user",
+                                "content": "Convince your fellow redditor to keep gambling, so they can get their biggest jackpot yet!!!"
+                            }
                         ]
                     )
-                except Exception as e:
+                except asyncio.TimeoutError as e:
                     self.logger.error(e)
 
                 clean_response = re.sub(r"<think>.*?</think>\\n\\n", "", response.message.content, flags=re.DOTALL)
@@ -89,6 +96,7 @@ class Gambling(commands.Cog):
                 await ctx.message.add_reaction(karma_case[case_length - 3])
             except discord.HTTPException as e:
                 self.logger.error(f"ERROR ADDING REACTION {karma_case[case_length - 3]}: {e})")
+
 
 async def setup(bot):
     await bot.add_cog(Gambling(bot))

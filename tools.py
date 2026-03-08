@@ -1,29 +1,35 @@
+import asyncio
+import base64
 import inspect
 import json
 import logging
-import discord
-import random
-import base64
-import aiohttp
-import regex
-import asyncio
-from ollama import Client
-from urllib import parse, request
-from utils import reddiquette
-from datetime import datetime
-from zoneinfo import ZoneInfo
-from bs4 import BeautifulSoup
+import os
 from collections import OrderedDict
+from datetime import datetime
+from json import JSONDecodeError
+from zoneinfo import ZoneInfo
+
+import aiohttp
+import discord
+import regex
+from bs4 import BeautifulSoup
+from ollama import Client
+
+import utils
+from utils import REDDIQUETTE, karmic_dict
 
 
+## Tool decorator
 def tool(func):
     func.is_tool = True
     return func
 
+
 class AITools:
+
     def __init__(self, bot):
         self.bot = bot
-        self.logger = logging.getLogger(f"{self.__class__.__name__}")
+        self.logger = logging.getLogger(self.__class__.__name__)
 
         self.model = "artifish/llama3.2-uncensored"
         self.vision_model = "llava"
@@ -31,19 +37,26 @@ class AITools:
         self.message_cache = OrderedDict()
         self.cache_size = 1000
 
-        with open("settings.json", "r") as f:
-            self.settings = json.load(f)
+        self.ollama_endpoint = os.getenv("OLLAMA_ENDPOINT")
+        self.searxng_endpoint = os.getenv("SEARXNG_ENDPOINT")
 
-        self.client = Client(host=self.settings.get("ollama_endpoint"))
-        self.giphy_key = self.settings.get("giphy_key")
-        self.search_url = f"http://{self.settings.get('searxng_endpoint')}/search"
+        if not self.ollama_endpoint:
+            raise ValueError("OLLAMA_ENDPOINT environment variable is not set")
+
+        if not self.searxng_endpoint:
+            raise ValueError("SEARXNG_ENDPOINT environment variable is not set")
+
+        self.client = Client(host=self.ollama_endpoint)
+        self.search_url = f"http://{self.searxng_endpoint}/search"
 
         self.tools = [
             function for _, function in inspect.getmembers(self, predicate=inspect.ismethod)
             if getattr(function, "is_tool", False)
         ]
 
-    async def ollama_response(self, system_instructions, messages, server, user, model : str | None = None) -> str | None:
+    async def ollama_response(
+            self, system_instructions, messages, server, user, model: str | None = None
+    ) -> str | None:
         """
         Generates an AI response using the ollama API.
         :param system_instructions: System instructions for LLM model
@@ -71,23 +84,26 @@ class AITools:
 
             tool_calls = response.message.tool_calls or []
 
-            json_pattern = regex.compile(r"""
-                (
-                    \{ (?: [^{}]++ | (?R) )* \}
-                  | \[ (?: [^\[\]]++ | (?R) )* \]
-                )
-            """, regex.VERBOSE)
+            json_pattern = regex.compile(
+                r"""
+                    (
+                        \{ (?: [^{}]++ | (?R) )* \}
+                      | \[ (?: [^\[\]]++ | (?R) )* \]
+                    )
+                """, regex.VERBOSE
+            )
 
             for j in json_pattern.findall(response.message.content):
                 try:
                     data = json.loads(j)
                     if isinstance(data, dict) and data.get("type") == "function":
                         tool_calls.append(data)
-                except:
+                except JSONDecodeError as e:
+                    self.logger.error(e)
                     continue
 
             if tool_calls:
-                self.logger.debug(f"TOOL CALLS: {tool_calls}")
+                # self.logger.debug(f"TOOL CALLS: {tool_calls}")
 
                 for call in tool_calls:
                     if isinstance(call, dict):
@@ -123,18 +139,22 @@ class AITools:
 
                         self.logger.debug(f"TOOL RESULT: {result}")
 
-                        messages.append({
-                            "role": "tool",
-                            "name": function,
-                            "content": str(result)
-                        })
+                        messages.append(
+                            {
+                                "role"   : "tool",
+                                "name"   : function,
+                                "content": str(result)
+                            }
+                        )
 
                     else:
-                        messages.append({
-                            "role": "tool",
-                            "name": function,
-                            "content": "Tool doesn't exist"
-                        })
+                        messages.append(
+                            {
+                                "role"   : "tool",
+                                "name"   : function,
+                                "content": "Tool doesn't exist"
+                            }
+                        )
 
                 continue
 
@@ -194,21 +214,24 @@ class AITools:
                 for url in image_urls:
                     images_b64.add(await self.url_to_base64(url))
 
-            messages.append({
-                "role": "assistant" if current.author.bot else "user",
-                "content": regex.sub(
-                    r"<@!?(\d+)>",
-                    lambda m: (current.guild.get_member(int(m.author.id))).name
+            messages.append(
+                {
+                    "role"   : "assistant" if current.author.bot else "user",
+                    "content": regex.sub(
+                        r"<@!?(\d+)>",
+                        lambda m: (current.guild.get_member(int(m.author.id))).name
                         if payload.guild.get_member(int(m.author.id)) else m.group(0),
-                    current.content
-                ),
-                "images": images_b64 if images_b64 else "",
-            })
+                        current.content
+                    ),
+                    "images" : images_b64 if images_b64 else "",
+                }
+            )
 
             if current.reference:
                 current = await self.get_message(current.channel, current.reference.message_id)
 
-            else: break
+            else:
+                break
 
         messages.reverse()
 
@@ -217,11 +240,13 @@ class AITools:
         if image_urls:
             for url in image_urls:
                 images_b64.add(await self.url_to_base64(url))
-        messages.append({
-            "role": "user",
-            "content": payload.content,
-            "images": images_b64 if images_b64 else ""
-        })
+        messages.append(
+            {
+                "role"   : "user",
+                "content": payload.content,
+                "images" : images_b64 if images_b64 else ""
+            }
+        )
 
         return list(messages)
 
@@ -287,7 +312,7 @@ class AITools:
                             self.logger.debug(f"NO IMAGE IN URL: {url}")
                             return None
 
-        except Exception as e:
+        except aiohttp.ClientError as e:
             self.logger.error(f"FAILED TO FETCH URL {url}: {e}")
             return None
 
@@ -331,7 +356,7 @@ class AITools:
                                 elif (img := soup.find("img")) and img.get("src"):
                                     image_urls.add(img["src"])
 
-                except Exception as e:
+                except aiohttp.ClientError as e:
                     self.logger.debug(f"Failed to fetch HTML page {url}: {e}")
 
         if not image_urls:
@@ -341,7 +366,7 @@ class AITools:
         return image_urls
 
     @tool
-    def respond_to_user(self, response = None) -> str:
+    def respond_to_user(self, response=None) -> str:
         """
         Call this function if you have called the same tool multiple times
         or you have already called all the tools you need.
@@ -387,68 +412,20 @@ class AITools:
             - Karmic Emoji Counts
         :return: A JSON formatted list of the stats for all members in the server
         """
-        try:
-            with open("karma.json", "r") as f:
-                data = json.load(f)
-        except FileNotFoundError as e:
-            self.logger.error(f"karma.json NOT FOUND: {e}")
-            return "No data found"
-        except json.decoder.JSONDecodeError as e:
-            self.logger.error(f"INVALID karma.json: {e}")
-            return "No data found"
-
-        try:
-            karma = data[str(server)]
-        except KeyError as e:
-            self.logger.error(f"USER'S KARMA NOT FOUND: {e}")
-            return "No data found"
-
-        if karma:
-            return str(karma)
+        if karmic_dict:
+            return karmic_dict[server.id]
 
         return "No data found"
 
     @tool
-    def get_gif(self, query: str = None):
+    async def get_gif(self, query: str = None):
         """
         Get a gif
         :param query: GIF Search query - does not accept http/https format
         :return: A URL containing the gif
         """
-        if not self.giphy_key:
-            self.logger.error("GIPHY KEY NOT FOUND")
-            return "No giphy API key found"
-
-        if not query:
-            self.logger.error("SEARCH QUERY NOT FOUND")
-            return ("No search query found. "
-                    "Please call this tool with a meaningful query, "
-                    "such as \"cat\", \"reaction\" or \"yes\".")
-
-        else:
-            giphy_url = "https://api.giphy.com/v1/gifs/search"
-            params = parse.urlencode({
-                "q": query,
-                "api_key": self.giphy_key,
-                "limit": 5
-            })
-            self.logger.debug(f"GETTING 5 GIFS: {query}")
-
-        try:
-            with request.urlopen(f"{giphy_url}?{params}") as response:
-                data = json.loads(response.read())
-
-        except Exception as e:
-            self.logger.error(f"FAILED TO GET GIF: {e}")
-            return "Failed to get gif."
-
-        items = data.get("data", [])
-        if not items:
-            self.logger.error("GIFS NOT FOUND")
-            return "No data found"
-
-        gif_urls = [item["images"]["original"]["url"] for item in items]
-        return f"INCLUDE THE FULL URL IN YOUR RESPONSE, AS LONG AS THE GIF IS RELEVANT TO THE TEXT: {random.choice(gif_urls)}"
+        gif_url = await utils.gif_search(query)
+        return f"INCLUDE THE FULL URL IN YOUR RESPONSE, AS LONG AS THE GIF IS RELEVANT TO THE TEXT: {gif_url}"
 
     @tool
     def get_reddiquette(self):
@@ -456,7 +433,7 @@ class AITools:
         Returns the reddiquette that users must follow on the server
         :return: Reddiquette
         """
-        return str(reddiquette)
+        return str(REDDIQUETTE)
 
     @tool
     def get_server_name(self, server):
@@ -475,8 +452,10 @@ class AITools:
         """
         return str(datetime.now(ZoneInfo("Europe/London")))
 
+    # noinspection PyIncorrectDocstring
+    # Docstring passed through in tool list, AI isn't intended to know about the "server" variable
     @tool
-    def get_server_members(self, server, online = False):
+    def get_server_members(self, server, online=False):
         """
         Get the members of the current server
         :param online: bool - True to filter by online users, False to get all users
@@ -485,7 +464,7 @@ class AITools:
         guild = self.bot.get_guild(server)
         if online:
             return [member.name for member in guild.members
-                              if member.status != discord.Status.offline]
+                    if member.status != discord.Status.offline]
 
         return guild.members
 
@@ -500,10 +479,10 @@ class AITools:
             return "No search query found"
 
         params = {
-            "q": query,
-            "format": "json",
+            "q"         : query,
+            "format"    : "json",
             "categories": "general",
-            "count": 5
+            "count"     : 5
         }
 
         results = []
@@ -513,7 +492,7 @@ class AITools:
                     if response.status != 200:
                         return f"Search failed with status {response.status}"
                     data = await response.json()
-            except Exception as e:
+            except aiohttp.ClientError as e:
                 self.logger.error(f"SEARCH FAILED: {e}")
                 return "Failed to get search results."
 

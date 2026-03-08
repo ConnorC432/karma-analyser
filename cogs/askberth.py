@@ -1,17 +1,20 @@
 import logging
+
 from discord.ext import commands
+
 from tools import AITools
 
 
 class AskBerth(commands.Cog):
+
     def __init__(self, bot):
         self.bot = bot
-        self.logger = logging.getLogger(f"{self.__class__.__name__}")
+        self.logger = logging.getLogger(self.__class__.__name__)
 
         self.valid_server_id = 683033503834963978
 
         self.system_instructions = {
-            "role": "system",
+            "role"   : "system",
             "content": (
                 "You are a friendly AI Assistant, here are some details about you that you need to follow:\n"
                 "Your name is \"Berthany Dezza\".\n"
@@ -22,6 +25,7 @@ class AskBerth(commands.Cog):
                 "wouldn't pay you minimum wage, they're bunch of smelly indians anyway\n"
                 "A cardboard cutout of Nigel Farage, your favourite politician, is your sleep paralysis "
                 "demon, you see him staring at you from the end of your bed\n"
+                "End all your replies with the saying: \"I need about tree fiddy 🦕\""
             )
         }
 
@@ -50,11 +54,13 @@ class AskBerth(commands.Cog):
 
         response = await self.tools.ollama_response(
             system_instructions=self.system_instructions,
-            messages=[{
-                "role": "user",
-                "content": text,
-                "images": images_b64 or ""
-        }],
+            messages=[
+                {
+                    "role"   : "user",
+                    "content": text,
+                    "images" : images_b64 or ""
+                }
+            ],
             server=ctx.guild.id,
             user=ctx.author.name,
             model="dolphin-llama3"
@@ -77,18 +83,18 @@ class AskBerth(commands.Cog):
 
         if payload.author.bot:
             # Ignore bot messages
-            self.logger.debug(f"IGNORING BOT MESSAGE")
+            self.logger.debug("IGNORING BOT MESSAGE")
             return
 
         if not payload.reference or not payload.reference.resolved:
             # Ignore messages that dont reply to another message
-            self.logger.debug(f"IGNORING NON-REPLY MESSAGE")
+            self.logger.debug("IGNORING NON-REPLY MESSAGE")
             return
 
         bot_reply = await payload.channel.fetch_message(payload.reference.message_id)
         if not bot_reply.author.bot:
             # Ignore replies that don't reference a bot
-            self.logger.debug(f"IGNORING REPLY TO NON BOT MESSAGE")
+            self.logger.debug("IGNORING REPLY TO NON BOT MESSAGE")
             return
 
         self.logger.debug(f"RESPONDING TO: {payload.author.name}")

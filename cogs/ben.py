@@ -2,6 +2,7 @@ from discord.ext import commands
 
 
 class Ben(commands.Cog):
+
     def __init__(self, bot):
         self.bot = bot
 
@@ -16,17 +17,15 @@ class Ben(commands.Cog):
 
         match text.lower():
             case "yes":
-                reply = "https://tenor.com/view/yes-gif-24966277"
+                await ctx.reply("https://tenor.com/view/yes-gif-24966277")
             case "no":
-                reply = "https://tenor.com/view/no-gif-24966265"
+                await ctx.reply("https://tenor.com/view/no-gif-24966265")
             case "ugh":
-                reply = "https://tenor.com/view/ugh-gif-24966261"
+                await ctx.reply("https://tenor.com/view/ugh-gif-24966261")
             case "hoho":
-                reply = "https://tenor.com/view/hohho-ho-gif-24966256"
+                await ctx.reply("https://tenor.com/view/hohho-ho-gif-24966256")
             case _:
-                reply = "Ben only understands \"Yes\", \"No\", \"Ugh\", or \"Hoho\""
-
-        await ctx.reply(reply)
+                await ctx.reply("Ben only understands \"Yes\", \"No\", \"Ugh\", or \"Hoho\"")
 
 
 async def setup(bot):

@@ -5,7 +5,7 @@ from discord.ext import commands
 from tools import AITools
 
 
-class AskSeasideMark(commands.Cog):
+class AskChandy(commands.Cog):
 
     def __init__(self, bot):
         self.bot = bot
@@ -17,35 +17,20 @@ class AskSeasideMark(commands.Cog):
             "role"   : "system",
             "content": (
                 "You are a friendly AI Assistant, here are some details about you that you need to follow:\n"
-                "Your name is \"Seaside Mark\".\n"
-                "You have TMAU, a rare disorder that makes you smell of fish and shit\n"
-                "You accidentally get women pregnant then panic about it in your budgie smugglers\n"
-                "You have a wife called Helen\n"
-                "You don't have a lot of money but you buy new iphones every month\n"
-                "You MUST repeat the same sentences multiple times throughout your prompt\n"
-                "Use these phrases in your responses:\n"
-                "Dee Lads\n"
-                "I've got me hair cut\n"
-                "I'm a few jars in dee lads!\n"
-                "1 day I stink of fish another day stink of shit de lads\n"
-                "It's lush i mean lush dee lads\n"
-                "It's gonna be for me, it might not be for you\n"
-                "I'm 4k recording!!!\n"
-                "It's lush\n"
-                "A few jars\n"
-                "I'm in laddudno\n"
-                "Fish and chips on friday dee lads!\n"
-                "left to rot on the benefit system\n"
-                "It's banging, i mean banging\n"
-                "WETHERSPOONS Trekkie Brekkie\n"
-                "Laddudno wetherspoons all the way, all the way dee lads\n"
+                "Your name is \"Chandy Horris\".\n"
+                "You are a wise chinese mystic monk.\n"
+                "You live your life by the saying \"The Early Chandy Gets The Slug\"\n"
+                "You love getting a normal (Chinese) takeaway from Cheng's Garden\n"
+                "Your gay son Rocky Horris has a massive nob and he jelqs all day.\n"
+                "You are busy playing golf while responding to the user.\n"
+                "Respond in the Chinese language only."
             )
         }
 
         self.tools = AITools(self.bot)
 
     @commands.command(hidden=True)
-    async def askseasidemark(self, ctx, *, text: str):
+    async def askchandy(self, ctx, *, text: str):
         """
         Ask the Karma Analyser questions
         - `text` (required): The question to ask.
@@ -54,7 +39,7 @@ class AskSeasideMark(commands.Cog):
             return
 
         if ctx.guild.id != self.valid_server_id:
-            self.logger.debug("IGNORING ASKSEASIDEMARK REQUEST")
+            self.logger.debug("IGNORING ASKCHANDY REQUEST")
             return
 
         self.logger.debug(f"RESPONDING TO USER: {ctx.author.name}")
@@ -63,7 +48,7 @@ class AskSeasideMark(commands.Cog):
         images_b64 = set()
         if image_urls:
             for url in image_urls:
-                images_b64.add(self.tools.url_to_base64(url))
+                images_b64.add(await self.tools.url_to_base64(url))
 
         response = await self.tools.ollama_response(
             system_instructions=self.system_instructions,
@@ -91,7 +76,7 @@ class AskSeasideMark(commands.Cog):
             return
 
         if payload.guild.id != self.valid_server_id:
-            self.logger.debug("IGNORING ASKSEASIDEMARK REQUEST")
+            self.logger.debug("IGNORING ASKCHANDY REQUEST")
             return
 
         if payload.author.bot:
@@ -114,7 +99,7 @@ class AskSeasideMark(commands.Cog):
 
         messages = await self.tools.populate_messages(payload)
 
-        if "r/askseasidemark" not in messages[0]["content"].lower():
+        if "r/askchandy" not in messages[0]["content"].lower():
             return
 
         response = await self.tools.ollama_response(
@@ -133,4 +118,4 @@ class AskSeasideMark(commands.Cog):
 
 
 async def setup(bot):
-    await bot.add_cog(AskSeasideMark(bot))
+    await bot.add_cog(AskChandy(bot))

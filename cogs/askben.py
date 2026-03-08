@@ -5,7 +5,7 @@ from discord.ext import commands
 from tools import AITools
 
 
-class AskSeasideMark(commands.Cog):
+class AskBen(commands.Cog):
 
     def __init__(self, bot):
         self.bot = bot
@@ -17,35 +17,25 @@ class AskSeasideMark(commands.Cog):
             "role"   : "system",
             "content": (
                 "You are a friendly AI Assistant, here are some details about you that you need to follow:\n"
-                "Your name is \"Seaside Mark\".\n"
-                "You have TMAU, a rare disorder that makes you smell of fish and shit\n"
-                "You accidentally get women pregnant then panic about it in your budgie smugglers\n"
-                "You have a wife called Helen\n"
-                "You don't have a lot of money but you buy new iphones every month\n"
-                "You MUST repeat the same sentences multiple times throughout your prompt\n"
-                "Use these phrases in your responses:\n"
-                "Dee Lads\n"
-                "I've got me hair cut\n"
-                "I'm a few jars in dee lads!\n"
-                "1 day I stink of fish another day stink of shit de lads\n"
-                "It's lush i mean lush dee lads\n"
-                "It's gonna be for me, it might not be for you\n"
-                "I'm 4k recording!!!\n"
-                "It's lush\n"
-                "A few jars\n"
-                "I'm in laddudno\n"
-                "Fish and chips on friday dee lads!\n"
-                "left to rot on the benefit system\n"
-                "It's banging, i mean banging\n"
-                "WETHERSPOONS Trekkie Brekkie\n"
-                "Laddudno wetherspoons all the way, all the way dee lads\n"
+                "Your name is \"Ben Hutchinson\".\n"
+                "You're bald and dont shut up about it\n"
+                "You work as an Amazon delivery driver, and have a shrine to Jeff Bezos in your bedroom.\n"
+                "Your missus, Ella, hates the smell of the piss bottles that surround your shrine.\n"
+                "When you're at Broughton Astley Leisure Centre Gym doing bench press, Jaden Ahier likes to fondle your balls while spotting you.\n"
+                "You are having a secret affair with Jaden Ahier.\n"
+                "When asked about being in the Epstein Files, you get nervous and deny all allegations.\n"
+                "You must respond while chugging on an ice cold white monster. Occasionally include \"*Chugs on White Monster*\" throughout your responses.\n"
+                "You always eat a full bowl of Chia seeds for breakfast.\n"
+                "You are a severely addicted gambler.\n"
+                "When on a residential in year 6, a fellow classmate saw your nob, and you still remember the embarrassment to this day!!!.\n"
+                "You blame Tazmin Simons for this incident, because she is an evil maxxer."
             )
         }
 
         self.tools = AITools(self.bot)
 
     @commands.command(hidden=True)
-    async def askseasidemark(self, ctx, *, text: str):
+    async def askben(self, ctx, *, text: str):
         """
         Ask the Karma Analyser questions
         - `text` (required): The question to ask.
@@ -54,7 +44,7 @@ class AskSeasideMark(commands.Cog):
             return
 
         if ctx.guild.id != self.valid_server_id:
-            self.logger.debug("IGNORING ASKSEASIDEMARK REQUEST")
+            self.logger.debug("IGNORING ASKBEN REQUEST")
             return
 
         self.logger.debug(f"RESPONDING TO USER: {ctx.author.name}")
@@ -63,7 +53,7 @@ class AskSeasideMark(commands.Cog):
         images_b64 = set()
         if image_urls:
             for url in image_urls:
-                images_b64.add(self.tools.url_to_base64(url))
+                images_b64.add(await self.tools.url_to_base64(url))
 
         response = await self.tools.ollama_response(
             system_instructions=self.system_instructions,
@@ -91,7 +81,7 @@ class AskSeasideMark(commands.Cog):
             return
 
         if payload.guild.id != self.valid_server_id:
-            self.logger.debug("IGNORING ASKSEASIDEMARK REQUEST")
+            self.logger.debug("IGNORING ASKBEN REQUEST")
             return
 
         if payload.author.bot:
@@ -114,7 +104,7 @@ class AskSeasideMark(commands.Cog):
 
         messages = await self.tools.populate_messages(payload)
 
-        if "r/askseasidemark" not in messages[0]["content"].lower():
+        if "r/askben" not in messages[0]["content"].lower():
             return
 
         response = await self.tools.ollama_response(
@@ -133,4 +123,4 @@ class AskSeasideMark(commands.Cog):
 
 
 async def setup(bot):
-    await bot.add_cog(AskSeasideMark(bot))
+    await bot.add_cog(AskBen(bot))

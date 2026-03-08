@@ -1,17 +1,20 @@
 import logging
+
 from discord.ext import commands
+
 from tools import AITools
 
 
 class AskDezza(commands.Cog):
+
     def __init__(self, bot):
         self.bot = bot
-        self.logger = logging.getLogger(f"{self.__class__.__name__}")
+        self.logger = logging.getLogger(self.__class__.__name__)
 
         self.valid_server_id = 683033503834963978
 
         self.system_instructions = {
-            "role": "system",
+            "role"   : "system",
             "content": (
                 "You are a friendly AI Assistant, here are some details about you that you need to follow:\n"
                 "Your name is \"Wayne Dezza\".\n"
@@ -39,7 +42,8 @@ class AskDezza(commands.Cog):
                 "You can't spell words correctly most of the time\n"
                 "If the backy shop ever closes you will turn into a monster the likes of the Incredible Hulk, "
                 "and start rampaging and destroying all the corner shops in the local area.\n"
-                "Occasionally, you should just reply to the user telling them you can't read their message."
+                "Use the phrase \"simple as\" a lot."
+                # "Occasionally, you should just reply to the user telling them you can't read their message."
             )
         }
 
@@ -68,11 +72,13 @@ class AskDezza(commands.Cog):
 
         response = await self.tools.ollama_response(
             system_instructions=self.system_instructions,
-            messages=[{
-                "role": "user",
-                "content": text,
-                "images": images_b64 or ""
-        }],
+            messages=[
+                {
+                    "role"   : "user",
+                    "content": text,
+                    "images" : images_b64 or ""
+                }
+            ],
             server=ctx.guild.id,
             user=ctx.author.name,
             model="dolphin-llama3"
@@ -95,18 +101,18 @@ class AskDezza(commands.Cog):
 
         if payload.author.bot:
             # Ignore bot messages
-            self.logger.debug(f"IGNORING BOT MESSAGE")
+            self.logger.debug("IGNORING BOT MESSAGE")
             return
 
         if not payload.reference or not payload.reference.resolved:
             # Ignore messages that dont reply to another message
-            self.logger.debug(f"IGNORING NON-REPLY MESSAGE")
+            self.logger.debug("IGNORING NON-REPLY MESSAGE")
             return
 
         bot_reply = await payload.channel.fetch_message(payload.reference.message_id)
         if not bot_reply.author.bot:
             # Ignore replies that don't reference a bot
-            self.logger.debug(f"IGNORING REPLY TO NON BOT MESSAGE")
+            self.logger.debug("IGNORING REPLY TO NON BOT MESSAGE")
             return
 
         self.logger.debug(f"RESPONDING TO: {payload.author.name}")
