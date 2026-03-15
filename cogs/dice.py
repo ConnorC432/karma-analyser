@@ -26,10 +26,10 @@ class Dice(commands.Cog):
         modifier = int(match.group(3)) if match.group(3) else 0     # Modifier +/-
 
         if (
-                num > 1000000
-                or sides > 1000000
+                num > 1000000000000
+                or sides > 1000000000000
                 or sides < 2
-                or abs(modifier) > 1000000
+                or abs(modifier) > 1000000000000
         ):
             return None
 
