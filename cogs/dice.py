@@ -21,9 +21,9 @@ class Dice(commands.Cog):
         if not match:
             return None
 
-        num = int(match.group(1))                                   # Number of dice to roll
-        sides = int(match.group(2))                                 # Number of sides on the dice
-        modifier = int(match.group(3)) if match.group(3) else 0     # Modifier +/-
+        num = int(match.group(1))  # Number of dice to roll
+        sides = int(match.group(2))  # Number of sides on the dice
+        modifier = int(match.group(3)) if match.group(3) else 0  # Modifier +/-
 
         if (
                 num > 1000000000000

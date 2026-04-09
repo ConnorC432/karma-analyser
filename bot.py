@@ -44,7 +44,7 @@ async def load_extensions():
         for cog in args.c:
             try:
                 await bot.load_extension(f"cogs.{cog}")
-                logger.debug(f"LOADED COG: {cog}",)
+                logger.debug(f"LOADED COG: {cog}", )
             except ExtensionError as e:
                 logger.critical(f"FAILED TO LOAD COG: {cog}: {e}")
     else:
