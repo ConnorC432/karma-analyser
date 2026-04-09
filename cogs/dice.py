@@ -99,6 +99,9 @@ class Dice(commands.Cog):
 
     @commands.Cog.listener()
     async def on_message(self, ctx):
+        if not ctx.guild:
+            return
+
         if ctx.author.bot:
             return
 

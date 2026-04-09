@@ -39,6 +39,26 @@ async def on_ready():
     logger.info(f"{bot.user} IS READY TO ANALYSE REDDIT KARMA")
 
 
+@bot.check
+async def globally_block_dms(ctx):
+    if ctx.guild is None:
+        logger.debug(f"Ignoring command '{ctx.command}' from user {ctx.author} in DM")
+        return False
+    return True
+
+
+@bot.event
+async def on_command_error(ctx, error):
+    # bot.check filtered command calls fail cleanly
+    if isinstance(error, commands.CheckFailure):
+        if ctx.guild is None:
+            return
+    
+    # Handle other errors
+    if not isinstance(error, (commands.CommandNotFound, commands.CheckFailure)):
+        logger.error(f"Ignoring exception in command {ctx.command}: {error}")
+
+
 # Load cogs
 async def load_extensions():
     logger.info("Loading cogs...")

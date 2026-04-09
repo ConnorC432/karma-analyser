@@ -41,7 +41,10 @@ class AskCog(commands.Cog):
                 await reply.add_reaction("<:reddit_downvote:1266139651660447744>")
 
     async def run_ask(self, ctx, text: str):
-        if self.valid_server_ids and (not ctx.guild or ctx.guild.id not in self.valid_server_ids):
+        if not ctx.guild:
+            return
+
+        if self.valid_server_ids and (ctx.guild.id not in self.valid_server_ids):
             self.logger.debug(f"IGNORING {self.askbot_name.upper()} REQUEST")
             return
 
@@ -68,7 +71,10 @@ class AskCog(commands.Cog):
 
     @commands.Cog.listener()
     async def on_message(self, message):
-        if self.valid_server_ids and (not message.guild or message.guild.id not in self.valid_server_ids):
+        if not message.guild:
+            return
+
+        if self.valid_server_ids and (message.guild.id not in self.valid_server_ids):
             return
 
         if message.author.bot:

@@ -16,6 +16,9 @@ class Misc(commands.Cog):
 
     @commands.Cog.listener()
     async def on_message(self, payload):
+        if not payload.guild:
+            return
+
         if payload.type in [
             discord.MessageType.premium_guild_subscription,
             discord.MessageType.premium_guild_tier_1,

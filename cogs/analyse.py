@@ -118,6 +118,9 @@ class Analyse(commands.Cog):
 
     @commands.Cog.listener()
     async def on_raw_reaction_add(self, payload):
+        if not payload.guild_id:
+            return
+
         # Ignore Non-Karmic Reactions
         if payload.emoji.name not in reaction_dict:
             return
@@ -141,6 +144,9 @@ class Analyse(commands.Cog):
 
     @commands.Cog.listener()
     async def on_raw_reaction_remove(self, payload):
+        if not payload.guild_id:
+            return
+
         # Ignore Non-Karmic Reactions
         if payload.emoji.name not in reaction_dict:
             return
@@ -164,6 +170,9 @@ class Analyse(commands.Cog):
 
     @commands.Cog.listener()
     async def on_message(self, message):
+        if not message.guild:
+            return
+
         self.message_count += 1
 
         # Update User's message count
@@ -174,6 +183,9 @@ class Analyse(commands.Cog):
 
     @commands.Cog.listener()
     async def on_message_delete(self, message):
+        if not message.guild:
+            return
+
         self.message_count -= 1
 
         async with karma_lock:
