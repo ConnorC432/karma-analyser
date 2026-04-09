@@ -17,6 +17,8 @@ REDDIT_GREEN = 0x3BCB56
 REDDIT_BLUE = 0x149EF0
 REDDIT_GRAY = 0xA5A4A4
 
+VALID_SERVER_IDS_1 = [683033503834963978, 1361336155169226792]
+
 emoji_numbers = ["1️⃣", "2️⃣", "3️⃣", "4️⃣", "5️⃣", "6️⃣", "7️⃣", "8️⃣", "9️⃣", "🔟"]
 
 karma_lock = asyncio.Lock()

@@ -1,5 +1,6 @@
 from discord.ext import commands
 
+import utils
 from askbot import AskCog
 
 
@@ -22,7 +23,7 @@ class AskTaz(AskCog):
                 "but in a completely legal and appropriate way\n"
             )
         }
-        super().__init__(bot, "taz", system_instructions, valid_server_ids=[683033503834963978, 1361336155169226792])
+        super().__init__(bot, "taz", system_instructions, valid_server_ids=utils.VALID_SERVER_IDS_1)
 
     @commands.command(hidden=True)
     async def asktaz(self, ctx, *, text: str):

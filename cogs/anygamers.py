@@ -2,6 +2,8 @@ import logging
 
 from discord.ext import commands
 
+import utils
+
 
 class AnyGamers(commands.Cog):
 
@@ -11,7 +13,7 @@ class AnyGamers(commands.Cog):
 
     @commands.command(hidden=True)
     async def anygamers(self, ctx):
-        if ctx.guild.id == 683033503834963978:
+        if ctx.guild.id in utils.VALID_SERVER_IDS_1:
             await ctx.reply(
                 "https://tenor.com/view/jaden-griddy-any-gamers-gamer-chinese-pilot-gif-3782711129914946355"
             )
