@@ -63,4 +63,16 @@ async def main():
         await bot.start(bot_token)
 
 
-asyncio.run(main())
+if __name__ == "__main__":
+    try:
+        asyncio.run(main())
+    except KeyboardInterrupt:
+        logger.info("Shutting down...")
+    except discord.LoginFailure:
+        logger.critical("Invalid bot token")
+    except discord.PrivilegedIntentsRequired:
+        logger.critical("Privileged intents are required to run this bot")
+    except discord.HTTPException as e:
+        logger.critical(f"Discord API Error: {e}")
+    except Exception as e:
+        logger.exception(f"An unexpected error occurred: {e}")
