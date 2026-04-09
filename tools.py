@@ -74,12 +74,17 @@ class AITools:
         original_messages = messages = [system_instructions] + list(messages)
 
         while True:
-            response = await asyncio.to_thread(
-                self.client.chat,
-                model=model,
-                messages=messages,
-                tools=self.tools if use_tools else ""
-            )
+            try:
+                response = await asyncio.to_thread(
+                    self.client.chat,
+                    model=model,
+                    messages=messages,
+                    tools=self.tools if use_tools else ""
+                )
+            except Exception as e:
+                self.logger.error(f"Error calling Ollama API: {e}")
+                return "RESPONSE GENERATION FAILED, PLEASE DOWNVOTE"
+
             self.logger.debug(f"RESPONSE: {response.message.content}")
 
             tool_calls = response.message.tool_calls or []
