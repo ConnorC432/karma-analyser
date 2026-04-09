@@ -15,6 +15,7 @@ from discord.ext.commands import ExtensionError
 parser = argparse.ArgumentParser()
 parser.add_argument("-c", nargs="*", default=[], help="The cogs to load")
 parser.add_argument("-d", help="debug mode", action="store_true")
+parser.add_argument("-q", help="quick start - skips analysis", action="store_true")
 args = parser.parse_args()
 
 # Logger
@@ -71,6 +72,14 @@ async def load_extensions():
             for path in Path("./cogs").iterdir()
             if path.suffix == ".py" and not path.name.startswith("_")
         ]
+
+    if args.q:
+        logger.info("Skipping r/analyse cog...")
+        try:
+            cogs_to_load.remove("cogs.analyse")
+        except:
+            # analyse cog can't be found, so just ignore it
+            pass
 
     loaded_count = 0
     failed_count = 0
