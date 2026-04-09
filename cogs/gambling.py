@@ -1,13 +1,11 @@
 import asyncio
-import json
 import logging
 import random
-import re
 
 import discord
 from discord.ext import commands
-from ollama import Client
 
+from tools import AITools
 from utils import REDDIT_RED, gamble_lock, gambling_table, get_gambling_rewards, help_words
 
 
@@ -16,6 +14,7 @@ class Gambling(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
         self.logger = logging.getLogger(self.__class__.__name__)
+        self.tools = AITools(self.bot)
 
     @commands.command(aliases=['gamble'])
     async def gambling(self, ctx, *, text: str = None):
@@ -48,31 +47,25 @@ class Gambling(commands.Cog):
                 return
 
             if any(key in text.lower() for key in help_words):
-                with open("settings.json", "r", encoding="utf-8") as f:
-                    settings = json.load(f)
+                ai_instructions = {
+                    "role"   : "system",
+                    "content": "You are trying to convince a fellow redditor to keep gambling, they don't know that they are close to their big win, which is why you need to convince them!"
+                }
 
-                client = Client(host=settings.get("ollama_endpoint"))
-                ai_instructions = "You are trying to convince a fellow redditor to keep gambling, they don't know that they are close to their big win, which is why you need to convince them!"
-                response = None
+                clean_response = await self.tools.ollama_response(
+                    system_instructions=ai_instructions,
+                    messages=[
+                        {
+                            "role"   : "user",
+                            "content": "Convince your fellow redditor to keep gambling, so they can get their biggest jackpot yet!!!"
+                        }
+                    ],
+                    server=ctx.guild.id if ctx.guild else None,
+                    user=ctx.author.name,
+                    model="llama3"
+                )
 
-                try:
-                    response = await asyncio.to_thread(
-                        client.chat,
-                        model="llama3",
-                        messages=[
-                            {"role": "system", "content": ai_instructions},
-                            {
-                                "role"   : "user",
-                                "content": "Convince your fellow redditor to keep gambling, so they can get their biggest jackpot yet!!!"
-                            }
-                        ]
-                    )
-                except asyncio.TimeoutError as e:
-                    self.logger.error(e)
-
-                clean_response = re.sub(r"<think>.*?</think>\\n\\n", "", response.message.content, flags=re.DOTALL)
                 await ctx.reply(f"{clean_response[:2000]}")
-                self.logger.debug(f"RESPONSE: {clean_response[:2000]}")
                 return
 
         case_length = random.randint(10, 20)

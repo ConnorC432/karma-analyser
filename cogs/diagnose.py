@@ -1,12 +1,9 @@
-import asyncio
-import json
 import logging
-import re
 
 import discord
 from discord.ext import commands
-from ollama import Client
 
+from tools import AITools
 from utils import REDDIQUETTE
 
 
@@ -15,6 +12,7 @@ class Diagnose(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
         self.logger = logging.getLogger(self.__class__.__name__)
+        self.tools = AITools(self.bot)
 
     @commands.command(aliases=["diagnosis"])
     async def diagnose(self, ctx, user: discord.Member = None):
@@ -34,26 +32,22 @@ class Diagnose(commands.Cog):
             if msg.author == user and "r/" not in msg.content and "http" not in msg.content:
                 message_log.append(msg.content)
 
-        ai_instructions = "You are a reddit moderation bot...\n" + REDDIQUETTE
+        ai_instructions = {
+            "role"   : "system",
+            "content": "You are a reddit moderation bot...\n" + REDDIQUETTE
+        }
         prompt = "These are the messages you need to analyse: \n" + "\n".join(message_log)
 
-        with open("settings.json", "r", encoding="utf-8") as f:
-            settings = json.load(f)
-        client = Client(host=settings.get("ollama_endpoint"))
+        clean_response = await self.tools.ollama_response(
+            system_instructions=ai_instructions,
+            messages=[
+                {"role": "user", "content": prompt}
+            ],
+            server=ctx.guild.id if ctx.guild else None,
+            user=ctx.author.name,
+            model="artifish/llama3.2-uncensored"
+        )
 
-        try:
-            response = await asyncio.to_thread(
-                client.chat,
-                model="artifish/llama3.2-uncensored",
-                messages=[
-                    {"role": "system", "content": ai_instructions},
-                    {"role": "user", "content": prompt}
-                ]
-            )
-        except asyncio.TimeoutError as e:
-            self.logger.error(e)
-
-        clean_response = re.sub(r"<think>.*?</think>\\n\\n", "", response.message.content, flags=re.DOTALL)
         await reply.edit(content=f"{user.mention}: {clean_response[:1950]}")
         self.logger.debug(f"RESPONSE: {clean_response[:1950]}")
 
