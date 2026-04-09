@@ -4,6 +4,7 @@ import argparse
 import asyncio
 import logging
 import os
+from pathlib import Path
 
 import discord
 from discord.ext import commands
@@ -40,21 +41,35 @@ async def on_ready():
 
 # Load cogs
 async def load_extensions():
+    logger.info("Loading cogs...")
+
     if args.c:
-        for cog in args.c:
-            try:
-                await bot.load_extension(f"cogs.{cog}")
-                logger.debug(f"LOADED COG: {cog}", )
-            except ExtensionError as e:
-                logger.critical(f"FAILED TO LOAD COG: {cog}: {e}")
+        cogs_to_load = [f"cogs.{cog}" for cog in args.c]
     else:
-        for filename in os.listdir("./cogs"):
-            if filename.endswith(".py") and not filename.startswith("_"):
-                try:
-                    await bot.load_extension(f"cogs.{filename[:-3]}")
-                    logger.debug(f"LOADED COG: {filename}")
-                except ExtensionError as e:
-                    logger.critical(f"FAILED TO LOAD COG: {filename}: {e}")
+        cogs_to_load = [
+            f"cogs.{path.stem}"
+            for path in Path("./cogs").iterdir()
+            if path.suffix == ".py" and not path.name.startswith("_")
+        ]
+
+    loaded_count = 0
+    failed_count = 0
+
+    for extension in cogs_to_load:
+        logger.info(f"Loading {extension}...")
+        try:
+            await bot.load_extension(extension)
+            logger.info(f"Loaded {extension}")
+            loaded_count += 1
+        except ExtensionError as e:
+            logger.exception(f"Failed to load {extension}: {e}")
+            failed_count += 1
+
+    logger.info(
+        "Cogs loaded %s/%s",
+        loaded_count,
+        loaded_count + failed_count
+    )
 
 
 async def main():
