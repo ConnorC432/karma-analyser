@@ -7,7 +7,7 @@ class AskSeasideMark(AskCog):
 
     def __init__(self, bot):
         system_instructions = {
-            "role": "system",
+            "role"   : "system",
             "content": (
                 "You are a friendly AI Assistant, here are some details about you that you need to follow:\n"
                 "Your name is \"Seaside Mark\".\n"
@@ -36,7 +36,7 @@ class AskSeasideMark(AskCog):
         }
         super().__init__(
             bot, "seasidemark", system_instructions, valid_server_ids=[683033503834963978, 1361336155169226792]
-            )
+        )
 
     @commands.command(hidden=True)
     async def askseasidemark(self, ctx, *, text: str):
