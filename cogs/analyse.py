@@ -123,35 +123,13 @@ class Analyse(commands.Cog):
 
     @commands.Cog.listener()
     async def on_raw_reaction_add(self, payload):
-        if not payload.guild_id:
-            return
-
-        # Ignore Non-Karmic Reactions
-        if payload.emoji.name not in reaction_dict:
-            return
-
-        guild = self.bot.get_guild(payload.guild_id)
-        user = guild.get_member(payload.user_id)
-        message = await guild.get_channel(payload.channel_id).fetch_message(payload.message_id)
-
-        if user == message.author:
-            return
-
-        async with karma_lock:
-            # Count Reactions
-            guild_id = payload.guild_id
-            author_id = payload.message_author_id
-
-            karmic_dict[guild_id][author_id][payload.emoji.name] += 1
-            karmic_dict[guild_id][author_id]["Karma"] += reaction_dict[payload.emoji.name]
-
-            if karmic_dict[guild_id][author_id][f"Karma"] in KARMIC_MILESTONE:
-                await self.karma_milestone(message, karmic_dict[guild_id][author_id]["Karma"])
-
-        self.logger.debug(f"ANALYSED {user.name}'S REACTION TO {message.author.name}'S POST")
+        await self._handle_reaction(payload, add=True)
 
     @commands.Cog.listener()
     async def on_raw_reaction_remove(self, payload):
+        await self._handle_reaction(payload, add=False)
+
+    async def _handle_reaction(self, payload, add=True):
         if not payload.guild_id:
             return
 
@@ -170,43 +148,85 @@ class Analyse(commands.Cog):
             # Count Reactions
             guild_id = payload.guild_id
             author_id = payload.message_author_id
+            
+            # Add or remove karma and reaction counts
+            karmic_dict[guild_id][author_id][payload.emoji.name] += 1
+            karmic_dict[guild_id][author_id]["Karma"] += reaction_dict[payload.emoji.name]
 
-            karmic_dict[guild_id][author_id][f"{payload.emoji.name}_given"] -= 1
-            karmic_dict[guild_id][author_id]["Karma_given"] -= reaction_dict[payload.emoji.name]
-
-            if karmic_dict[guild_id][author_id][f"Karma"] in KARMIC_MILESTONE:
+            if karmic_dict[guild_id][author_id]["Karma"] in KARMIC_MILESTONE:
                 await self.karma_milestone(message, karmic_dict[guild_id][author_id]["Karma"])
 
-        self.logger.debug(f"ANALYSED {user.name}'S REACTION TO {message.author.name}'S POST")
+        action = "ANALYSED" if add else "UN-ANALYSED"
+        self.logger.debug(f"{action} {user.name}'S REACTION TO {message.author.name}'S POST")
 
     @commands.Cog.listener()
     async def on_message(self, message):
-        if not message.guild:
-            return
-
-        self.message_count += 1
-
-        # Update User's message count
-        async with karma_lock:
-            karmic_dict[message.guild.id][message.author.id]["Messages"] += 1
-
-        self.logger.debug(f"ANALYSED MESSAGE: {message.author.name}: {message.content}")
+        await self._handle_message(message, add=True)
 
     @commands.Cog.listener()
     async def on_message_delete(self, message):
+        await self._handle_message(message, add=False)
+
+    async def _handle_message(self, message, add=True):
         if not message.guild:
             return
 
-        self.message_count -= 1
+        modifier = 1 if add else -1
+        self.message_count += modifier
 
+        # Update User's message count
         async with karma_lock:
-            karmic_dict[message.guild.id][message.author.id]["Messages"] -= 1
+            karmic_dict[message.guild.id][message.author.id]["Messages"] += modifier
 
-        self.logger.debug(f"UN-ANALYSED MESSAGE: {message.author.name}: {message.content}")
+        action = "ANALYSED" if add else "UN-ANALYSED"
+        self.logger.debug(f"{action} MESSAGE: {message.author.name}: {message.content}")
 
     async def karma_milestone(self, message, karma):
         await message.channel.send(f"KARMIC MILESTONE ALERT! REDDITOR {message.author.mention} "
                                    f"HAS REACHED {karma} KARMA {" ".join([UPVOTE_STR] * 5)} ")
+
+    async def _get_users_to_iterate(self, ctx):
+        users_to_iterate = set()
+
+        # @everyone
+        if "@everyone" in ctx.message.content:
+            users_to_iterate.update(
+                m.id
+                for m in ctx.guild.members
+                if karmic_dict[ctx.guild.id][m.id]["Messages"] >= 100
+            )
+
+        # @here
+        elif "@here" in ctx.message.content:
+            users_to_iterate.update(
+                m.id for m in ctx.guild.members
+                if m.status != discord.Status.offline
+            )
+
+        else:
+            # @user
+            users_to_iterate.update(m.id for m in ctx.message.mentions)
+
+            # @role
+            for role in ctx.message.role_mentions:
+                users_to_iterate.update(m.id for m in role.members)
+
+            # No Arguments
+            if not users_to_iterate:
+                users_to_iterate.add(ctx.author.id)
+
+        return users_to_iterate
+
+    def _get_user_string(self, guild, user_id):
+        user_obj = guild.get_member(user_id)
+        return user_obj.display_name if user_obj else str(user_id)
+
+    async def _handle_karma_lock(self, reply):
+        if karma_lock.locked():
+            await reply.edit(
+                content="WAITING TO ACCESS KARMIC ARCHIVES, "
+                        "THIS MAY TAKE LONGER THAN USUAL"
+            )
 
     @commands.command(aliases=['analysis'])
     async def analyse(self, ctx):
@@ -216,36 +236,10 @@ class Analyse(commands.Cog):
         """
         reply = await ctx.reply("KARMA SUBROUTINE INITIALISED")
 
+        await self._handle_karma_lock(reply)
+
         async with karma_lock:
-            # Determine which users to analyse
-            users_to_iterate = set()
-
-            # @everyone
-            if "@everyone" in ctx.message.content:
-                users_to_iterate.update(
-                    m.id
-                    for m in ctx.guild.members
-                    if karmic_dict[ctx.guild.id][m.id]["Messages"] >= 100
-                )
-
-            # @here
-            elif "@here" in ctx.message.content:
-                users_to_iterate.update(
-                    m.id for m in ctx.guild.members
-                    if m.status != discord.Status.offline
-                )
-
-            else:
-                # @user
-                users_to_iterate.update(m.id for m in ctx.message.mentions)
-
-                # @role
-                for role in ctx.message.role_mentions:
-                    users_to_iterate.update(m.id for m in role.members)
-
-                # No Arguments
-                if not users_to_iterate:
-                    users_to_iterate.add(ctx.author.id)
+            users_to_iterate = await self._get_users_to_iterate(ctx)
 
             self.logger.info(f"ANALYSING USERS: {users_to_iterate}")
 
@@ -257,8 +251,7 @@ class Analyse(commands.Cog):
                 messages = user_data["Messages"]
                 karma = user_data["Karma"]
 
-                user_obj = discord.utils.find(lambda m, u=user: m.id == user, ctx.guild.members)
-                user_str = user_obj.display_name if user_obj else user
+                user_str = self._get_user_string(ctx.guild, user)
 
                 karma_ratio = karma / messages if messages != 0 else 0
                 karma_str = UPVOTE_STR if karma >= 0 else DOWNVOTE_STR
@@ -270,93 +263,34 @@ class Analyse(commands.Cog):
                 )
 
                 # Karma/Reactions Earned
-                embed.add_field(
-                    name="Karma",
-                    value=f"{karma} {karma_str}",
-                    inline=False
-                )
-                embed.add_field(
-                    name="Messages",
-                    value=f"{messages}",
-                    inline=False
-                )
-                embed.add_field(
-                    name="Karmic Ratio",
-                    value=f"{round(karma_ratio, 4)}",
-                    inline=False
-                )
-                embed.add_field(
-                    name="Silver",
-                    value=f"{karmic_dict[ctx.guild.id][user]['reddit_silver']} {SILVER_STR}",
-                    inline=True,
-                )
-                embed.add_field(
-                    name="Gold",
-                    value=f"{karmic_dict[ctx.guild.id][user]['reddit_gold']} {GOLD_STR}",
-                    inline=True,
-                )
-                embed.add_field(
-                    name="Platinum",
-                    value=f"{karmic_dict[ctx.guild.id][user]['reddit_platinum']} {PLAT_STR}",
-                    inline=True,
-                )
-                embed.add_field(
-                    name="Wholesome",
-                    value=f"{karmic_dict[ctx.guild.id][user]['reddit_wholesome']} {WHOLESOME_STR}",
-                    inline=True,
-                )
-                embed.add_field(
-                    name="Helpful",
-                    value=f"{karmic_dict[ctx.guild.id][user]['helpful']} {HELPFUL_STR}",
-                    inline=True,
-                )
-                embed.add_field(
-                    name="Trukes", value=f"{karmic_dict[ctx.guild.id][user]['truke']} {TRUKE_STR}",
-                    inline=True,
-                )
+                fields = [
+                    ("Karma", f"{karma} {karma_str}", False),
+                    ("Messages", f"{messages}", False),
+                    ("Karmic Ratio", f"{round(karma_ratio, 4)}", False),
+                    ("Silver", f"{user_data['reddit_silver']} {SILVER_STR}", True),
+                    ("Gold", f"{user_data['reddit_gold']} {GOLD_STR}", True),
+                    ("Platinum", f"{user_data['reddit_platinum']} {PLAT_STR}", True),
+                    ("Wholesome", f"{user_data['reddit_wholesome']} {WHOLESOME_STR}", True),
+                    ("Helpful", f"{user_data['helpful']} {HELPFUL_STR}", True),
+                    ("Trukes", f"{user_data['truke']} {TRUKE_STR}", True),
+                    ("Karma_given", f"{karma} {karma_str}", False),
+                    ("Silver_given", f"{user_data['reddit_silver']} {SILVER_STR}", True),
+                    ("Gold_given", f"{user_data['reddit_gold']} {GOLD_STR}", True),
+                    ("Platinum_given", f"{user_data['reddit_platinum']} {PLAT_STR}", True),
+                    ("Wholesome_given", f"{user_data['reddit_wholesome']} {WHOLESOME_STR}", True),
+                    ("Helpful_given", f"{user_data['helpful']} {HELPFUL_STR}", True),
+                    ("Trukes_given", f"{user_data['truke']} {TRUKE_STR}", True),
+                ]
 
-                # Karma/Reactions Given
-                embed.add_field(
-                    name="Karma_given",
-                    value=f"{karma} {karma_str}",
-                    inline=False
-                )
-                embed.add_field(
-                    name="Silver_given",
-                    value=f"{karmic_dict[ctx.guild.id][user]['reddit_silver']} {SILVER_STR}",
-                    inline=True,
-                )
-                embed.add_field(
-                    name="Gold_given",
-                    value=f"{karmic_dict[ctx.guild.id][user]['reddit_gold']} {GOLD_STR}",
-                    inline=True,
-                )
-                embed.add_field(
-                    name="Platinum_given",
-                    value=f"{karmic_dict[ctx.guild.id][user]['reddit_platinum']} {PLAT_STR}",
-                    inline=True,
-                )
-                embed.add_field(
-                    name="Wholesome_given",
-                    value=f"{karmic_dict[ctx.guild.id][user]['reddit_wholesome']} {WHOLESOME_STR}",
-                    inline=True,
-                )
-                embed.add_field(
-                    name="Helpful_given",
-                    value=f"{karmic_dict[ctx.guild.id][user]['helpful']} {HELPFUL_STR}",
-                    inline=True,
-                )
-                embed.add_field(
-                    name="Trukes_given", value=f"{karmic_dict[ctx.guild.id][user]['truke']} {TRUKE_STR}",
-                    inline=True,
-                )
+                for name, value, inline in fields:
+                    embed.add_field(name=name, value=value, inline=inline)
 
                 try:
                     await ctx.channel.send(embed=embed)
                 except discord.HTTPException as e:
                     self.logger.error(f"FAILED TO SEND EMBED: {e}")
 
-    @commands.command(aliases=['truth', 'truths', 'trukes', 'truthnuke', 'truthnukes', 'false'])
+    @commands.command(aliases=['truth', 'truths', 'trukes', 'truthnuke', 'truthnukes', 'false', 'falses'])
     async def truke(self, ctx):
         """
         Analyse a user's truthfulness
@@ -364,36 +298,10 @@ class Analyse(commands.Cog):
         """
         reply = await ctx.reply("TRUTHFULNESS SUBROUTINE INITIALISED")
 
+        await self._handle_karma_lock(reply)
+
         async with karma_lock:
-            # Determine which users to analyse
-            users_to_iterate = set()
-
-            # @everyone
-            if "@everyone" in ctx.message.content:
-                users_to_iterate.update(
-                    m.id
-                    for m in ctx.guild.members
-                    if karmic_dict[ctx.guild.id][m.id]["Messages"] >= 100
-                )
-
-            # @here
-            elif "@here" in ctx.message.content:
-                users_to_iterate.update(
-                    m.id for m in ctx.guild.members
-                    if m.status != discord.Status.offline
-                )
-
-            else:
-                # @user
-                users_to_iterate.update(m.id for m in ctx.message.mentions)
-
-                # @role
-                for role in ctx.message.role_mentions:
-                    users_to_iterate.update(m.id for m in role.members)
-
-                # No Arguments
-                if not users_to_iterate:
-                    users_to_iterate.add(ctx.author.id)
+            users_to_iterate = await self._get_users_to_iterate(ctx)
 
             self.logger.info(f"ANALYSING USERS: {users_to_iterate}")
 
@@ -407,8 +315,7 @@ class Analyse(commands.Cog):
                 truke = user_data["truke"]
                 truth_nuke = user_data["truthnuke"]
 
-                user_obj = discord.utils.find(lambda m, u=user: m.id == user, ctx.guild.members)
-                user_str = user_obj.display_name if user_obj else user
+                user_str = self._get_user_string(ctx.guild, user)
 
                 # Create Karmic analysis embed for each user
                 embed = discord.Embed(
@@ -417,21 +324,14 @@ class Analyse(commands.Cog):
                 )
 
                 # Karma/Reactions Earned
-                embed.add_field(
-                    name="Truths",
-                    value=f"{truth} {TRUE_STR}",
-                    inline=False
-                )
-                embed.add_field(
-                    name="Truth Nukes",
-                    value=f"{truke + truth_nuke} {TRUKE_STR}",
-                    inline=False
-                )
-                embed.add_field(
-                    name="Falses",
-                    value=f"{false} {FALSE_STR}",
-                    inline=False
-                )
+                fields = [
+                    ("Truths", f"{truth} {TRUE_STR}", False),
+                    ("Truth Nukes", f"{truke + truth_nuke} {TRUKE_STR}", False),
+                    ("Falses", f"{false} {FALSE_STR}", False),
+                ]
+
+                for name, value, inline in fields:
+                    embed.add_field(name=name, value=value, inline=inline)
 
                 try:
                     await ctx.channel.send(embed=embed)
