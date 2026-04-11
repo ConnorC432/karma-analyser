@@ -90,6 +90,8 @@ reaction_dict = {
     "helpful"         : 0,
     "truthnuke"       : 0,
     "truke"           : 0,
+    "true"            : 0,
+    "false"           : 0,
     "up"              : 0.25,
     "arrow_up"        : 0.5,
     "arrow_down"      : -0.5

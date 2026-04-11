@@ -18,6 +18,8 @@ PLAT_STR = "<:reddit_platinum:833678610279563304>"
 WHOLESOME_STR = "<:reddit_wholesome:833669115762835456>"
 HELPFUL_STR = "<:helpful:1412197811008704694>"
 TRUKE_STR = "<:truke:1359507023951298700>"
+TRUE_STR = "<:true:1389941856963526757>"
+FALSE_STR = "<:false:1389942082059243550>"
 
 
 class Analyse(commands.Cog):
@@ -337,6 +339,88 @@ class Analyse(commands.Cog):
                 embed.add_field(
                     name="Trukes_given", value=f"{karmic_dict[ctx.guild.id][user]['truke']} {TRUKE_STR}",
                     inline=True,
+                )
+
+                try:
+                    await ctx.channel.send(embed=embed)
+                except discord.HTTPException as e:
+                    self.logger.error(f"FAILED TO SEND EMBED: {e}")
+
+    @commands.command(aliases=['truth', 'truths', 'trukes', 'truthnuke', 'truthnukes', 'false'])
+    async def trukes(self, ctx):
+        """
+        Analyse a user's truthfulness
+        - `user` (optional): Mention the user(s) to analyse.
+        """
+        reply = await ctx.reply("TRUTHFULNESS SUBROUTINE INITIALISED")
+
+        async with karma_lock:
+            # Determine which users to analyse
+            users_to_iterate = set()
+
+            # @everyone
+            if "@everyone" in ctx.message.content:
+                users_to_iterate.update(
+                    m.id
+                    for m in ctx.guild.members
+                    if karmic_dict[ctx.guild.id][m.id]["Messages"] >= 100
+                )
+
+            # @here
+            elif "@here" in ctx.message.content:
+                users_to_iterate.update(
+                    m.id for m in ctx.guild.members
+                    if m.status != discord.Status.offline
+                )
+
+            else:
+                # @user
+                users_to_iterate.update(m.id for m in ctx.message.mentions)
+
+                # @role
+                for role in ctx.message.role_mentions:
+                    users_to_iterate.update(m.id for m in role.members)
+
+                # No Arguments
+                if not users_to_iterate:
+                    users_to_iterate.add(ctx.author.id)
+
+            self.logger.info(f"ANALYSING USERS: {users_to_iterate}")
+
+            await asyncio.sleep(random.uniform(2.5, 5))
+            await reply.edit(content="TRUTHFULNESS ANALYSED")
+
+            for user in users_to_iterate:
+                user_data = karmic_dict[ctx.guild.id][user]
+                truth = user_data["true"]
+                false = user_data["false"]
+                truke = user_data["truke"]
+                truth_nuke = user_data["truthnuke"]
+
+                user_obj = discord.utils.find(lambda m, u=user: m.id == user, ctx.guild.members)
+                user_str = user_obj.display_name if user_obj else user
+
+                # Create Karmic analysis embed for each user
+                embed = discord.Embed(
+                    title=f"{user_str}",
+                    color=REDDIT_RED,
+                )
+
+                # Karma/Reactions Earned
+                embed.add_field(
+                    name="Truths",
+                    value=f"{truth} {TRUE_STR}",
+                    inline=False
+                )
+                embed.add_field(
+                    name="Truth Nukes",
+                    value=f"{truke + truth_nuke} {TRUKE_STR}",
+                    inline=False
+                )
+                embed.add_field(
+                    name="Falses",
+                    value=f"{false} {FALSE_STR}",
+                    inline=False
                 )
 
                 try:
