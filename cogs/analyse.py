@@ -7,7 +7,7 @@ import random
 import discord
 from discord.ext import commands, tasks
 
-from utils import REDDIT_RED, karma_lock, karmic_dict, reaction_dict, status
+from utils import KARMIC_MILESTONE, REDDIT_RED, karma_lock, karmic_dict, reaction_dict, status
 
 
 UPVOTE_STR = "<:reddit_upvote:1266139689136689173>"
@@ -145,6 +145,9 @@ class Analyse(commands.Cog):
             karmic_dict[guild_id][author_id][payload.emoji.name] += 1
             karmic_dict[guild_id][author_id]["Karma"] += reaction_dict[payload.emoji.name]
 
+            if karmic_dict[guild_id][author_id][f"Karma"] in KARMIC_MILESTONE:
+                await self.karma_milestone(message, karmic_dict[guild_id][author_id]["Karma"])
+
         self.logger.debug(f"ANALYSED {user.name}'S REACTION TO {message.author.name}'S POST")
 
     @commands.Cog.listener()
@@ -170,6 +173,9 @@ class Analyse(commands.Cog):
 
             karmic_dict[guild_id][author_id][f"{payload.emoji.name}_given"] -= 1
             karmic_dict[guild_id][author_id]["Karma_given"] -= reaction_dict[payload.emoji.name]
+
+            if karmic_dict[guild_id][author_id][f"Karma"] in KARMIC_MILESTONE:
+                await self.karma_milestone(message, karmic_dict[guild_id][author_id]["Karma"])
 
         self.logger.debug(f"ANALYSED {user.name}'S REACTION TO {message.author.name}'S POST")
 
@@ -197,6 +203,10 @@ class Analyse(commands.Cog):
             karmic_dict[message.guild.id][message.author.id]["Messages"] -= 1
 
         self.logger.debug(f"UN-ANALYSED MESSAGE: {message.author.name}: {message.content}")
+
+    async def karma_milestone(self, message, karma):
+        await message.channel.send(f"KARMIC MILESTONE ALERT! REDDITOR {message.author.mention} "
+                                   f"HAS REACHED {karma} KARMA {" ".join([UPVOTE_STR] * 5)} ")
 
     @commands.command(aliases=['analysis'])
     async def analyse(self, ctx):
@@ -347,7 +357,7 @@ class Analyse(commands.Cog):
                     self.logger.error(f"FAILED TO SEND EMBED: {e}")
 
     @commands.command(aliases=['truth', 'truths', 'trukes', 'truthnuke', 'truthnukes', 'false'])
-    async def trukes(self, ctx):
+    async def truke(self, ctx):
         """
         Analyse a user's truthfulness
         - `user` (optional): Mention the user(s) to analyse.

@@ -167,6 +167,22 @@ REDDIQUETTE = (
     "⦁ Take moderation positions in a community where your profession, employment, or biases could pose a direct conflict of interest to the neutral and user driven nature of Reddit. \n"
 )
 
+KARMIC_MILESTONE = {
+    50,
+    100,
+    250,
+    500,
+    1000,
+    10000,
+    100000,
+    1000000,
+    10000000,
+    100000000,
+    1000000000,
+    10000000000,
+    100000000000,
+}
+
 
 async def gif_search(query: str):
     api_key = os.getenv("KLIPY_KEY")
