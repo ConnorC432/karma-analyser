@@ -10,6 +10,7 @@ COPY deductions.json .
 COPY petition.gif .
 COPY tools.py .
 COPY utils.py .
+COPY askbot.py .
 COPY cogs/ ./cogs/
 
 # Install Deno runtime
