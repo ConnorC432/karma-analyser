@@ -204,13 +204,6 @@ class Analyse(commands.Cog):
         """
         reply = await ctx.reply("KARMA SUBROUTINE INITIALISED")
 
-        # Load karma JSON
-        if karma_lock.locked():
-            await reply.edit(
-                content="WAITING TO ACCESS KARMIC ARCHIVES, "
-                        "THIS MAY TAKE LONGER THAN USUAL"
-            )
-
         async with karma_lock:
             # Determine which users to analyse
             users_to_iterate = set()
