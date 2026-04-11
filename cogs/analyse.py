@@ -103,9 +103,12 @@ class Analyse(commands.Cog):
 
                     # Add Reaction Count
                     karmic_dict[guild.id][message.author.id][emoji_name] += 1
-
                     # Add Weighted Karma Value
                     karmic_dict[guild.id][message.author.id]["Karma"] += reaction_dict[emoji_name]
+
+                    # Count Reactions given
+                    karmic_dict[guild.id][user.id][emoji_name] += 1
+                    karmic_dict[guild.id][user.id]["Karma"] += reaction_dict[emoji_name]
 
             except discord.HTTPException as e:
                 self.logger.error(f"HTTP ERROR: {e}")
@@ -163,8 +166,8 @@ class Analyse(commands.Cog):
             guild_id = payload.guild_id
             author_id = payload.message_author_id
 
-            karmic_dict[guild_id][author_id][payload.emoji.name] -= 1
-            karmic_dict[guild_id][author_id]["Karma"] -= reaction_dict[payload.emoji.name]
+            karmic_dict[guild_id][author_id][f"{payload.emoji.name}_given"] -= 1
+            karmic_dict[guild_id][author_id]["Karma_given"] -= reaction_dict[payload.emoji.name]
 
         self.logger.debug(f"ANALYSED {user.name}'S REACTION TO {message.author.name}'S POST")
 
@@ -261,6 +264,7 @@ class Analyse(commands.Cog):
                     color=REDDIT_RED,
                 )
 
+                # Karma/Reactions Earned
                 embed.add_field(
                     name="Karma",
                     value=f"{karma} {karma_str}",
@@ -303,6 +307,42 @@ class Analyse(commands.Cog):
                 )
                 embed.add_field(
                     name="Trukes", value=f"{karmic_dict[ctx.guild.id][user]['truke']} {TRUKE_STR}",
+                    inline=True,
+                )
+
+                # Karma/Reactions Given
+                embed.add_field(
+                    name="Karma_given",
+                    value=f"{karma} {karma_str}",
+                    inline=False
+                )
+                embed.add_field(
+                    name="Silver_given",
+                    value=f"{karmic_dict[ctx.guild.id][user]['reddit_silver']} {SILVER_STR}",
+                    inline=True,
+                )
+                embed.add_field(
+                    name="Gold_given",
+                    value=f"{karmic_dict[ctx.guild.id][user]['reddit_gold']} {GOLD_STR}",
+                    inline=True,
+                )
+                embed.add_field(
+                    name="Platinum_given",
+                    value=f"{karmic_dict[ctx.guild.id][user]['reddit_platinum']} {PLAT_STR}",
+                    inline=True,
+                )
+                embed.add_field(
+                    name="Wholesome_given",
+                    value=f"{karmic_dict[ctx.guild.id][user]['reddit_wholesome']} {WHOLESOME_STR}",
+                    inline=True,
+                )
+                embed.add_field(
+                    name="Helpful_given",
+                    value=f"{karmic_dict[ctx.guild.id][user]['helpful']} {HELPFUL_STR}",
+                    inline=True,
+                )
+                embed.add_field(
+                    name="Trukes_given", value=f"{karmic_dict[ctx.guild.id][user]['truke']} {TRUKE_STR}",
                     inline=True,
                 )
 
