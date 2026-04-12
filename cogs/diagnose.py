@@ -3,8 +3,7 @@ import logging
 import discord
 from discord.ext import commands
 
-from tools import AITools
-from utils import REDDIQUETTE
+from tools import AITools, REDDIQUETTE
 
 
 class Diagnose(commands.Cog):

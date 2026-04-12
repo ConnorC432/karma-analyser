@@ -7,8 +7,75 @@ import random
 import discord
 from discord.ext import commands, tasks
 
-from utils import KARMIC_MILESTONE, REDDIT_RED, karma_lock, karmic_dict, reaction_dict, status
+from utils import REDDIT_RED, karma_lock, karmic_dict
 
+
+status = [
+    "ANALYSING KARMA",
+    "MASS DOWNVOTING",
+    "THANKING KIND STRANGER",
+    "KARMA COURT JURY SERVICE",
+    "SCROLLING REELS",
+    "READING REDDIQUETTE",
+    "BALATRO",
+    "FORTNITE",
+    "FRUIT MACHINE",
+    "R6 SIEGE",
+    "5D CHESS WITH MULTIVERSE TIME TRAVEL",
+    "MINECRAFT",
+    "NOTHING (EVER HAPPENS)",
+    "BLADES IN THE DARK",
+    "WORDLE",
+    "R/GAMBLING",
+    "TOUCHING GRASS",
+    "KARMA FARMING",
+    "FALLOUT: NEW VEGAS",
+    "BALDUR'S GATE",
+    "SKYRIM",
+    "FACTORIO",
+    "RIMWORLD",
+    "JACKBOX",
+    "THE NARWHAL BACONS AT MIDNIGHT"
+]
+
+reaction_dict = {
+    "reddit_upvote"   : 1,
+    "Upvote"          : 1,
+    "reddit_downvote" : -1,
+    "Downvote"        : -1,
+    "half_upvote"     : 0.5,
+    "quarter_upvote"  : 0.5,
+    "half_downvote"   : -0.5,
+    "quarter_downvote": -0.5,
+    "reddit_gold"     : 0,
+    "reddit_platinum" : 0,
+    "reddit_silver"   : 0,
+    "reddit_wholesome": 0,
+    "helpful"         : 0,
+    "truthnuke"       : 0,
+    "truke"           : 0,
+    "true"            : 0,
+    "false"           : 0,
+    "up"              : 0.25,
+    "arrow_up"        : 0.5,
+    "arrow_down"      : -0.5
+}
+
+KARMIC_MILESTONE = {
+    50,
+    100,
+    250,
+    500,
+    1000,
+    10000,
+    100000,
+    1000000,
+    10000000,
+    100000000,
+    1000000000,
+    10000000000,
+    100000000000,
+}
 
 UPVOTE_STR = "<:reddit_upvote:1266139689136689173>"
 DOWNVOTE_STR = "<:reddit_downvote:1266139651660447744>"
