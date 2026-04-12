@@ -32,11 +32,11 @@ class AskCog(commands.Cog):
         self.tools = AITools(self.bot)
 
     async def _get_images(self, message):
-        image_urls = await self.tools.extract_image_urls(message)
+        image_urls = await self.tools._extract_image_urls(message)
         images_b64 = set()
         if image_urls:
             for url in image_urls:
-                images_b64.add(await self.tools.url_to_base64(url))
+                images_b64.add(await self.tools._url_to_base64(url))
         return images_b64
 
     async def _handle_response(self, response, target):
@@ -46,7 +46,7 @@ class AskCog(commands.Cog):
             if response == "RESPONSE GENERATION FAILED, PLEASE DOWNVOTE":
                 await reply.add_reaction("<:reddit_downvote:1266139651660447744>")
 
-    async def run_ask(self, ctx, text: str):
+    async def _run_ask(self, ctx, text: str):
         if not ctx.guild:
             return
 
@@ -95,7 +95,7 @@ class AskCog(commands.Cog):
 
         self.logger.debug(f"RESPONDING TO: {message.author.name}")
 
-        messages = await self.tools.populate_messages(message)
+        messages = await self.tools._populate_messages(message)
 
         if f"r/ask{self.askbot_name}" not in messages[0]["content"].lower():
             return

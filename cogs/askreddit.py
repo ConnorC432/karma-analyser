@@ -32,7 +32,7 @@ class AskReddit(AskCog):
         Ask the Karma Analyser questions
         - `text` (required): The question to ask.
         """
-        await self.run_ask(ctx, text)
+        await self._run_ask(ctx, text)
 
 
 async def setup(bot):

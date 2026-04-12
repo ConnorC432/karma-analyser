@@ -241,7 +241,7 @@ class AITools:
                 else "RESPONSE GENERATION FAILED, PLEASE DOWNVOTE"
             )
 
-    async def populate_messages(self, payload):
+    async def _populate_messages(self, payload):
         """
         Creates a message history from a single message,
         looking through all of it's replies
@@ -252,11 +252,11 @@ class AITools:
         current = await payload.channel.fetch_message(payload.reference.message_id)
 
         while current:
-            image_urls = await self.extract_image_urls(current)
+            image_urls = await self._extract_image_urls(current)
             images_b64 = set()
             if image_urls:
                 for url in image_urls:
-                    images_b64.add(await self.url_to_base64(url))
+                    images_b64.add(await self._url_to_base64(url))
 
             messages.append(
                 {
@@ -275,7 +275,7 @@ class AITools:
             )
 
             if current.reference:
-                current = await self.get_message(
+                current = await self._get_message(
                     current.channel, current.reference.message_id
                 )
 
@@ -284,11 +284,11 @@ class AITools:
 
         messages.reverse()
 
-        image_urls = await self.extract_image_urls(payload)
+        image_urls = await self._extract_image_urls(payload)
         images_b64 = set()
         if image_urls:
             for url in image_urls:
-                images_b64.add(await self.url_to_base64(url))
+                images_b64.add(await self._url_to_base64(url))
         messages.append(
             {
                 "role": "user",
@@ -299,7 +299,7 @@ class AITools:
 
         return list(messages)
 
-    async def get_message(self, channel: discord.TextChannel, message_id: int):
+    async def _get_message(self, channel: discord.TextChannel, message_id: int):
         """
         Helper function to find a message object, looks for a cached message
         first, falling back to the discord API if not found.
@@ -312,13 +312,13 @@ class AITools:
 
         try:
             message = await channel.fetch_message(message_id)
-            await self.cache_message(message_id, message)
+            await self._cache_message(message_id, message)
             return message
 
         except (discord.NotFound, discord.Forbidden) as e:
             self.logger.error(f"FAILED TO GET MESSAGE: {e}")
 
-    async def cache_message(self, message_id, message):
+    async def _cache_message(self, message_id, message):
         """
         Cache a message object
         :param message_id: message ID to cache
@@ -329,7 +329,7 @@ class AITools:
         if len(self.message_cache) > self.cache_size:
             self.message_cache.popitem(last=False)
 
-    async def url_to_base64(self, url: str) -> str:
+    async def _url_to_base64(self, url: str) -> str:
         """
         Converts an image URL to a base64 encoded string.
         :param url: Image URL
@@ -365,7 +365,7 @@ class AITools:
             self.logger.error(f"FAILED TO FETCH URL {url}: {e}")
             return None
 
-    async def extract_image_urls(self, message: discord.Message):
+    async def _extract_image_urls(self, message: discord.Message):
         """
         Extracts image URLs from a message and stores them in a set.
         :param message: Message object to extract image URLs from
@@ -417,7 +417,7 @@ class AITools:
         return image_urls
 
     @tool
-    def respond_to_user(self, response=None) -> str:
+    def _respond_to_user(self, response=None) -> str:
         """
         Call this function if you have called the same tool multiple times
         or you have already called all the tools you need.

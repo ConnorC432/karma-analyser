@@ -14,7 +14,7 @@ class Dice(commands.Cog):
         self.logger = logging.getLogger(self.__class__.__name__)
         self.pattern = re.compile(r"^(\d+)d(\d+)([+\-]\d+)?$")
 
-    def parse_roll_string(self, dice: str):
+    def _parse_roll_string(self, dice: str):
         match = self.pattern.match(dice)
 
         if not match:
@@ -35,15 +35,15 @@ class Dice(commands.Cog):
         return num, sides, modifier
 
     @staticmethod
-    def roll_dice(num: int, sides: int, modifier: int = None):
+    def _roll_dice(num: int, sides: int, modifier: int = None):
         rolls = [random.randint(1, sides) for _ in range(num)]
         total = sum(rolls) + modifier
         return rolls, total
 
-    def create_embed(self, num, sides, modifier, rolls, total):
+    def _create_embed(self, num, sides, modifier, rolls, total):
         embed = discord.Embed(title=total, color=utils.REDDIT_RED)
         embed.add_field(
-            name=self.dice_name(num, sides),
+            name=self._dice_name(num, sides),
             value=f"{num}d{sides}{f'{modifier:+}' if modifier else ''}",
             inline=True,
         )
@@ -57,7 +57,7 @@ class Dice(commands.Cog):
         return embed
 
     @staticmethod
-    def dice_name(num, sides):
+    def _dice_name(num, sides):
         dice_info = {
             2: {"emoji": "🪙", "singular": "Coin", "plural": "Coins"},
             52: {
@@ -88,14 +88,14 @@ class Dice(commands.Cog):
         if ctx.author.bot:
             return
 
-        parsed = self.parse_roll_string(dice)
+        parsed = self._parse_roll_string(dice)
 
         if not parsed:
             return
 
         num, sides, modifier = parsed
-        rolls, total = self.roll_dice(num, sides, modifier)
-        embed = self.create_embed(num, sides, modifier, rolls, total)
+        rolls, total = self._roll_dice(num, sides, modifier)
+        embed = self._create_embed(num, sides, modifier, rolls, total)
 
         await ctx.reply(embed=embed)
 
@@ -112,14 +112,14 @@ class Dice(commands.Cog):
 
         dice = ctx.content[2:].strip()
 
-        parsed = self.parse_roll_string(dice)
+        parsed = self._parse_roll_string(dice)
 
         if not parsed:
             return
 
         num, sides, modifier = parsed
-        rolls, total = self.roll_dice(num, sides, modifier)
-        embed = self.create_embed(num, sides, modifier, rolls, total)
+        rolls, total = self._roll_dice(num, sides, modifier)
+        embed = self._create_embed(num, sides, modifier, rolls, total)
 
         await ctx.reply(embed=embed)
 

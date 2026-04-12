@@ -99,7 +99,7 @@ class Analyse(commands.Cog):
                         async for message in channel.history(
                             limit=None, oldest_first=True
                         ):
-                            await self.analyse_message(guild, message)
+                            await self._analyse_message(guild, message)
 
                             self.message_count += 1
 
@@ -118,9 +118,9 @@ class Analyse(commands.Cog):
 
         misc_cog = self.bot.get_cog("Misc")
         if misc_cog:
-            await misc_cog.change_status()
+            await misc_cog._change_status()
 
-    async def analyse_message(self, guild, message):
+    async def _analyse_message(self, guild, message):
         self.logger.debug(f"({self.message_count}) {message.author}: {message.content}")
         # Ignore Deleted Users and messages sent after bot initialisation.
         if message.author.name == "Deleted User" or message.created_at > self.init_time:
@@ -426,7 +426,7 @@ class Analyse(commands.Cog):
 
             misc_cog = self.bot.get_cog("Misc")
             if misc_cog:
-                await misc_cog.change_status()
+                await misc_cog._change_status()
 
 async def setup(bot):
     await bot.add_cog(Analyse(bot))

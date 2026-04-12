@@ -143,7 +143,7 @@ class Misc(commands.Cog):
         await ctx.reply("Thank you kind stranger!")
 
     @tasks.loop(minutes=15)
-    async def change_status(self):
+    async def _change_status(self):
         activity = random.choice(status)
         self.logger.info(f"CHANGED STATUS: {activity}")
         await self.bot.change_presence(activity=discord.Game(name=activity))

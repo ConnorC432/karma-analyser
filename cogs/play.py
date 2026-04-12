@@ -92,10 +92,10 @@ class MusicPlayer:
             "options": "-vn",
         }
 
-        self.loop_task = bot.loop.create_task(self.player_loop())
+        self.loop_task = bot.loop.create_task(self._player_loop())
 
     @staticmethod
-    def create_embed(ctx, info) -> discord.Embed:
+    def _create_embed(ctx, info) -> discord.Embed:
         """
         Create an embed for a given song
         :return: discord embed
@@ -121,12 +121,12 @@ class MusicPlayer:
 
         return embed
 
-    async def player_loop(self):
+    async def _player_loop(self):
         while True:
             self.current = await self.queue.get()
 
             try:
-                await self.start_next_song()
+                await self._start_next_song()
             except Exception as e:
                 self.logger.error(f"ERROR IN PLAYBACK LOOP: {e}")
 
@@ -134,12 +134,12 @@ class MusicPlayer:
                 await self.voice_client.disconnect()
                 self.voice_client = None
 
-    async def start_next_song(self):
+    async def _start_next_song(self):
         ctx = self.current["ctx"]
         info = self.current["info"]
 
         try:
-            await self.join_vc(ctx)
+            await self._join_vc(ctx)
 
             source = discord.FFmpegPCMAudio(info["url"], **self.ffmpeg_opts)
 
@@ -152,7 +152,7 @@ class MusicPlayer:
             )
 
             ### Create Embed
-            embed = self.create_embed(ctx, info)
+            embed = self._create_embed(ctx, info)
             view = MusicControls(self.bot, self)
 
             await ctx.reply(embed=embed, view=view)
@@ -174,7 +174,7 @@ class MusicPlayer:
             await ctx.reply("ERROR PLAYING SONG")
             self.logger.error(f"ERROR PLAYING SONG: {e}")
 
-    async def join_vc(self, ctx):
+    async def _join_vc(self, ctx):
         channel = ctx.author.voice.channel
 
         if self.voice_client and self.voice_client.is_connected():
@@ -192,7 +192,7 @@ class Play(commands.Cog):
 
         self.players: dict[int, MusicPlayer] = {}
 
-    def get_music_player(self, guild: discord.Guild) -> MusicPlayer:
+    def _get_music_player(self, guild: discord.Guild) -> MusicPlayer:
         """
         return or create a new music player for the given guild
         :param guild:
@@ -203,7 +203,7 @@ class Play(commands.Cog):
 
         return self.players[guild.id]
 
-    async def search_youtube(self, query: str):
+    async def _search_youtube(self, query: str):
         """
         Search YouTube for audio
         :param query: YouTube search query
@@ -282,9 +282,9 @@ class Play(commands.Cog):
             await ctx.reply("PLEASE PROVIDE A SEARCH QUERY")
             return
 
-        player = self.get_music_player(ctx.guild)
+        player = self._get_music_player(ctx.guild)
 
-        info = await self.search_youtube(query)
+        info = await self._search_youtube(query)
         if not info:
             await ctx.reply("COULD NOT FIND A RELEVANT VIDEO")
             return
@@ -302,7 +302,7 @@ class Play(commands.Cog):
         if ctx.channel.name != "song-requests":
             return
 
-        player = self.get_music_player(ctx.guild)
+        player = self._get_music_player(ctx.guild)
 
         if not player:
             await ctx.reply("NOTHING EVER HAPPENS")
@@ -330,7 +330,7 @@ class Play(commands.Cog):
         if ctx.channel.name != "song-requests":
             return
 
-        player = self.get_music_player(ctx.guild)
+        player = self._get_music_player(ctx.guild)
 
         if not player:
             await ctx.reply("QUEUE IS EMPTY")
