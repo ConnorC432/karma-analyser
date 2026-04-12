@@ -14,5 +14,6 @@ disable = [
 exclude = [
     "venv",
     ".venv",
-    ".idea"
+    ".idea",
+    "cogs/_*.py"
 ]
