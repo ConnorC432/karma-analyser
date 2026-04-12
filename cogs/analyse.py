@@ -215,7 +215,7 @@ class Analyse(commands.Cog):
             # Count Reactions
             guild_id = payload.guild_id
             author_id = payload.message_author_id
-            
+
             # Add or remove karma and reaction counts
             karmic_dict[guild_id][author_id][payload.emoji.name] += 1
             karmic_dict[guild_id][author_id]["Karma"] += reaction_dict[payload.emoji.name]
@@ -228,8 +228,10 @@ class Analyse(commands.Cog):
         self.logger.debug(f"{action} {user.name}'S REACTION TO {message.author.name}'S POST")
 
     async def _karma_milestone(self, message, karma):
-        await message.channel.send(f"KARMIC MILESTONE ALERT! REDDITOR {message.author.mention} "
-                                   f"HAS REACHED {karma} KARMA {" ".join([UPVOTE_STR] * 5)} ")
+        await message.channel.send(
+            f"KARMIC MILESTONE ALERT! REDDITOR {message.author.mention} "
+            f"HAS REACHED {karma} KARMA {" ".join([UPVOTE_STR] * 5)} "
+            )
         karmic_dict[message.guild.id][message.author.id]["Karma_milestone"] = karma
 
     @commands.Cog.listener()

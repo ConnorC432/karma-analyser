@@ -54,7 +54,7 @@ async def on_command_error(ctx, error):
     if isinstance(error, commands.CheckFailure):
         if ctx.guild is None:
             return
-    
+
     # Handle other errors
     if not isinstance(error, (commands.CommandNotFound, commands.CheckFailure)):
         logger.error(f"Ignoring exception in command {ctx.command}: {error}")

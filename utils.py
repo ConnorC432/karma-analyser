@@ -20,6 +20,7 @@ VALID_SERVER_IDS_1 = [683033503834963978, 1361336155169226792]
 karmic_dict = defaultdict(lambda: defaultdict(lambda: defaultdict(int)))
 karma_lock = asyncio.Lock()
 
+
 async def gif_search(query: str):
     api_key = os.getenv("KLIPY_KEY")
     if not api_key:
