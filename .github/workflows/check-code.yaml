@@ -55,3 +55,8 @@ jobs:
 
       - name: Verify cogs
         run: python bot.py -t
+        env:
+          # Prevent ValueErrors
+          BOT_TOKEN: "test"
+          OLLAMA_ENDPOINT: "test"
+          SEARXNG_ENDPOINT: "test"
