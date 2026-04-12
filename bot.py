@@ -4,6 +4,7 @@ import argparse
 import asyncio
 import logging
 import os
+import sys
 from pathlib import Path
 
 import discord
@@ -16,6 +17,7 @@ parser = argparse.ArgumentParser()
 parser.add_argument("-c", nargs="*", default=[], help="The cogs to load")
 parser.add_argument("-d", help="debug mode", action="store_true")
 parser.add_argument("-q", help="quick start - skips analysis", action="store_true")
+parser.add_argument("-t", help="load cogs then exit", action="store_true")
 args = parser.parse_args()
 
 # Logger
@@ -104,7 +106,10 @@ async def load_extensions():
 async def main():
     async with bot:
         await load_extensions()
-        await bot.start(bot_token)
+        if args.t:
+            sys.exit(0)
+        else:
+            await bot.start(bot_token)
 
 
 if __name__ == "__main__":
