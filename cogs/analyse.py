@@ -7,7 +7,6 @@ import random
 import discord
 from discord.ext import commands
 
-from cogs.misc import Misc
 from utils import REDDIT_RED, karma_lock, karmic_dict
 
 
