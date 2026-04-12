@@ -10,15 +10,38 @@ on:
   workflow_call:
 
 jobs:
-  verify:
+  security:
+    name: Security Scan
     runs-on: ubuntu-latest
-
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
 
       - name: Run Gitleaks
         uses: gitleaks/gitleaks-action@v2
+
+  lint:
+    name: Lint & Format
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Linter
+        uses: astral-sh/ruff-action@v3
+
+      - name: Check Formatting
+        uses: astral-sh/ruff-action@v3
+        with:
+          args: "format --check --diff"
+
+  verify:
+    name: Verify Cogs
+    needs: lint
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
 
       - name: Set up Python
         uses: actions/setup-python@v4
@@ -29,14 +52,6 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           pip install -r requirements.txt
-
-      - name: Linter
-        uses: astral-sh/ruff-action@v3
-
-      - name: Check Formatting
-        uses: astral-sh/ruff-action@v3
-        with:
-          args: "format --check --diff"
 
       - name: Verify cogs
         run: python bot.py -t
