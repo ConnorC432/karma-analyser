@@ -5,38 +5,10 @@ import logging
 import random
 
 import discord
-from discord.ext import commands, tasks
+from discord.ext import commands
 
 from utils import REDDIT_RED, karma_lock, karmic_dict
 
-
-status = [
-    "ANALYSING KARMA",
-    "MASS DOWNVOTING",
-    "THANKING KIND STRANGER",
-    "KARMA COURT JURY SERVICE",
-    "SCROLLING REELS",
-    "READING REDDIQUETTE",
-    "BALATRO",
-    "FORTNITE",
-    "FRUIT MACHINE",
-    "R6 SIEGE",
-    "5D CHESS WITH MULTIVERSE TIME TRAVEL",
-    "MINECRAFT",
-    "NOTHING (EVER HAPPENS)",
-    "BLADES IN THE DARK",
-    "WORDLE",
-    "R/GAMBLING",
-    "TOUCHING GRASS",
-    "KARMA FARMING",
-    "FALLOUT: NEW VEGAS",
-    "BALDUR'S GATE",
-    "SKYRIM",
-    "FACTORIO",
-    "RIMWORLD",
-    "JACKBOX",
-    "THE NARWHAL BACONS AT MIDNIGHT"
-]
 
 reaction_dict = {
     "reddit_upvote"   : 1,
@@ -182,12 +154,6 @@ class Analyse(commands.Cog):
             except discord.HTTPException as e:
                 self.logger.error(f"HTTP ERROR: {e}")
 
-    @tasks.loop(minutes=15)
-    async def change_status(self):
-        activity = random.choice(status)
-        self.logger.info(f"CHANGED STATUS: {activity}")
-        await self.bot.change_presence(activity=discord.Game(name=activity))
-
     @commands.Cog.listener()
     async def on_raw_reaction_add(self, payload):
         await self._handle_reaction(payload, add=True)
@@ -231,7 +197,7 @@ class Analyse(commands.Cog):
         await message.channel.send(
             f"KARMIC MILESTONE ALERT! REDDITOR {message.author.mention} "
             f"HAS REACHED {karma} KARMA {" ".join([UPVOTE_STR] * 5)} "
-            )
+        )
         karmic_dict[message.guild.id][message.author.id]["Karma_milestone"] = karma
 
     @commands.Cog.listener()
