@@ -116,7 +116,7 @@ class Misc(commands.Cog):
             discord.MessageType.premium_guild_tier_2,
             discord.MessageType.premium_guild_tier_3
         ]:
-            await payload.reply(f"Thank you for boosting the server kind stranger!")
+            await payload.reply("Thank you for boosting the server kind stranger!")
 
         if payload.author.bot:
             return

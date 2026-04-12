@@ -403,7 +403,7 @@ class AITools:
                     self.logger.debug(f"Failed to fetch HTML page {url}: {e}")
 
         if not image_urls:
-            self.logger.debug(f"NO IMAGE URLS FOUND")
+            self.logger.debug("NO IMAGE URLS FOUND")
             return None
 
         return image_urls
