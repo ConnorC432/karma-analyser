@@ -77,11 +77,7 @@ async def load_extensions():
 
     if args.q:
         logger.info("Skipping r/analyse cog...")
-        try:
-            cogs_to_load.remove("cogs.analyse")
-        except:
-            # analyse cog can't be found, so just ignore it
-            pass
+        cogs_to_load.remove("cogs.analyse")
 
     loaded_count = 0
     failed_count = 0
