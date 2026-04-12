@@ -1,15 +1,72 @@
-name: Create Docker Image
+name: Build and Push Docker Image
 
 on:
-  workflow_run:
-    workflows: ["Check Code"]
-    types:
-      - completed
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+  workflow_call:
 
 jobs:
-  build-and-push:
+  security:
+    name: Security Scan
     runs-on: ubuntu-latest
-    if: ${{ github.event.workflow_run.conclusion == 'success' }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+
+      - name: Run Gitleaks
+        uses: gitleaks/gitleaks-action@v2
+
+  lint:
+    name: Lint & Format
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Lint
+        uses: astral-sh/ruff-action@v3
+
+      - name: Format
+        uses: astral-sh/ruff-action@v3
+        with:
+          args: "format --check --diff"
+
+  verify:
+    name: Verify Cogs
+    needs: lint
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.12'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Verify cogs
+        run: python bot.py -t
+        env:
+          # Prevent ValueErrors
+          BOT_TOKEN: "test"
+          OLLAMA_ENDPOINT: "test"
+          SEARXNG_ENDPOINT: "test"
+
+  build-and-push:
+    name: Build and Push Docker Image
+    needs: [security, verify]
+    runs-on: ubuntu-latest
 
     steps:
       - name: Checkout code
