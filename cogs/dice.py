@@ -44,7 +44,7 @@ class Dice(commands.Cog):
         embed = discord.Embed(title=total, color=utils.REDDIT_RED)
         embed.add_field(
             name=self.dice_name(num, sides),
-            value=f"{num}d{sides}{modifier or ''}",
+            value=f"{num}d{sides}{f'{modifier:+}' if modifier else ''}",
             inline=True,
         )
         if len(rolls) <= 50:
