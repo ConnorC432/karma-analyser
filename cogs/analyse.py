@@ -154,10 +154,16 @@ class Analyse(commands.Cog):
             karmic_dict[guild_id][author_id]["Karma"] += reaction_dict[payload.emoji.name]
 
             if karmic_dict[guild_id][author_id]["Karma"] in KARMIC_MILESTONE:
-                await self.karma_milestone(message, karmic_dict[guild_id][author_id]["Karma"])
+                if karmic_dict[guild_id][author_id]["Karma"] > karmic_dict[guild_id][author_id]["Karma_milestone"]:
+                    await self._karma_milestone(message, karmic_dict[guild_id][author_id]["Karma"])
 
         action = "ANALYSED" if add else "UN-ANALYSED"
         self.logger.debug(f"{action} {user.name}'S REACTION TO {message.author.name}'S POST")
+
+    async def _karma_milestone(self, message, karma):
+        await message.channel.send(f"KARMIC MILESTONE ALERT! REDDITOR {message.author.mention} "
+                                   f"HAS REACHED {karma} KARMA {" ".join([UPVOTE_STR] * 5)} ")
+        karmic_dict[message.guild.id][message.author.id]["Karma_milestone"] = karma
 
     @commands.Cog.listener()
     async def on_message(self, message):
@@ -180,10 +186,6 @@ class Analyse(commands.Cog):
 
         action = "ANALYSED" if add else "UN-ANALYSED"
         self.logger.debug(f"{action} MESSAGE: {message.author.name}: {message.content}")
-
-    async def karma_milestone(self, message, karma):
-        await message.channel.send(f"KARMIC MILESTONE ALERT! REDDITOR {message.author.mention} "
-                                   f"HAS REACHED {karma} KARMA {" ".join([UPVOTE_STR] * 5)} ")
 
     async def _get_users_to_iterate(self, ctx):
         users_to_iterate = set()
