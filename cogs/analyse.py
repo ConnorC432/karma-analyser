@@ -427,5 +427,6 @@ class Analyse(commands.Cog):
             if misc_cog:
                 await misc_cog._change_status()
 
+
 async def setup(bot):
     await bot.add_cog(Analyse(bot))
