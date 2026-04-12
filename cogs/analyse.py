@@ -7,6 +7,7 @@ import random
 import discord
 from discord.ext import commands
 
+from cogs.misc import Misc
 from utils import REDDIT_RED, karma_lock, karmic_dict
 
 
@@ -115,7 +116,9 @@ class Analyse(commands.Cog):
                     except discord.HTTPException as e:
                         self.logger.error(f"HTTP ERROR: {e}")
 
-        self.change_status.start()
+        misc_cog = self.bot.get_cog("Misc")
+        if misc_cog:
+            await misc_cog.change_status()
 
     async def analyse_message(self, guild, message):
         self.logger.debug(f"({self.message_count}) {message.author}: {message.content}")
@@ -421,6 +424,9 @@ class Analyse(commands.Cog):
                 except discord.HTTPException as e:
                     self.logger.error(f"FAILED TO SEND EMBED: {e}")
 
+            misc_cog = self.bot.get_cog("Misc")
+            if misc_cog:
+                await misc_cog.change_status()
 
 async def setup(bot):
     await bot.add_cog(Analyse(bot))
