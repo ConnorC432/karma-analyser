@@ -25,9 +25,9 @@ class MusicControls(discord.ui.View):
 
     async def interaction_check(self, interaction: discord.Interaction):
         if (
-                not interaction.user.voice
-                or not self.player.voice_client
-                or interaction.user.voice.channel != self.player.voice_client.channel
+            not interaction.user.voice
+            or not self.player.voice_client
+            or interaction.user.voice.channel != self.player.voice_client.channel
         ):
             await interaction.response.send_message(
                 "YOU MUST BE IN THE SAME VOICE CHANNEL",
@@ -37,27 +37,35 @@ class MusicControls(discord.ui.View):
         return True
 
     @discord.ui.button(label="⏭ SKIP", style=discord.ButtonStyle.primary)
-    async def skip(self, interaction: discord.Interaction, button: discord.ui.Button) -> None:
+    async def skip(
+        self, interaction: discord.Interaction, button: discord.ui.Button
+    ) -> None:
         self.player.voice_client.stop()
 
         await interaction.response.defer()
 
     @discord.ui.button(label="▶ PLAY", style=discord.ButtonStyle.success)
-    async def play_pause(self, interaction: discord.Interaction, button: discord.ui.Button) -> None:
+    async def play_pause(
+        self, interaction: discord.Interaction, button: discord.ui.Button
+    ) -> None:
         if self.player.voice_client.is_paused():
             self.player.voice_client.resume()
 
         await interaction.response.defer()
 
     @discord.ui.button(label="⏸ PAUSE", style=discord.ButtonStyle.secondary)
-    async def pause(self, interaction: discord.Interaction, button: discord.ui.Button) -> None:
+    async def pause(
+        self, interaction: discord.Interaction, button: discord.ui.Button
+    ) -> None:
         if self.player.voice_client.is_playing():
             self.player.voice_client.pause()
 
         await interaction.response.defer()
 
     @discord.ui.button(label="⏹ STOP", style=discord.ButtonStyle.danger)
-    async def stop(self, interaction: discord.Interaction, button: discord.ui.Button) -> None:
+    async def stop(
+        self, interaction: discord.Interaction, button: discord.ui.Button
+    ) -> None:
         self.player.queue = asyncio.Queue()
         self.player.voice_client.stop()
 
@@ -80,8 +88,8 @@ class MusicPlayer:
         self.play_next_event = asyncio.Event()
 
         self.ffmpeg_opts = {
-            'before_options': '-reconnect 1 -reconnect_streamed 1 -reconnect_delay_max 5',
-            'options'       : '-vn'
+            "before_options": "-reconnect 1 -reconnect_streamed 1 -reconnect_delay_max 5",
+            "options": "-vn",
         }
 
         self.loop_task = bot.loop.create_task(self.player_loop())
@@ -100,11 +108,11 @@ class MusicPlayer:
             title=f"NOW PLAYING: {info.get('title', 'Unknown Title')}",
             url=info.get("webpage_url", "Unknown URL"),
             description=f"By **{info.get('uploader', 'Unknown User')}**",
-            colour=utils.REDDIT_RED
+            colour=utils.REDDIT_RED,
         )
 
         embed.add_field(name="Duration", value=duration_str)
-        embed.add_field(name="Views", value=f"{info.get("view_count", 0):,}")
+        embed.add_field(name="Views", value=f"{info.get('view_count', 0):,}")
 
         if info.get("thumbnail"):
             embed.set_thumbnail(url=info["thumbnail"])
@@ -138,7 +146,9 @@ class MusicPlayer:
             self.play_next_event.clear()
             self.voice_client.play(
                 source,
-                after=lambda e: self.bot.loop.call_soon_threadsafe(self.play_next_event.set),
+                after=lambda e: self.bot.loop.call_soon_threadsafe(
+                    self.play_next_event.set
+                ),
             )
 
             ### Create Embed
@@ -176,7 +186,6 @@ class MusicPlayer:
 
 
 class Play(commands.Cog):
-
     def __init__(self, bot):
         self.bot = bot
         self.logger = logging.getLogger(f"{self.__class__.__name__}")
@@ -203,12 +212,12 @@ class Play(commands.Cog):
         cookie_path = Path("cookies.txt").resolve()
 
         ytdl_opts = {
-            "format"        : "bestaudio/best[ext=m4a]/best",
-            "noplaylist"    : True,
+            "format": "bestaudio/best[ext=m4a]/best",
+            "noplaylist": True,
             "default_search": "ytsearch5",
-            "quiet"         : True,
-            "ignoreerrors"  : True,
-            "logger"        : self.logger,
+            "quiet": True,
+            "ignoreerrors": True,
+            "logger": self.logger,
             "progress_hooks": [lambda d: self.logger.debug(d)],
         }
 
@@ -243,7 +252,9 @@ class Play(commands.Cog):
                 return None
 
             if info.get("webpage_url") and info.get("url"):
-                self.logger.info(f"YT video found: title={info.get('title')} url={info.get('webpage_url')}")
+                self.logger.info(
+                    f"YT video found: title={info.get('title')} url={info.get('webpage_url')}"
+                )
                 return info
 
             self.logger.warning(f"No valid fields in info: {info}")
@@ -278,12 +289,7 @@ class Play(commands.Cog):
             await ctx.reply("COULD NOT FIND A RELEVANT VIDEO")
             return
 
-        await player.queue.put(
-            {
-                "ctx" : ctx,
-                "info": info
-            }
-        )
+        await player.queue.put({"ctx": ctx, "info": info})
 
         await ctx.reply(f"QUEUED: [{info['title']}]")
 
@@ -306,7 +312,10 @@ class Play(commands.Cog):
             await ctx.reply("NOTHING IS PLAYING")
             return
 
-        if not ctx.author.voice or ctx.author.voice.channel != player.voice_client.channel:
+        if (
+            not ctx.author.voice
+            or ctx.author.voice.channel != player.voice_client.channel
+        ):
             await ctx.reply("YOU MUST BE IN THE SAME VOICE CHANNEL TO SKIP")
             return
 
@@ -340,7 +349,7 @@ class Play(commands.Cog):
             embed.add_field(
                 name="Now Playing",
                 value=f"[{current_info.get('title')}]({current_info.get('webpage_url')})",
-                inline=False
+                inline=False,
             )
 
         upcoming = list(player.queue._queue)
@@ -349,23 +358,17 @@ class Play(commands.Cog):
             description = ""
             for index, song in enumerate(upcoming[:10], start=1):
                 info = song["info"]
-                description += f"**{index}.** [{info.get('title')}]({info.get('webpage_url')})\n"
+                description += (
+                    f"**{index}.** [{info.get('title')}]({info.get('webpage_url')})\n"
+                )
 
             if len(upcoming) > 10:
                 description += f"\n...and {len(upcoming) - 10} more"
 
-            embed.add_field(
-                name="UP NEXT",
-                value=description,
-                inline=False
-            )
+            embed.add_field(name="UP NEXT", value=description, inline=False)
 
         else:
-            embed.add_field(
-                name="UP NEXT",
-                value="NOTHING ELSE IN QUEUE",
-                inline=False
-            )
+            embed.add_field(name="UP NEXT", value="NOTHING ELSE IN QUEUE", inline=False)
 
         await ctx.reply(embed=embed)
 

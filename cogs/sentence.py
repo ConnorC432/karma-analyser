@@ -10,7 +10,6 @@ from utils import karma_lock, karmic_dict
 
 
 class Sentence(commands.Cog):
-
     def __init__(self, bot):
         self.bot = bot
         self.logger = logging.getLogger(self.__class__.__name__)
@@ -32,7 +31,9 @@ class Sentence(commands.Cog):
             f"FOR CRIMES AGAINST REDDIT AND XER PEOPLE, u/{member.name} IS HEREBY SENTENCED TO A KARMIC DEDUCTION TOTALLING {ded} REDDIT KARMA"
         )
 
-        self.logger.info(f"SENTENCING {member.name} BY A DEDUCTION TOTALLING {ded} REDDIT KARMA")
+        self.logger.info(
+            f"SENTENCING {member.name} BY A DEDUCTION TOTALLING {ded} REDDIT KARMA"
+        )
 
         try:
             with open("deductions.json", "r", encoding="utf-8") as f:

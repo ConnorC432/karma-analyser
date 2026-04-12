@@ -6,7 +6,6 @@ from discord.ext import commands
 
 
 class Poll(commands.Cog):
-
     def __init__(self, bot):
         self.bot = bot
         self.logger = logging.getLogger(self.__class__.__name__)

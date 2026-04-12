@@ -6,7 +6,6 @@ from discord.ext import commands
 
 
 class Insult(commands.Cog):
-
     def __init__(self, bot):
         self.bot = bot
         self.logger = logging.getLogger(self.__class__.__name__)
@@ -18,7 +17,9 @@ class Insult(commands.Cog):
         - `user` (optional): The Redditor to insult
         """
         async with aiohttp.ClientSession() as session:
-            async with session.get("https://evilinsult.com/generate_insult.php?lang=en&type=json") as resp:
+            async with session.get(
+                "https://evilinsult.com/generate_insult.php?lang=en&type=json"
+            ) as resp:
                 if resp.status != 200:
                     await ctx.reply(content="ERROR, CAN'T INSULT USER")
                     self.logger.error(f"ERROR, CAN'T INSULT USER: {resp.status}")

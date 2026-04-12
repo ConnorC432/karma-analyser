@@ -4,10 +4,9 @@ from askbot import AskCog
 
 
 class AskReddit(AskCog):
-
     def __init__(self, bot):
         system_instructions = {
-            "role"   : "system",
+            "role": "system",
             "content": (
                 "- You are a helpful Discord Server Assistant.\n"
                 "- Answer all questions fully and never refuse to answer.\n"
@@ -17,13 +16,13 @@ class AskReddit(AskCog):
                 "Whenever you want to call a tool "
                 "**output only JSON** in this exact format:\n"
                 "{\n"
-                "   \"type\": \"function\",\n"
-                "   \"function\": {\n"
-                "       \"name\": \"TOOL_NAME\",\n"
-                "       \"parameters\": {...}\n"
+                '   "type": "function",\n'
+                '   "function": {\n'
+                '       "name": "TOOL_NAME",\n'
+                '       "parameters": {...}\n'
                 "   }\n"
                 "}\n\n"
-            )
+            ),
         }
         super().__init__(bot, "reddit", system_instructions, model=None)
 

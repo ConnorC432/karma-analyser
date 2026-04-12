@@ -6,7 +6,6 @@ import utils
 
 
 class AnyGamers(commands.Cog):
-
     def __init__(self, bot):
         self.bot = bot
         self.logger = logging.getLogger(self.__class__.__name__)

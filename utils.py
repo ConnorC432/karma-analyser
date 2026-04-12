@@ -28,12 +28,12 @@ async def gif_search(query: str):
 
     url = f"https://api.klipy.com/api/v1/{api_key}/gifs/search"
     params = {
-        "q"             : query or "reddit",
-        "page"          : 1,
-        "per_page"      : 8,
-        "customer_id"   : 0,
-        "locale"        : "GB",
-        "content_filter": "off"
+        "q": query or "reddit",
+        "page": 1,
+        "per_page": 8,
+        "customer_id": 0,
+        "locale": "GB",
+        "content_filter": "off",
     }
 
     async with aiohttp.ClientSession() as session:

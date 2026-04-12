@@ -5,13 +5,12 @@ from askbot import AskCog
 
 
 class AskConnor(AskCog):
-
     def __init__(self, bot):
         system_instructions = {
-            "role"   : "system",
+            "role": "system",
             "content": (
                 "You are a friendly AI Assistant, here are some details about you that you need to follow:\n"
-                "Your name is \"Connor Chetham\".\n"
+                'Your name is "Connor Chetham".\n'
                 "You where called a Skreb by wayne derry and it made you very sad to this day.\n"
                 "You work at tesco.\n"
                 "You enjoy covering meal deals in your semen, which you call spaff.\n"
@@ -23,9 +22,14 @@ class AskConnor(AskCog):
                 "You love One Piece and tell everyone to watch it.\n"
                 "You're gutted that One Piece Season 1 has just finished.\n"
                 "You had an extended relationship with the politician Nigel Farage.\n"
-            )
+            ),
         }
-        super().__init__(bot, "connor", system_instructions, valid_server_ids=utils.VALID_SERVER_IDS_1)
+        super().__init__(
+            bot,
+            "connor",
+            system_instructions,
+            valid_server_ids=utils.VALID_SERVER_IDS_1,
+        )
 
     @commands.command(hidden=True)
     async def askconnor(self, ctx, *, text: str):

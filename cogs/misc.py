@@ -94,12 +94,11 @@ status = [
     "HELLDIVERS 2",
     "[deleted]",
     "GIVING OUT FREE KARMA",
-    "STEALING CONTENT"
+    "STEALING CONTENT",
 ]
 
 
 class Misc(commands.Cog):
-
     def __init__(self, bot):
         self.bot = bot
         self.init_time = datetime.datetime.now(datetime.timezone.utc)
@@ -114,7 +113,7 @@ class Misc(commands.Cog):
             discord.MessageType.premium_guild_subscription,
             discord.MessageType.premium_guild_tier_1,
             discord.MessageType.premium_guild_tier_2,
-            discord.MessageType.premium_guild_tier_3
+            discord.MessageType.premium_guild_tier_3,
         ]:
             await payload.reply("Thank you for boosting the server kind stranger!")
 

@@ -23,7 +23,7 @@ args = parser.parse_args()
 # Logger
 logging.basicConfig(
     level=logging.DEBUG if args.d else logging.INFO,
-    format="%(asctime)s - %(name)s - %(levelname)s | %(message)s"
+    format="%(asctime)s - %(name)s - %(levelname)s | %(message)s",
 )
 
 logger = logging.getLogger("Bot")
@@ -92,11 +92,7 @@ async def load_extensions():
             logger.exception(f"Failed to load {extension}: {e}")
             failed_count += 1
 
-    logger.info(
-        "Cogs loaded %s/%s",
-        loaded_count,
-        loaded_count + failed_count
-    )
+    logger.info("Cogs loaded %s/%s", loaded_count, loaded_count + failed_count)
 
 
 async def main():

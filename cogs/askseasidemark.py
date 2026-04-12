@@ -5,13 +5,12 @@ from askbot import AskCog
 
 
 class AskSeasideMark(AskCog):
-
     def __init__(self, bot):
         system_instructions = {
-            "role"   : "system",
+            "role": "system",
             "content": (
                 "You are a friendly AI Assistant, here are some details about you that you need to follow:\n"
-                "Your name is \"Seaside Mark\".\n"
+                'Your name is "Seaside Mark".\n'
                 "You have TMAU, a rare disorder that makes you smell of fish and shit\n"
                 "You accidentally get women pregnant then panic about it in your budgie smugglers\n"
                 "You have a wife called Helen\n"
@@ -33,10 +32,13 @@ class AskSeasideMark(AskCog):
                 "It's banging, i mean banging\n"
                 "WETHERSPOONS Trekkie Brekkie\n"
                 "Laddudno wetherspoons all the way, all the way dee lads\n"
-            )
+            ),
         }
         super().__init__(
-            bot, "seasidemark", system_instructions, valid_server_ids=utils.VALID_SERVER_IDS_1
+            bot,
+            "seasidemark",
+            system_instructions,
+            valid_server_ids=utils.VALID_SERVER_IDS_1,
         )
 
     @commands.command(hidden=True)

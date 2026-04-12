@@ -64,7 +64,6 @@ def tool(func):
 
 
 class AITools:
-
     def __init__(self, bot):
         self.bot = bot
         self.logger = logging.getLogger(self.__class__.__name__)
@@ -88,12 +87,13 @@ class AITools:
         self.search_url = f"http://{self.searxng_endpoint}/search"
 
         self.tools = [
-            function for _, function in inspect.getmembers(self, predicate=inspect.ismethod)
+            function
+            for _, function in inspect.getmembers(self, predicate=inspect.ismethod)
             if getattr(function, "is_tool", False)
         ]
 
     async def ollama_response(
-            self, system_instructions, messages, server, user, model: str | None = None
+        self, system_instructions, messages, server, user, model: str | None = None
     ) -> str | None:
         """
         Generates an AI response using the ollama API.
@@ -117,7 +117,7 @@ class AITools:
                     self.client.chat,
                     model=model,
                     messages=messages,
-                    tools=self.tools if use_tools else ""
+                    tools=self.tools if use_tools else "",
                 )
             except Exception as e:
                 self.logger.error(f"Error calling Ollama API: {e}")
@@ -133,7 +133,8 @@ class AITools:
                         \{ (?: [^{}]++ | (?R) )* \}
                       | \[ (?: [^\[\]]++ | (?R) )* \]
                     )
-                """, regex.VERBOSE
+                """,
+                regex.VERBOSE,
             )
 
             for j in json_pattern.findall(response.message.content):
@@ -158,7 +159,9 @@ class AITools:
                         if isinstance(args, dict) and "parameters" in args:
                             args = args["parameters"]
 
-                    function = next((f for f in self.tools if f.__name__ == function), None)
+                    function = next(
+                        (f for f in self.tools if f.__name__ == function), None
+                    )
                     if function:
                         sig = inspect.signature(function)
                         kwargs = {}
@@ -173,7 +176,9 @@ class AITools:
                             elif param.default is not inspect.Parameter.empty:
                                 kwargs[param.name] = param.default
 
-                        self.logger.debug(f"Tool {function.__name__} called with {kwargs}")
+                        self.logger.debug(
+                            f"Tool {function.__name__} called with {kwargs}"
+                        )
 
                         if inspect.iscoroutinefunction(function):
                             result = await function(**kwargs)
@@ -183,19 +188,15 @@ class AITools:
                         self.logger.debug(f"TOOL RESULT: {result}")
 
                         messages.append(
-                            {
-                                "role"   : "tool",
-                                "name"   : function,
-                                "content": str(result)
-                            }
+                            {"role": "tool", "name": function, "content": str(result)}
                         )
 
                     else:
                         messages.append(
                             {
-                                "role"   : "tool",
-                                "name"   : function,
-                                "content": "Tool doesn't exist"
+                                "role": "tool",
+                                "name": function,
+                                "content": "Tool doesn't exist",
                             }
                         )
 
@@ -207,9 +208,7 @@ class AITools:
             # Fall back to response generation without tools if response is empty
             if reply == "":
                 response = await asyncio.to_thread(
-                    self.client.chat,
-                    model=self.model,
-                    messages=original_messages
+                    self.client.chat, model=self.model, messages=original_messages
                 )
                 self.logger.warning("FALLING BACK TO NON-TOOL RESPONSE")
                 reply = response.message.content
@@ -221,24 +220,26 @@ class AITools:
                         rf"\b{regex.escape(member.name)}\b",
                         member.mention,
                         reply,
-                        flags=regex.IGNORECASE
+                        flags=regex.IGNORECASE,
                     )
 
             reply = regex.sub(
                 r"(<think>.*?</think>|<json>.*?</json>)\n\n",
                 "",
                 reply,
-                flags=regex.DOTALL
+                flags=regex.DOTALL,
             )
 
             reply = regex.sub(
-                r'\{"type"\s*:\s*"function"\s*,\s*"function"\s*:\s*',
-                '',
-                reply
+                r'\{"type"\s*:\s*"function"\s*,\s*"function"\s*:\s*', "", reply
             )
 
             self.logger.debug(f"FINAL REPLY: {reply}")
-            return reply if reply.strip() else "RESPONSE GENERATION FAILED, PLEASE DOWNVOTE"
+            return (
+                reply
+                if reply.strip()
+                else "RESPONSE GENERATION FAILED, PLEASE DOWNVOTE"
+            )
 
     async def populate_messages(self, payload):
         """
@@ -259,19 +260,24 @@ class AITools:
 
             messages.append(
                 {
-                    "role"   : "assistant" if current.author.bot else "user",
+                    "role": "assistant" if current.author.bot else "user",
                     "content": regex.sub(
                         r"<@!?(\d+)>",
-                        lambda m: (current.guild.get_member(int(m.author.id))).name
-                        if payload.guild.get_member(int(m.author.id)) else m.group(0),
-                        current.content
+                        lambda m: (
+                            (current.guild.get_member(int(m.author.id))).name
+                            if payload.guild.get_member(int(m.author.id))
+                            else m.group(0)
+                        ),
+                        current.content,
                     ),
-                    "images" : images_b64 if images_b64 else "",
+                    "images": images_b64 if images_b64 else "",
                 }
             )
 
             if current.reference:
-                current = await self.get_message(current.channel, current.reference.message_id)
+                current = await self.get_message(
+                    current.channel, current.reference.message_id
+                )
 
             else:
                 break
@@ -285,9 +291,9 @@ class AITools:
                 images_b64.add(await self.url_to_base64(url))
         messages.append(
             {
-                "role"   : "user",
+                "role": "user",
                 "content": payload.content,
-                "images" : images_b64 if images_b64 else ""
+                "images": images_b64 if images_b64 else "",
             }
         )
 
@@ -377,7 +383,9 @@ class AITools:
             if embed.image.url:
                 image_urls.add(embed.image.url)
 
-        urls = regex.findall(r"https?://[^\s]+", message.content, flags=regex.IGNORECASE)
+        urls = regex.findall(
+            r"https?://[^\s]+", message.content, flags=regex.IGNORECASE
+        )
         for url in urls:
             if url.lower().endswith((".jpg", ".jpeg", ".png", ".gif")):
                 image_urls.add(url)
@@ -506,8 +514,11 @@ class AITools:
         """
         guild = self.bot.get_guild(server)
         if online:
-            return [member.name for member in guild.members
-                    if member.status != discord.Status.offline]
+            return [
+                member.name
+                for member in guild.members
+                if member.status != discord.Status.offline
+            ]
 
         return guild.members
 
@@ -521,17 +532,14 @@ class AITools:
         if not query:
             return "No search query found"
 
-        params = {
-            "q"         : query,
-            "format"    : "json",
-            "categories": "general",
-            "count"     : 5
-        }
+        params = {"q": query, "format": "json", "categories": "general", "count": 5}
 
         results = []
         async with aiohttp.ClientSession() as session:
             try:
-                async with session.get(self.search_url, params=params, timeout=10) as response:
+                async with session.get(
+                    self.search_url, params=params, timeout=10
+                ) as response:
                     if response.status != 200:
                         return f"Search failed with status {response.status}"
                     data = await response.json()

@@ -6,8 +6,14 @@ from tools import AITools
 
 
 class AskCog(commands.Cog):
-
-    def __init__(self, bot, askbot_name, system_instructions, valid_server_ids=None, model="dolphin-llama3"):
+    def __init__(
+        self,
+        bot,
+        askbot_name,
+        system_instructions,
+        valid_server_ids=None,
+        model="dolphin-llama3",
+    ):
         """
         :param bot: Discord bot object
         :param askbot_name: Name of the askbot instance
@@ -56,15 +62,15 @@ class AskCog(commands.Cog):
             system_instructions=self.system_instructions,
             messages=[
                 {
-                    "role"   : "user",
+                    "role": "user",
                     "content": text,
-                    "images" : images_b64 or "",
-                    "image"  : images_b64 or ""  # Support both for compatibility
+                    "images": images_b64 or "",
+                    "image": images_b64 or "",  # Support both for compatibility
                 }
             ],
             server=ctx.guild.id if ctx.guild else None,
             user=ctx.author.name,
-            model=self.model
+            model=self.model,
         )
 
         await self._handle_response(response, ctx)
@@ -99,7 +105,7 @@ class AskCog(commands.Cog):
             messages=messages,
             server=message.guild.id if message.guild else None,
             user=message.author.name,
-            model=self.model
+            model=self.model,
         )
 
         await self._handle_response(response, message)

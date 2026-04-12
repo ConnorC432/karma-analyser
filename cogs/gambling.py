@@ -29,7 +29,7 @@ help_words = [
     "urge",
     "temptation",
     "compulsive",
-    "control"
+    "control",
 ]
 
 # Limit to 25 values so drops embed doesn't break
@@ -58,18 +58,17 @@ gambling_table = [
     ("<:horseinsuit2:1363514876265365514>", 1),
     ("<:imjakingit:1361028727206711488>", 1),
     ("<:Monster:1412064129581060266>", 1),
-    ("<:duke:1414946579302842388>", 0.1)  # ~0.01%
+    ("<:duke:1414946579302842388>", 0.1),  # ~0.01%
 ]
 
 
 class Gambling(commands.Cog):
-
     def __init__(self, bot):
         self.bot = bot
         self.logger = logging.getLogger(self.__class__.__name__)
         self.tools = AITools(self.bot)
 
-    @commands.command(aliases=['gamble'])
+    @commands.command(aliases=["gamble"])
     async def gambling(self, ctx, *, text: str = None):
         """
         Gamble for Karma and Awards
@@ -82,40 +81,36 @@ class Gambling(commands.Cog):
         if text:
             if "drops" in text:
                 total_weight = sum(weight for _, weight in gambling_table)
-                chances = [(item, (weight / total_weight) * 100) for item, weight in gambling_table]
+                chances = [
+                    (item, (weight / total_weight) * 100)
+                    for item, weight in gambling_table
+                ]
 
-                embed = discord.Embed(
-                    title="Gambling Drops",
-                    color=REDDIT_RED
-                )
+                embed = discord.Embed(title="Gambling Drops", color=REDDIT_RED)
 
                 for item, chance in chances:
-                    embed.add_field(
-                        name=item,
-                        value=f"{chance:.6f}%",
-                        inline=True
-                    )
+                    embed.add_field(name=item, value=f"{chance:.6f}%", inline=True)
 
                 await ctx.reply(embed=embed)
                 return
 
             if any(key in text.lower() for key in help_words):
                 ai_instructions = {
-                    "role"   : "system",
-                    "content": "You are trying to convince a fellow redditor to keep gambling, they don't know that they are close to their big win, which is why you need to convince them!"
+                    "role": "system",
+                    "content": "You are trying to convince a fellow redditor to keep gambling, they don't know that they are close to their big win, which is why you need to convince them!",
                 }
 
                 clean_response = await self.tools.ollama_response(
                     system_instructions=ai_instructions,
                     messages=[
                         {
-                            "role"   : "user",
-                            "content": "Convince your fellow redditor to keep gambling, so they can get their biggest jackpot yet!!!"
+                            "role": "user",
+                            "content": "Convince your fellow redditor to keep gambling, so they can get their biggest jackpot yet!!!",
                         }
                     ],
                     server=ctx.guild.id if ctx.guild else None,
                     user=ctx.author.name,
-                    model="llama3"
+                    model="llama3",
                 )
 
                 await ctx.reply(f"{clean_response[:2000]}")
@@ -131,17 +126,17 @@ class Gambling(commands.Cog):
 
         async with gamble_lock:
             for i in range(case_length - 4):
-                frame = karma_case[i:i + 5]
-                display = (
-                    f"{frame[0]}  |  {frame[1]}  |  **>> {frame[2]} <<**  |  {frame[3]}  |  {frame[4]}"
-                )
+                frame = karma_case[i : i + 5]
+                display = f"{frame[0]}  |  {frame[1]}  |  **>> {frame[2]} <<**  |  {frame[3]}  |  {frame[4]}"
                 await message.edit(content=display)
                 await asyncio.sleep(0.25)
 
             try:
                 await ctx.message.add_reaction(karma_case[case_length - 3])
             except discord.HTTPException as e:
-                self.logger.error(f"ERROR ADDING REACTION {karma_case[case_length - 3]}: {e})")
+                self.logger.error(
+                    f"ERROR ADDING REACTION {karma_case[case_length - 3]}: {e})"
+                )
 
     def _get_gambling_rewards(self, length=10):
         rewards, weights = zip(*gambling_table)

@@ -6,16 +6,15 @@ from tools import AITools
 
 
 class TLDR(commands.Cog):
-
     def __init__(self, bot):
         self.bot = bot
         self.logger = logging.getLogger(self.__class__.__name__)
 
         self.system_instructions = {
-            "role"   : "system",
+            "role": "system",
             "content": (
                 "Your purpose is to summarise the user's reddit post in 50 words or less using dry-wit humour and lots of sarcasm"
-            )
+            ),
         }
 
         self.tools = AITools(self.bot)
@@ -40,12 +39,12 @@ class TLDR(commands.Cog):
             system_instructions=self.system_instructions,
             messages=[
                 {
-                    "role"   : "user",
+                    "role": "user",
                     "content": text,
                 }
             ],
             server=ctx.guild.id if ctx.guild else None,
-            user=ctx.author.name
+            user=ctx.author.name,
         )
 
         await ctx.reply(response)

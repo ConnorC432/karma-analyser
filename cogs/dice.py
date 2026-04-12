@@ -9,7 +9,6 @@ import utils
 
 
 class Dice(commands.Cog):
-
     def __init__(self, bot):
         self.bot = bot
         self.logger = logging.getLogger(self.__class__.__name__)
@@ -26,10 +25,10 @@ class Dice(commands.Cog):
         modifier = int(match.group(3)) if match.group(3) else 0  # Modifier +/-
 
         if (
-                num > 1000000000000
-                or sides > 1000000000000
-                or sides < 2
-                or abs(modifier) > 1000000000000
+            num > 1000000000000
+            or sides > 1000000000000
+            or sides < 2
+            or abs(modifier) > 1000000000000
         ):
             return None
 
@@ -42,20 +41,17 @@ class Dice(commands.Cog):
         return rolls, total
 
     def create_embed(self, num, sides, modifier, rolls, total):
-        embed = discord.Embed(
-            title=total,
-            color=utils.REDDIT_RED
-        )
+        embed = discord.Embed(title=total, color=utils.REDDIT_RED)
         embed.add_field(
             name=self.dice_name(num, sides),
             value=f"{num}d{sides}{modifier or ''}",
-            inline=True
+            inline=True,
         )
         if len(rolls) <= 50:
             embed.add_field(
                 name="🫳 Roll" if num == 1 else "🫳 Rolls",
                 value=", ".join(map(str, rolls)),
-                inline=False
+                inline=False,
             )
 
         return embed
@@ -63,13 +59,19 @@ class Dice(commands.Cog):
     @staticmethod
     def dice_name(num, sides):
         dice_info = {
-            2  : {"emoji": "🪙", "singular": "Coin", "plural": "Coins"},
-            52 : {"emoji": "🃏", "singular": "Deck of Cards", "plural": "Decks of Cards"},
-            69 : {"emoji": "🍆", "singular": "Nice", "plural": "Nice"},
+            2: {"emoji": "🪙", "singular": "Coin", "plural": "Coins"},
+            52: {
+                "emoji": "🃏",
+                "singular": "Deck of Cards",
+                "plural": "Decks of Cards",
+            },
+            69: {"emoji": "🍆", "singular": "Nice", "plural": "Nice"},
             777: {"emoji": "🎰", "singular": "Slot Machine", "plural": "Slot machines"},
         }
 
-        info = dice_info.get(sides, {"emoji": "🎲", "singular": "Die", "plural": "Dice"})
+        info = dice_info.get(
+            sides, {"emoji": "🎲", "singular": "Die", "plural": "Dice"}
+        )
 
         name = info["singular"] if num == 1 else info["plural"]
 
