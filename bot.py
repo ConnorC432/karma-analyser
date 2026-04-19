@@ -8,6 +8,7 @@ import sys
 from pathlib import Path
 
 import discord
+from aiohttp import web
 from discord.ext import commands
 from discord.ext.commands import ExtensionError
 
@@ -18,6 +19,7 @@ parser.add_argument("-c", nargs="*", default=[], help="The cogs to load")
 parser.add_argument("-d", help="debug mode", action="store_true")
 parser.add_argument("-q", help="quick start - skips analysis", action="store_true")
 parser.add_argument("-t", help="load cogs then exit", action="store_true")
+parser.add_argument("-h", help="start health check server", action="store_true")
 args = parser.parse_args()
 
 # Logger
@@ -45,6 +47,22 @@ bot = commands.Bot(command_prefix=["r/", "R/"], intents=intents, case_insensitiv
 @bot.event
 async def on_ready():
     logger.info(f"{bot.user} IS READY TO ANALYSE REDDIT KARMA")
+
+
+async def health_check(request):
+    if bot.is_ready():
+        return web.Response(text="OK", status=200)
+    return web.Response(text="Bot not ready", status=503)
+
+
+async def setup_healthcheck():
+    app = web.Application()
+    app.router.add_get("/health", health_check)
+    runner = web.AppRunner(app)
+    await runner.setup()
+    site = web.TCPSite(runner, "0.0.0.0", 8080)
+    await site.start()
+    logger.debug("Health check server started on port 8080")
 
 
 @bot.check
@@ -106,6 +124,8 @@ async def main():
         if args.t:
             sys.exit(0)
         else:
+            if args.h:
+                await setup_healthcheck()
             await bot.start(bot_token)
 
 
