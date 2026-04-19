@@ -92,6 +92,49 @@ class AITools:
             if getattr(function, "is_tool", False)
         ]
 
+        self.tool_definitions = [
+            self._generate_tool_definition(f) for f in self.tools
+        ]
+
+    def _generate_tool_definition(self, func):
+        """
+        Generates a tool definition for the Ollama API from a Python function.
+        :param func: Python function
+        :return: Ollama API tool definition
+        """
+        sig = inspect.signature(func)
+        docstring = inspect.getdoc(func) or ""
+
+        parameters = {"type": "object", "properties": {}, "required": []}
+
+        for name, param in sig.parameters.items():
+            if name in ["self", "server", "user"]:
+                continue
+
+            param_type = "string"
+            if param.annotation == int:
+                param_type = "integer"
+            elif param.annotation == bool:
+                param_type = "boolean"
+            elif param.annotation == float:
+                param_type = "number"
+
+            parameters["properties"][name] = {
+                "type": param_type,
+            }
+
+            if param.default is inspect.Parameter.empty:
+                parameters["required"].append(name)
+
+        return {
+            "type": "function",
+            "function": {
+                "name": func.__name__,
+                "description": docstring,
+                "parameters": parameters,
+            },
+        }
+
     async def ollama_response(
         self, system_instructions, messages, server, user, model: str | None = None
     ) -> str | None:
@@ -104,10 +147,8 @@ class AITools:
         :param model: Optional - model to use for text generation
         :return: AI response string
         """
-        use_tools = False
         if model is None:
             model = self.model
-            use_tools = True
 
         original_messages = messages = [system_instructions] + list(messages)
 
@@ -117,7 +158,7 @@ class AITools:
                     self.client.chat,
                     model=model,
                     messages=messages,
-                    tools=self.tools if use_tools else "",
+                    tools=self.tool_definitions,
                 )
             except Exception as e:
                 self.logger.error(f"Error calling Ollama API: {e}")
@@ -140,7 +181,11 @@ class AITools:
             for j in json_pattern.findall(response.message.content):
                 try:
                     data = json.loads(j)
-                    if isinstance(data, dict) and data.get("type") == "function":
+                    if (
+                        isinstance(data, dict)
+                        and data.get("type") == "function"
+                        and "function" in data
+                    ):
                         tool_calls.append(data)
                 except JSONDecodeError as e:
                     self.logger.error(e)
@@ -151,6 +196,9 @@ class AITools:
 
                 for call in tool_calls:
                     if isinstance(call, dict):
+                        if "function" not in call:
+                            self.logger.warning(f"Malformed tool call: {call}")
+                            continue
                         function = call["function"]["name"]
                         args = call.get("parameters") or {}
                     else:
