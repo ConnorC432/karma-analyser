@@ -28,6 +28,11 @@ logging.basicConfig(
 
 logger = logging.getLogger("Bot")
 
+# Disable noisy discord.py loggers
+if not args.d:
+    logging.getLogger("discord.gateway").disabled = True
+    logging.getLogger("discord.http").disabled = True
+
 # Load settings
 bot_token = os.environ.get("BOT_TOKEN")
 if not bot_token:
