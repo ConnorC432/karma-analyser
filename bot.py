@@ -34,6 +34,8 @@ logger = logging.getLogger("Bot")
 if not args.d:
     logging.getLogger("discord.gateway").disabled = True
     logging.getLogger("discord.http").disabled = True
+    # And aiohttp
+    logging.getLogger("aiohttp.access").disabled = True
 
 # Load settings
 bot_token = os.environ.get("BOT_TOKEN")
