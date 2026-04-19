@@ -102,7 +102,7 @@ class Analyse(commands.Cog):
 
                             self.message_count += 1
 
-                            if self.message_count % 100 == 0:
+                            if self.message_count % 1000 == 0:
                                 await self.bot.change_presence(
                                     activity=discord.Game(
                                         name=f"{self.message_count} MESSAGES ANALYSED"
