@@ -148,6 +148,23 @@ class Misc(commands.Cog):
         self.logger.info(f"CHANGED STATUS: {activity}")
         await self.bot.change_presence(activity=discord.Game(name=activity))
 
+    @_change_status.before_loop
+    async def before_change_status(self):
+        await self.bot.wait_until_ready()
+        if not self.bot.get_cog("Analyse"):
+            self.logger.debug("Analyse cog not loaded, skipping analysis wait")
+            return
+
+        self.logger.debug("Waiting for analysis to finish before starting change status loop")
+        while not hasattr(self.bot, "analysis_finished"):
+            self.logger.debug("Bot has no analysis_finished attribute yet, waiting")
+            await asyncio.sleep(1)
+        self.logger.debug("Bot has analysis_finished attribute, waiting for event to be set")
+        await self.bot.analysis_finished.wait()
+        self.logger.info("KARMA ANALYSIS FINISHED, CHANGE STATUS LOOP STARTED")
+
 
 async def setup(bot):
-    await bot.add_cog(Misc(bot))
+    cog = Misc(bot)
+    await bot.add_cog(cog)
+    cog._change_status.start()

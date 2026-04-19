@@ -70,54 +70,59 @@ class Analyse(commands.Cog):
 
     @commands.Cog.listener()
     async def on_ready(self):
-        async with karma_lock:
-            # Load Karmic Deductions
-            try:
-                with open("deductions.json", "r", encoding="utf-8") as f:
-                    deductions = json.load(f)
-            except FileNotFoundError as e:
-                self.logger.debug(f"SHIT, I LOST THE KARMIC ARCHIVES: {e}")
-                deductions = {}
+        if not hasattr(self.bot, "analysis_finished"):
+            self.bot.analysis_finished = asyncio.Event()
+            self.bot.loop.create_task(self.run_analysis())
 
-            for guild in self.bot.guilds:
-                guild_deductions = deductions.get(guild.id, {})
+    async def run_analysis(self):
+        try:
+            async with karma_lock:
+                # Load Karmic Deductions
+                try:
+                    with open("deductions.json", "r", encoding="utf-8") as f:
+                        deductions = json.load(f)
+                except FileNotFoundError as e:
+                    self.logger.debug(f"SHIT, I LOST THE KARMIC ARCHIVES: {e}")
+                    deductions = {}
 
-                for user, deduction in guild_deductions.items():
-                    user_obj = guild.get_member_named(user)
-                    if user_obj is not None:
-                        karmic_dict[guild.id][user_obj.id]["Karma"] += deduction
-                    else:
-                        self.logger.warning(
-                            f"USER {user} NOT IN SUBREDDIT {guild.name}"
-                        )
+                for guild in self.bot.guilds:
+                    guild_deductions = deductions.get(guild.id, {})
 
-            self.logger.info("COUNTING KARMA...")
-            for guild in self.bot.guilds:
-                for channel in guild.text_channels:
-                    try:
-                        async for message in channel.history(
-                            limit=None, oldest_first=True
-                        ):
-                            await self._analyse_message(guild, message)
+                    for user, deduction in guild_deductions.items():
+                        user_obj = guild.get_member_named(user)
+                        if user_obj is not None:
+                            karmic_dict[guild.id][user_obj.id]["Karma"] += deduction
+                        else:
+                            self.logger.warning(
+                                f"USER {user} NOT IN SUBREDDIT {guild.name}"
+                            )
 
-                            self.message_count += 1
+                self.logger.info("COUNTING KARMA...")
+                for guild in self.bot.guilds:
+                    for channel in guild.text_channels:
+                        try:
+                            async for message in channel.history(
+                                limit=None, oldest_first=True
+                            ):
+                                await self._analyse_message(guild, message)
 
-                            if self.message_count % 1000 == 0:
-                                await self.bot.change_presence(
-                                    activity=discord.Game(
-                                        name=f"{self.message_count} MESSAGES ANALYSED"
-                                    ),
-                                )
-                                self.logger.info(
-                                    f'CHANGED STATUS: "{self.message_count} MESSAGES ANALYSED"'
-                                )
+                                self.message_count += 1
 
-                    except discord.HTTPException as e:
-                        self.logger.error(f"HTTP ERROR: {e}")
+                                if self.message_count % 1000 == 0:
+                                    await self.bot.change_presence(
+                                        activity=discord.Game(
+                                            name=f"{self.message_count} MESSAGES ANALYSED"
+                                        ),
+                                    )
+                                    self.logger.info(
+                                        f'CHANGED STATUS: "{self.message_count} MESSAGES ANALYSED"'
+                                    )
 
-        misc_cog = self.bot.get_cog("Misc")
-        if misc_cog:
-            await misc_cog._change_status()
+                        except discord.HTTPException as e:
+                            self.logger.error(f"HTTP ERROR: {e}")
+        finally:
+            self.logger.info("FINISHED COUNTING KARMA")
+            self.bot.analysis_finished.set()
 
     async def _analyse_message(self, guild, message):
         self.logger.debug(f"({self.message_count}) {message.author}: {message.content}")
