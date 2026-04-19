@@ -19,7 +19,9 @@ parser.add_argument("-c", nargs="*", default=[], help="The cogs to load")
 parser.add_argument("-d", help="debug mode", action="store_true")
 parser.add_argument("-q", help="quick start - skips analysis", action="store_true")
 parser.add_argument("-t", help="load cogs then exit", action="store_true")
-parser.add_argument("--health-check", help="start health check server", action="store_true")
+parser.add_argument(
+    "--health-check", help="start health check server", action="store_true"
+)
 args = parser.parse_args()
 
 # Logger
