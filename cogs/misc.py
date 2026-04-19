@@ -122,7 +122,9 @@ class Misc(commands.Cog):
 
         try:
             if "pass it on" in payload.content.lower():
-                async for message in payload.channel.history(limit=100, oldest_first=False):
+                async for message in payload.channel.history(
+                    limit=100, oldest_first=False
+                ):
                     if message.author.bot and message.content == payload.content:
                         return
 
@@ -136,11 +138,15 @@ class Misc(commands.Cog):
                 )
                 self.logger.info("NOTHING EVER HAPPENS")
         except discord.Forbidden:
-            self.logger.warning(f"Missing permissions to reply in channel {payload.channel.id} of guild {payload.guild.id}")
+            self.logger.warning(
+                f"Missing permissions to reply in channel {payload.channel.id} of guild {payload.guild.id}"
+            )
         except discord.HTTPException:
             self.logger.exception(f"HTTP Error replying to message {payload.id}")
         except Exception:
-            self.logger.exception(f"Unexpected error in on_message in {self.__class__.__name__}")
+            self.logger.exception(
+                f"Unexpected error in on_message in {self.__class__.__name__}"
+            )
 
     @commands.command()
     async def gild(self, ctx):
@@ -165,11 +171,15 @@ class Misc(commands.Cog):
             self.logger.debug("Analyse cog not loaded, skipping analysis wait")
             return
 
-        self.logger.debug("Waiting for analysis to finish before starting change status loop")
+        self.logger.debug(
+            "Waiting for analysis to finish before starting change status loop"
+        )
         while not hasattr(self.bot, "analysis_finished"):
             self.logger.debug("Bot has no analysis_finished attribute yet, waiting")
             await asyncio.sleep(1)
-        self.logger.debug("Bot has analysis_finished attribute, waiting for event to be set")
+        self.logger.debug(
+            "Bot has analysis_finished attribute, waiting for event to be set"
+        )
         await self.bot.analysis_finished.wait()
         self.logger.info("KARMA ANALYSIS FINISHED, CHANGE STATUS LOOP STARTED")
 

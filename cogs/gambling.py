@@ -94,7 +94,9 @@ class Gambling(commands.Cog):
                 try:
                     await ctx.reply(embed=embed)
                 except discord.HTTPException:
-                    self.logger.exception(f"Failed to send gambling drops embed in {ctx.channel.name}")
+                    self.logger.exception(
+                        f"Failed to send gambling drops embed in {ctx.channel.name}"
+                    )
                 return
 
             if any(key in text.lower() for key in help_words):
@@ -119,7 +121,9 @@ class Gambling(commands.Cog):
 
                     await ctx.reply(f"{clean_response[:2000]}")
                 except discord.HTTPException:
-                    self.logger.exception(f"Failed to send gambling encouragement to {ctx.author.name}")
+                    self.logger.exception(
+                        f"Failed to send gambling encouragement to {ctx.author.name}"
+                    )
                 except Exception:
                     self.logger.exception("Unexpected error in gambling help response")
                 return
@@ -131,7 +135,9 @@ class Gambling(commands.Cog):
         try:
             message = await ctx.reply("Opening your Karma Case...")
         except discord.HTTPException:
-            self.logger.exception(f"Failed to start gambling case for {ctx.author.name}")
+            self.logger.exception(
+                f"Failed to start gambling case for {ctx.author.name}"
+            )
             return
 
         self.logger.info(f"OPENING KARMA CASE: REWARD = {karma_case[case_length - 3]}")
@@ -145,7 +151,9 @@ class Gambling(commands.Cog):
                     await message.edit(content=display)
                     await asyncio.sleep(0.25)
             except discord.HTTPException:
-                self.logger.exception(f"Failed to edit gambling case message for {ctx.author.name}")
+                self.logger.exception(
+                    f"Failed to edit gambling case message for {ctx.author.name}"
+                )
 
             try:
                 await ctx.message.add_reaction(karma_case[case_length - 3])

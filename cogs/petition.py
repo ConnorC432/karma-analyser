@@ -21,7 +21,9 @@ class Petition(commands.Cog):
 
             await reply.add_reaction("🖊️")
         except discord.Forbidden:
-            self.logger.warning(f"Missing permissions to create petition in {ctx.channel.id}")
+            self.logger.warning(
+                f"Missing permissions to create petition in {ctx.channel.id}"
+            )
         except discord.HTTPException:
             self.logger.exception(f"Failed to create petition in {ctx.channel.id}")
         except Exception:

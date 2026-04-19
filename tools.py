@@ -92,9 +92,7 @@ class AITools:
             if getattr(function, "is_tool", False)
         ]
 
-        self.tool_definitions = [
-            self._generate_tool_definition(f) for f in self.tools
-        ]
+        self.tool_definitions = [self._generate_tool_definition(f) for f in self.tools]
 
     def _generate_tool_definition(self, func):
         """
@@ -112,11 +110,11 @@ class AITools:
                 continue
 
             param_type = "string"
-            if param.annotation == int:
+            if param.annotation is int:
                 param_type = "integer"
-            elif param.annotation == bool:
+            elif param.annotation is bool:
                 param_type = "boolean"
-            elif param.annotation == float:
+            elif param.annotation is float:
                 param_type = "number"
 
             parameters["properties"][name] = {

@@ -36,7 +36,9 @@ class Sentence(commands.Cog):
                 f"SENTENCING {member.name} BY A DEDUCTION TOTALLING {ded} REDDIT KARMA"
             )
         except discord.HTTPException:
-            self.logger.exception(f"Failed to send sentencing messages for {member.name}")
+            self.logger.exception(
+                f"Failed to send sentencing messages for {member.name}"
+            )
             return
 
         try:
@@ -64,7 +66,9 @@ class Sentence(commands.Cog):
             with karma_lock:
                 karmic_dict[ctx.guild.id][member.id]["Karma"] -= ded
         except Exception:
-            self.logger.exception(f"Unexpected error applying sentence to {member.name}")
+            self.logger.exception(
+                f"Unexpected error applying sentence to {member.name}"
+            )
 
 
 async def setup(bot):

@@ -26,7 +26,9 @@ class Diagnose(commands.Cog):
         try:
             reply = await ctx.reply("DIAGNOSING...")
         except discord.HTTPException:
-            self.logger.exception(f"Failed to send initial diagnosis message to {ctx.author.name}")
+            self.logger.exception(
+                f"Failed to send initial diagnosis message to {ctx.author.name}"
+            )
             return
 
         try:

@@ -37,7 +37,9 @@ class Poll(commands.Cog):
             return
 
         try:
-            poll = discord.Poll(question=question[:300], duration=duration, multiple=False)
+            poll = discord.Poll(
+                question=question[:300], duration=duration, multiple=False
+            )
             for opt in options:
                 opt = opt.replace("_", " ")
                 poll.add_answer(text=opt)

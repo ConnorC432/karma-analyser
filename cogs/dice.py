@@ -100,7 +100,9 @@ class Dice(commands.Cog):
 
             await ctx.reply(embed=embed)
         except discord.HTTPException:
-            self.logger.exception(f"Failed to send dice roll to {ctx.author.name} in {ctx.guild.name}")
+            self.logger.exception(
+                f"Failed to send dice roll to {ctx.author.name} in {ctx.guild.name}"
+            )
         except Exception:
             self.logger.exception("Unexpected error in dice command")
 
@@ -129,7 +131,9 @@ class Dice(commands.Cog):
 
             await ctx.reply(embed=embed)
         except discord.HTTPException:
-            self.logger.exception(f"Failed to send dice roll to {ctx.author.name} in {ctx.guild.name}")
+            self.logger.exception(
+                f"Failed to send dice roll to {ctx.author.name} in {ctx.guild.name}"
+            )
         except Exception:
             self.logger.exception("Unexpected error in on_message in Dice cog")
 

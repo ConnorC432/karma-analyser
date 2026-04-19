@@ -46,7 +46,9 @@ class MusicControls(discord.ui.View):
         try:
             await interaction.response.defer()
         except discord.HTTPException:
-            self.logger.exception(f"Failed to defer skip interaction in {self.guild.name}")
+            self.logger.exception(
+                f"Failed to defer skip interaction in {self.guild.name}"
+            )
         except Exception:
             self.logger.exception("Unexpected error in skip interaction")
 
@@ -60,7 +62,9 @@ class MusicControls(discord.ui.View):
         try:
             await interaction.response.defer()
         except discord.HTTPException:
-            self.logger.exception(f"Failed to defer play interaction in {self.guild.name}")
+            self.logger.exception(
+                f"Failed to defer play interaction in {self.guild.name}"
+            )
         except Exception:
             self.logger.exception("Unexpected error in play_pause interaction")
 
@@ -74,7 +78,9 @@ class MusicControls(discord.ui.View):
         try:
             await interaction.response.defer()
         except discord.HTTPException:
-            self.logger.exception(f"Failed to defer pause interaction in {self.guild.name}")
+            self.logger.exception(
+                f"Failed to defer pause interaction in {self.guild.name}"
+            )
         except Exception:
             self.logger.exception("Unexpected error in pause interaction")
 
@@ -88,7 +94,9 @@ class MusicControls(discord.ui.View):
         try:
             await interaction.response.defer()
         except discord.HTTPException:
-            self.logger.exception(f"Failed to defer stop interaction in {self.guild.name}")
+            self.logger.exception(
+                f"Failed to defer stop interaction in {self.guild.name}"
+            )
         except Exception:
             self.logger.exception("Unexpected error in stop interaction")
 
@@ -179,7 +187,9 @@ class MusicPlayer:
             try:
                 await ctx.reply(embed=embed, view=view)
             except discord.HTTPException:
-                self.logger.exception(f"Failed to send now playing embed for {info.get('title')} in {ctx.guild.name}")
+                self.logger.exception(
+                    f"Failed to send now playing embed for {info.get('title')} in {ctx.guild.name}"
+                )
 
             ### Wait for song to end and check VC still populated
             while self.voice_client and self.voice_client.is_playing():
@@ -321,9 +331,13 @@ class Play(commands.Cog):
 
             await ctx.reply(f"QUEUED: [{info['title']}]")
         except discord.HTTPException:
-            self.logger.exception(f"Failed to reply in play command for {ctx.author.name}")
+            self.logger.exception(
+                f"Failed to reply in play command for {ctx.author.name}"
+            )
         except Exception:
-            self.logger.exception(f"Unexpected error in play command for query: {query}")
+            self.logger.exception(
+                f"Unexpected error in play command for query: {query}"
+            )
 
     @commands.command(name="skip", aliases=["next", "fastforward"])
     async def skip(self, ctx):
@@ -355,9 +369,13 @@ class Play(commands.Cog):
             player.voice_client.stop()
             await ctx.reply("SKIPPED")
         except discord.HTTPException:
-            self.logger.exception(f"Failed to reply in skip command for {ctx.author.name}")
+            self.logger.exception(
+                f"Failed to reply in skip command for {ctx.author.name}"
+            )
         except Exception:
-            self.logger.exception(f"Unexpected error in skip command for {ctx.author.name}")
+            self.logger.exception(
+                f"Unexpected error in skip command for {ctx.author.name}"
+            )
 
     @commands.command(name="queue", aliases=["playlist", "upnext"])
     async def queue(self, ctx):
@@ -397,9 +415,7 @@ class Play(commands.Cog):
                 description = ""
                 for index, song in enumerate(upcoming[:10], start=1):
                     info = song["info"]
-                    description += (
-                        f"**{index}.** [{info.get('title')}]({info.get('webpage_url')})\n"
-                    )
+                    description += f"**{index}.** [{info.get('title')}]({info.get('webpage_url')})\n"
 
                 if len(upcoming) > 10:
                     description += f"\n...and {len(upcoming) - 10} more"
@@ -407,13 +423,17 @@ class Play(commands.Cog):
                 embed.add_field(name="UP NEXT", value=description, inline=False)
 
             else:
-                embed.add_field(name="UP NEXT", value="NOTHING ELSE IN QUEUE", inline=False)
+                embed.add_field(
+                    name="UP NEXT", value="NOTHING ELSE IN QUEUE", inline=False
+                )
 
             await ctx.reply(embed=embed)
         except discord.HTTPException:
             self.logger.exception(f"Failed to send queue embed to {ctx.author.name}")
         except Exception:
-            self.logger.exception(f"Unexpected error in queue command for {ctx.author.name}")
+            self.logger.exception(
+                f"Unexpected error in queue command for {ctx.author.name}"
+            )
 
 
 async def setup(bot):

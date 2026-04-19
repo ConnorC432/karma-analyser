@@ -19,7 +19,9 @@ class AnyGamers(commands.Cog):
                     "https://tenor.com/view/jaden-griddy-any-gamers-gamer-chinese-pilot-gif-3782711129914946355"
                 )
             except discord.HTTPException:
-                self.logger.exception(f"Failed to reply with anygamers GIF in {ctx.channel.id}")
+                self.logger.exception(
+                    f"Failed to reply with anygamers GIF in {ctx.channel.id}"
+                )
             except Exception:
                 self.logger.exception("Unexpected error in anygamers command")
 

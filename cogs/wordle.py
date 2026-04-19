@@ -23,12 +23,16 @@ class Wordle(commands.Cog):
                 ) as resp:
                     if resp.status != 200:
                         await ctx.reply(content="NONCE")
-                        self.logger.error(f"Failed to fetch wordle answers: {resp.status}")
+                        self.logger.error(
+                            f"Failed to fetch wordle answers: {resp.status}"
+                        )
                         return
 
                     text = await resp.text()
                     words = [
-                        line.strip().lower() for line in text.splitlines() if line.strip()
+                        line.strip().lower()
+                        for line in text.splitlines()
+                        if line.strip()
                     ]
         except aiohttp.ClientError:
             self.logger.exception("HTTP Error fetching wordle answers")
