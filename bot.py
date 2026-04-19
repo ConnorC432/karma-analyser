@@ -19,7 +19,7 @@ parser.add_argument("-c", nargs="*", default=[], help="The cogs to load")
 parser.add_argument("-d", help="debug mode", action="store_true")
 parser.add_argument("-q", help="quick start - skips analysis", action="store_true")
 parser.add_argument("-t", help="load cogs then exit", action="store_true")
-parser.add_argument("-h", help="start health check server", action="store_true")
+parser.add_argument("--health-check", help="start health check server", action="store_true")
 args = parser.parse_args()
 
 # Logger
@@ -124,8 +124,9 @@ async def main():
         if args.t:
             sys.exit(0)
         else:
-            if args.h:
+            if args.health_check:
                 await setup_healthcheck()
+                logger.info("HEALTH CHECK SERVER STARTED")
             await bot.start(bot_token)
 
 
