@@ -1,4 +1,5 @@
 import logging
+import discord
 
 from discord.ext import commands
 
@@ -35,19 +36,24 @@ class TLDR(commands.Cog):
             self.logger.debug("NOTHING TO TLDR")
             return
 
-        response = await self.tools.ollama_response(
-            system_instructions=self.system_instructions,
-            messages=[
-                {
-                    "role": "user",
-                    "content": text,
-                }
-            ],
-            server=ctx.guild.id if ctx.guild else None,
-            user=ctx.author.name,
-        )
+        try:
+            response = await self.tools.ollama_response(
+                system_instructions=self.system_instructions,
+                messages=[
+                    {
+                        "role": "user",
+                        "content": text,
+                    }
+                ],
+                server=ctx.guild.id if ctx.guild else None,
+                user=ctx.author.name,
+            )
 
-        await ctx.reply(response)
+            await ctx.reply(response)
+        except discord.HTTPException:
+            self.logger.exception(f"Failed to send TLDR response to {ctx.author.name}")
+        except Exception:
+            self.logger.exception("Unexpected error in tldr command")
 
 
 async def setup(bot):

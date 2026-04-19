@@ -160,8 +160,8 @@ class AITools:
                     messages=messages,
                     tools=self.tool_definitions,
                 )
-            except Exception as e:
-                self.logger.error(f"Error calling Ollama API: {e}")
+            except Exception:
+                self.logger.exception(f"Error calling Ollama API for model {model}")
                 return "RESPONSE GENERATION FAILED, PLEASE DOWNVOTE"
 
             self.logger.debug(f"RESPONSE: {response.message.content}")
@@ -187,8 +187,8 @@ class AITools:
                         and "function" in data
                     ):
                         tool_calls.append(data)
-                except JSONDecodeError as e:
-                    self.logger.error(e)
+                except JSONDecodeError:
+                    self.logger.exception("Failed to decode JSON from response")
                     continue
 
             if tool_calls:
@@ -455,8 +455,8 @@ class AITools:
                                 elif (img := soup.find("img")) and img.get("src"):
                                     image_urls.add(img["src"])
 
-                except aiohttp.ClientError as e:
-                    self.logger.debug(f"Failed to fetch HTML page {url}: {e}")
+                except aiohttp.ClientError:
+                    self.logger.exception(f"Failed to fetch HTML page {url}")
 
         if not image_urls:
             self.logger.debug("NO IMAGE URLS FOUND")

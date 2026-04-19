@@ -93,11 +93,16 @@ class Dice(commands.Cog):
         if not parsed:
             return
 
-        num, sides, modifier = parsed
-        rolls, total = self._roll_dice(num, sides, modifier)
-        embed = self._create_embed(num, sides, modifier, rolls, total)
+        try:
+            num, sides, modifier = parsed
+            rolls, total = self._roll_dice(num, sides, modifier)
+            embed = self._create_embed(num, sides, modifier, rolls, total)
 
-        await ctx.reply(embed=embed)
+            await ctx.reply(embed=embed)
+        except discord.HTTPException:
+            self.logger.exception(f"Failed to send dice roll to {ctx.author.name} in {ctx.guild.name}")
+        except Exception:
+            self.logger.exception("Unexpected error in dice command")
 
     @commands.Cog.listener()
     async def on_message(self, ctx):
@@ -117,11 +122,16 @@ class Dice(commands.Cog):
         if not parsed:
             return
 
-        num, sides, modifier = parsed
-        rolls, total = self._roll_dice(num, sides, modifier)
-        embed = self._create_embed(num, sides, modifier, rolls, total)
+        try:
+            num, sides, modifier = parsed
+            rolls, total = self._roll_dice(num, sides, modifier)
+            embed = self._create_embed(num, sides, modifier, rolls, total)
 
-        await ctx.reply(embed=embed)
+            await ctx.reply(embed=embed)
+        except discord.HTTPException:
+            self.logger.exception(f"Failed to send dice roll to {ctx.author.name} in {ctx.guild.name}")
+        except Exception:
+            self.logger.exception("Unexpected error in on_message in Dice cog")
 
 
 async def setup(bot):

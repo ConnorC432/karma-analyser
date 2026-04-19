@@ -24,7 +24,8 @@ karma_lock = asyncio.Lock()
 async def gif_search(query: str):
     api_key = os.getenv("KLIPY_KEY")
     if not api_key:
-        raise ValueError("KLIPY_KEY environment variable is not set")
+        logger.warning("KLIPY_KEY environment variable is not set")
+        return None
 
     url = f"https://api.klipy.com/api/v1/{api_key}/gifs/search"
     params = {
@@ -36,14 +37,14 @@ async def gif_search(query: str):
         "content_filter": "off",
     }
 
-    async with aiohttp.ClientSession() as session:
-        async with session.get(url, params=params) as resp:
-            try:
+    try:
+        async with aiohttp.ClientSession() as session:
+            async with session.get(url, params=params, timeout=10) as resp:
+                resp.raise_for_status()
                 data = await resp.json()
-
-            except ConnectionError:
-                logger.debug("KLIPY Connection Error")
-                return None
+    except Exception:
+        logger.exception(f"Failed to fetch GIF for query: {query}")
+        return None
 
     gifs = data.get("data", {}).get("data", [])
     if not gifs:

@@ -22,6 +22,7 @@ class MusicControls(discord.ui.View):
         self.logger = logging.getLogger(self.__class__.__name__)
 
         self.player = player
+        self.guild = player.guild
 
     async def interaction_check(self, interaction: discord.Interaction):
         if (
@@ -42,7 +43,12 @@ class MusicControls(discord.ui.View):
     ) -> None:
         self.player.voice_client.stop()
 
-        await interaction.response.defer()
+        try:
+            await interaction.response.defer()
+        except discord.HTTPException:
+            self.logger.exception(f"Failed to defer skip interaction in {self.guild.name}")
+        except Exception:
+            self.logger.exception("Unexpected error in skip interaction")
 
     @discord.ui.button(label="▶ PLAY", style=discord.ButtonStyle.success)
     async def play_pause(
@@ -51,7 +57,12 @@ class MusicControls(discord.ui.View):
         if self.player.voice_client.is_paused():
             self.player.voice_client.resume()
 
-        await interaction.response.defer()
+        try:
+            await interaction.response.defer()
+        except discord.HTTPException:
+            self.logger.exception(f"Failed to defer play interaction in {self.guild.name}")
+        except Exception:
+            self.logger.exception("Unexpected error in play_pause interaction")
 
     @discord.ui.button(label="⏸ PAUSE", style=discord.ButtonStyle.secondary)
     async def pause(
@@ -60,7 +71,12 @@ class MusicControls(discord.ui.View):
         if self.player.voice_client.is_playing():
             self.player.voice_client.pause()
 
-        await interaction.response.defer()
+        try:
+            await interaction.response.defer()
+        except discord.HTTPException:
+            self.logger.exception(f"Failed to defer pause interaction in {self.guild.name}")
+        except Exception:
+            self.logger.exception("Unexpected error in pause interaction")
 
     @discord.ui.button(label="⏹ STOP", style=discord.ButtonStyle.danger)
     async def stop(
@@ -69,7 +85,12 @@ class MusicControls(discord.ui.View):
         self.player.queue = asyncio.Queue()
         self.player.voice_client.stop()
 
-        await interaction.response.defer()
+        try:
+            await interaction.response.defer()
+        except discord.HTTPException:
+            self.logger.exception(f"Failed to defer stop interaction in {self.guild.name}")
+        except Exception:
+            self.logger.exception("Unexpected error in stop interaction")
 
 
 class MusicPlayer:
@@ -127,8 +148,8 @@ class MusicPlayer:
 
             try:
                 await self._start_next_song()
-            except Exception as e:
-                self.logger.error(f"ERROR IN PLAYBACK LOOP: {e}")
+            except Exception:
+                self.logger.exception("Unexpected error in music player loop")
 
             if self.queue.empty() and self.voice_client:
                 await self.voice_client.disconnect()
@@ -155,7 +176,10 @@ class MusicPlayer:
             embed = self._create_embed(ctx, info)
             view = MusicControls(self.bot, self)
 
-            await ctx.reply(embed=embed, view=view)
+            try:
+                await ctx.reply(embed=embed, view=view)
+            except discord.HTTPException:
+                self.logger.exception(f"Failed to send now playing embed for {info.get('title')} in {ctx.guild.name}")
 
             ### Wait for song to end and check VC still populated
             while self.voice_client and self.voice_client.is_playing():
@@ -170,9 +194,12 @@ class MusicPlayer:
             await self.play_next_event.wait()
             self.play_next_event.clear()
 
-        except Exception as e:
-            await ctx.reply("ERROR PLAYING SONG")
-            self.logger.error(f"ERROR PLAYING SONG: {e}")
+        except Exception:
+            try:
+                await ctx.reply("ERROR PLAYING SONG")
+            except discord.HTTPException:
+                self.logger.exception("Failed to send error reply during song playback")
+            self.logger.exception("Unexpected error starting next song")
 
     async def _join_vc(self, ctx):
         channel = ctx.author.voice.channel
@@ -260,8 +287,8 @@ class Play(commands.Cog):
             self.logger.warning(f"No valid fields in info: {info}")
             return None
 
-        except Exception as e:
-            self.logger.error(f"YouTube search failed for query {query}: {e}")
+        except Exception:
+            self.logger.exception(f"YouTube search failed for query {query}")
             return None
 
     @commands.command(name="play", aliases=["music", "song", "listen"])
@@ -274,24 +301,29 @@ class Play(commands.Cog):
         if ctx.channel.name != "song-requests":
             return
 
-        if not ctx.author.voice or not ctx.author.voice.channel:
-            await ctx.reply("YOU ARE NOT IN A VOICE CHANNEL")
-            return
+        try:
+            if not ctx.author.voice or not ctx.author.voice.channel:
+                await ctx.reply("YOU ARE NOT IN A VOICE CHANNEL")
+                return
 
-        if not query:
-            await ctx.reply("PLEASE PROVIDE A SEARCH QUERY")
-            return
+            if not query:
+                await ctx.reply("PLEASE PROVIDE A SEARCH QUERY")
+                return
 
-        player = self._get_music_player(ctx.guild)
+            player = self._get_music_player(ctx.guild)
 
-        info = await self._search_youtube(query)
-        if not info:
-            await ctx.reply("COULD NOT FIND A RELEVANT VIDEO")
-            return
+            info = await self._search_youtube(query)
+            if not info:
+                await ctx.reply("COULD NOT FIND A RELEVANT VIDEO")
+                return
 
-        await player.queue.put({"ctx": ctx, "info": info})
+            await player.queue.put({"ctx": ctx, "info": info})
 
-        await ctx.reply(f"QUEUED: [{info['title']}]")
+            await ctx.reply(f"QUEUED: [{info['title']}]")
+        except discord.HTTPException:
+            self.logger.exception(f"Failed to reply in play command for {ctx.author.name}")
+        except Exception:
+            self.logger.exception(f"Unexpected error in play command for query: {query}")
 
     @commands.command(name="skip", aliases=["next", "fastforward"])
     async def skip(self, ctx):
@@ -302,25 +334,30 @@ class Play(commands.Cog):
         if ctx.channel.name != "song-requests":
             return
 
-        player = self._get_music_player(ctx.guild)
+        try:
+            player = self._get_music_player(ctx.guild)
 
-        if not player:
-            await ctx.reply("NOTHING EVER HAPPENS")
-            return
+            if not player:
+                await ctx.reply("NOTHING EVER HAPPENS")
+                return
 
-        if not player.voice_client or not player.voice_client.is_connected():
-            await ctx.reply("NOTHING IS PLAYING")
-            return
+            if not player.voice_client or not player.voice_client.is_connected():
+                await ctx.reply("NOTHING IS PLAYING")
+                return
 
-        if (
-            not ctx.author.voice
-            or ctx.author.voice.channel != player.voice_client.channel
-        ):
-            await ctx.reply("YOU MUST BE IN THE SAME VOICE CHANNEL TO SKIP")
-            return
+            if (
+                not ctx.author.voice
+                or ctx.author.voice.channel != player.voice_client.channel
+            ):
+                await ctx.reply("YOU MUST BE IN THE SAME VOICE CHANNEL TO SKIP")
+                return
 
-        player.voice_client.stop()
-        await ctx.reply("SKIPPED")
+            player.voice_client.stop()
+            await ctx.reply("SKIPPED")
+        except discord.HTTPException:
+            self.logger.exception(f"Failed to reply in skip command for {ctx.author.name}")
+        except Exception:
+            self.logger.exception(f"Unexpected error in skip command for {ctx.author.name}")
 
     @commands.command(name="queue", aliases=["playlist", "upnext"])
     async def queue(self, ctx):
@@ -330,47 +367,53 @@ class Play(commands.Cog):
         if ctx.channel.name != "song-requests":
             return
 
-        player = self._get_music_player(ctx.guild)
+        try:
+            player = self._get_music_player(ctx.guild)
 
-        if not player:
-            await ctx.reply("QUEUE IS EMPTY")
-            return
+            if not player:
+                await ctx.reply("QUEUE IS EMPTY")
+                return
 
-        if player.current is None and player.queue.empty():
-            await ctx.reply("QUEUE IS EMPTY")
+            if player.current is None and player.queue.empty():
+                await ctx.reply("QUEUE IS EMPTY")
+                return
 
-        embed = discord.Embed(
-            title="QUEUE",
-            color=utils.REDDIT_RED,
-        )
-
-        if player.current:
-            current_info = player.current["info"]
-            embed.add_field(
-                name="Now Playing",
-                value=f"[{current_info.get('title')}]({current_info.get('webpage_url')})",
-                inline=False,
+            embed = discord.Embed(
+                title="QUEUE",
+                color=utils.REDDIT_RED,
             )
 
-        upcoming = list(player.queue._queue)
-
-        if upcoming:
-            description = ""
-            for index, song in enumerate(upcoming[:10], start=1):
-                info = song["info"]
-                description += (
-                    f"**{index}.** [{info.get('title')}]({info.get('webpage_url')})\n"
+            if player.current:
+                current_info = player.current["info"]
+                embed.add_field(
+                    name="Now Playing",
+                    value=f"[{current_info.get('title')}]({current_info.get('webpage_url')})",
+                    inline=False,
                 )
 
-            if len(upcoming) > 10:
-                description += f"\n...and {len(upcoming) - 10} more"
+            upcoming = list(player.queue._queue)
 
-            embed.add_field(name="UP NEXT", value=description, inline=False)
+            if upcoming:
+                description = ""
+                for index, song in enumerate(upcoming[:10], start=1):
+                    info = song["info"]
+                    description += (
+                        f"**{index}.** [{info.get('title')}]({info.get('webpage_url')})\n"
+                    )
 
-        else:
-            embed.add_field(name="UP NEXT", value="NOTHING ELSE IN QUEUE", inline=False)
+                if len(upcoming) > 10:
+                    description += f"\n...and {len(upcoming) - 10} more"
 
-        await ctx.reply(embed=embed)
+                embed.add_field(name="UP NEXT", value=description, inline=False)
+
+            else:
+                embed.add_field(name="UP NEXT", value="NOTHING ELSE IN QUEUE", inline=False)
+
+            await ctx.reply(embed=embed)
+        except discord.HTTPException:
+            self.logger.exception(f"Failed to send queue embed to {ctx.author.name}")
+        except Exception:
+            self.logger.exception(f"Unexpected error in queue command for {ctx.author.name}")
 
 
 async def setup(bot):

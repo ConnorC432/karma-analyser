@@ -23,34 +23,44 @@ class Diagnose(commands.Cog):
 
         self.logger.info(f"DIAGNOSING {user.name}")
 
-        reply = await ctx.reply("DIAGNOSING...")
-        message_log = []
-        async for msg in ctx.channel.history(limit=200):
-            if (
-                msg.author == user
-                and "r/" not in msg.content
-                and "http" not in msg.content
-            ):
-                message_log.append(msg.content)
+        try:
+            reply = await ctx.reply("DIAGNOSING...")
+        except discord.HTTPException:
+            self.logger.exception(f"Failed to send initial diagnosis message to {ctx.author.name}")
+            return
 
-        ai_instructions = {
-            "role": "system",
-            "content": "You are a reddit moderation bot...\n" + REDDIQUETTE,
-        }
-        prompt = "These are the messages you need to analyse: \n" + "\n".join(
-            message_log
-        )
+        try:
+            message_log = []
+            async for msg in ctx.channel.history(limit=200):
+                if (
+                    msg.author == user
+                    and "r/" not in msg.content
+                    and "http" not in msg.content
+                ):
+                    message_log.append(msg.content)
 
-        clean_response = await self.tools.ollama_response(
-            system_instructions=ai_instructions,
-            messages=[{"role": "user", "content": prompt}],
-            server=ctx.guild.id if ctx.guild else None,
-            user=ctx.author.name,
-            model="artifish/llama3.2-uncensored",
-        )
+            ai_instructions = {
+                "role": "system",
+                "content": "You are a reddit moderation bot...\n" + REDDIQUETTE,
+            }
+            prompt = "These are the messages you need to analyse: \n" + "\n".join(
+                message_log
+            )
 
-        await reply.edit(content=f"{user.mention}: {clean_response[:1950]}")
-        self.logger.debug(f"RESPONSE: {clean_response[:1950]}")
+            clean_response = await self.tools.ollama_response(
+                system_instructions=ai_instructions,
+                messages=[{"role": "user", "content": prompt}],
+                server=ctx.guild.id if ctx.guild else None,
+                user=ctx.author.name,
+                model="artifish/llama3.2-uncensored",
+            )
+
+            await reply.edit(content=f"{user.mention}: {clean_response[:1950]}")
+            self.logger.debug(f"RESPONSE: {clean_response[:1950]}")
+        except discord.HTTPException:
+            self.logger.exception(f"Failed to edit diagnosis message for {user.name}")
+        except Exception:
+            self.logger.exception(f"Unexpected error diagnosing user {user.name}")
 
 
 async def setup(bot):

@@ -36,12 +36,17 @@ class Poll(commands.Cog):
             self.logger.warning("A poll can't have more than 10 options")
             return
 
-        poll = discord.Poll(question=question[:300], duration=duration, multiple=False)
-        for opt in options:
-            opt = opt.replace("_", " ")
-            poll.add_answer(text=opt)
+        try:
+            poll = discord.Poll(question=question[:300], duration=duration, multiple=False)
+            for opt in options:
+                opt = opt.replace("_", " ")
+                poll.add_answer(text=opt)
 
-        await ctx.message.reply(poll=poll)
+            await ctx.message.reply(poll=poll)
+        except discord.HTTPException:
+            self.logger.exception(f"Failed to create poll in {ctx.channel.name}")
+        except Exception:
+            self.logger.exception("Unexpected error in poll command")
 
 
 async def setup(bot):

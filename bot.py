@@ -64,7 +64,7 @@ async def on_command_error(ctx, error):
 
     # Handle other errors
     if not isinstance(error, (commands.CommandNotFound, commands.CheckFailure)):
-        logger.error(f"Ignoring exception in command {ctx.command}: {error}")
+        logger.exception(f"Exception in command {ctx.command}:", exc_info=error)
 
 
 # Load cogs

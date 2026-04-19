@@ -120,20 +120,27 @@ class Misc(commands.Cog):
         if payload.author.bot:
             return
 
-        if "pass it on" in payload.content.lower():
-            async for message in payload.channel.history(limit=100, oldest_first=False):
-                if message.author.bot and message.content == payload.content:
-                    return
+        try:
+            if "pass it on" in payload.content.lower():
+                async for message in payload.channel.history(limit=100, oldest_first=False):
+                    if message.author.bot and message.content == payload.content:
+                        return
 
-            await asyncio.sleep(random.uniform(0, 2.5))
-            await payload.channel.send(payload.content)
-            self.logger.info(f"PASSING IT ON: {payload.content}")
+                await asyncio.sleep(random.uniform(0, 2.5))
+                await payload.channel.send(payload.content)
+                self.logger.info(f"PASSING IT ON: {payload.content}")
 
-        if "nothing ever happens" in payload.content.lower():
-            await payload.reply(
-                content="https://tenor.com/view/nothing-ever-happens-chud-chudjak-soyjak-90-seconds-to-nothing-gif-9277709574191520604"
-            )
-            self.logger.info("NOTHING EVER HAPPENS")
+            if "nothing ever happens" in payload.content.lower():
+                await payload.reply(
+                    content="https://tenor.com/view/nothing-ever-happens-chud-chudjak-soyjak-90-seconds-to-nothing-gif-9277709574191520604"
+                )
+                self.logger.info("NOTHING EVER HAPPENS")
+        except discord.Forbidden:
+            self.logger.warning(f"Missing permissions to reply in channel {payload.channel.id} of guild {payload.guild.id}")
+        except discord.HTTPException:
+            self.logger.exception(f"HTTP Error replying to message {payload.id}")
+        except Exception:
+            self.logger.exception(f"Unexpected error in on_message in {self.__class__.__name__}")
 
     @commands.command()
     async def gild(self, ctx):
@@ -144,9 +151,12 @@ class Misc(commands.Cog):
 
     @tasks.loop(minutes=15)
     async def _change_status(self):
-        activity = random.choice(status)
-        self.logger.info(f"CHANGED STATUS: {activity}")
-        await self.bot.change_presence(activity=discord.Game(name=activity))
+        try:
+            activity = random.choice(status)
+            self.logger.info(f"CHANGED STATUS: {activity}")
+            await self.bot.change_presence(activity=discord.Game(name=activity))
+        except Exception:
+            self.logger.exception("Unexpected error in _change_status loop")
 
     @_change_status.before_loop
     async def before_change_status(self):

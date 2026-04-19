@@ -1,3 +1,4 @@
+import logging
 import discord
 from discord.ext import commands
 
@@ -7,6 +8,7 @@ import utils
 class Help(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
+        self.logger = logging.getLogger(self.__class__.__name__)
         self.bot.remove_command("help")
 
     @commands.command()
@@ -48,7 +50,12 @@ class Help(commands.Cog):
                         name="Aliases", value=", ".join(command.aliases), inline=False
                     )
 
-        await ctx.reply(embed=embed)
+        try:
+            await ctx.reply(embed=embed)
+        except discord.HTTPException:
+            self.logger.exception(f"Failed to send help embed to {ctx.author.name}")
+        except Exception:
+            self.logger.exception("Unexpected error in help command")
 
 
 async def setup(bot):

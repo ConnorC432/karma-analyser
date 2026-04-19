@@ -91,7 +91,10 @@ class Gambling(commands.Cog):
                 for item, chance in chances:
                     embed.add_field(name=item, value=f"{chance:.6f}%", inline=True)
 
-                await ctx.reply(embed=embed)
+                try:
+                    await ctx.reply(embed=embed)
+                except discord.HTTPException:
+                    self.logger.exception(f"Failed to send gambling drops embed in {ctx.channel.name}")
                 return
 
             if any(key in text.lower() for key in help_words):
@@ -100,43 +103,58 @@ class Gambling(commands.Cog):
                     "content": "You are trying to convince a fellow redditor to keep gambling, they don't know that they are close to their big win, which is why you need to convince them!",
                 }
 
-                clean_response = await self.tools.ollama_response(
-                    system_instructions=ai_instructions,
-                    messages=[
-                        {
-                            "role": "user",
-                            "content": "Convince your fellow redditor to keep gambling, so they can get their biggest jackpot yet!!!",
-                        }
-                    ],
-                    server=ctx.guild.id if ctx.guild else None,
-                    user=ctx.author.name,
-                    model="llama3",
-                )
+                try:
+                    clean_response = await self.tools.ollama_response(
+                        system_instructions=ai_instructions,
+                        messages=[
+                            {
+                                "role": "user",
+                                "content": "Convince your fellow redditor to keep gambling, so they can get their biggest jackpot yet!!!",
+                            }
+                        ],
+                        server=ctx.guild.id if ctx.guild else None,
+                        user=ctx.author.name,
+                        model="llama3",
+                    )
 
-                await ctx.reply(f"{clean_response[:2000]}")
+                    await ctx.reply(f"{clean_response[:2000]}")
+                except discord.HTTPException:
+                    self.logger.exception(f"Failed to send gambling encouragement to {ctx.author.name}")
+                except Exception:
+                    self.logger.exception("Unexpected error in gambling help response")
                 return
 
         case_length = random.randint(10, 20)
         karma_case = self._get_gambling_rewards(case_length)
 
         # Open Karma Case
-        message = await ctx.reply("Opening your Karma Case...")
+        try:
+            message = await ctx.reply("Opening your Karma Case...")
+        except discord.HTTPException:
+            self.logger.exception(f"Failed to start gambling case for {ctx.author.name}")
+            return
+
         self.logger.info(f"OPENING KARMA CASE: REWARD = {karma_case[case_length - 3]}")
         await asyncio.sleep(2)
 
         async with gamble_lock:
-            for i in range(case_length - 4):
-                frame = karma_case[i : i + 5]
-                display = f"{frame[0]}  |  {frame[1]}  |  **>> {frame[2]} <<**  |  {frame[3]}  |  {frame[4]}"
-                await message.edit(content=display)
-                await asyncio.sleep(0.25)
+            try:
+                for i in range(case_length - 4):
+                    frame = karma_case[i : i + 5]
+                    display = f"{frame[0]}  |  {frame[1]}  |  **>> {frame[2]} <<**  |  {frame[3]}  |  {frame[4]}"
+                    await message.edit(content=display)
+                    await asyncio.sleep(0.25)
+            except discord.HTTPException:
+                self.logger.exception(f"Failed to edit gambling case message for {ctx.author.name}")
 
             try:
                 await ctx.message.add_reaction(karma_case[case_length - 3])
-            except discord.HTTPException as e:
-                self.logger.error(
-                    f"ERROR ADDING REACTION {karma_case[case_length - 3]}: {e})"
+            except discord.HTTPException:
+                self.logger.exception(
+                    f"ERROR ADDING REACTION {karma_case[case_length - 3]} in {ctx.guild.name}"
                 )
+            except Exception:
+                self.logger.exception("Unexpected error adding gambling reaction")
 
     def _get_gambling_rewards(self, length=10):
         rewards, weights = zip(*gambling_table)

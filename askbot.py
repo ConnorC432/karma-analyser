@@ -1,4 +1,5 @@
 import logging
+import discord
 
 from discord.ext import commands
 
@@ -40,11 +41,16 @@ class AskCog(commands.Cog):
         return images_b64
 
     async def _handle_response(self, response, target):
-        if response:
-            reply = await target.reply(content=response[:2000])
-            self.logger.debug(f"RESPONSE: {response[:2000]}")
-            if response == "RESPONSE GENERATION FAILED, PLEASE DOWNVOTE":
-                await reply.add_reaction("<:reddit_downvote:1266139651660447744>")
+        try:
+            if response:
+                reply = await target.reply(content=response[:2000])
+                self.logger.debug(f"RESPONSE: {response[:2000]}")
+                if response == "RESPONSE GENERATION FAILED, PLEASE DOWNVOTE":
+                    await reply.add_reaction("<:reddit_downvote:1266139651660447744>")
+        except discord.HTTPException:
+            self.logger.exception(f"Failed to send response to {target}")
+        except Exception:
+            self.logger.exception(f"Unexpected error handling response for {target}")
 
     async def _run_ask(self, ctx, text: str):
         if not ctx.guild:

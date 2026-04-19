@@ -81,8 +81,11 @@ class Analyse(commands.Cog):
                 try:
                     with open("deductions.json", "r", encoding="utf-8") as f:
                         deductions = json.load(f)
-                except FileNotFoundError as e:
-                    self.logger.debug(f"SHIT, I LOST THE KARMIC ARCHIVES: {e}")
+                except FileNotFoundError:
+                    self.logger.warning("SHIT, I LOST THE KARMIC ARCHIVES")
+                    deductions = {}
+                except json.JSONDecodeError:
+                    self.logger.exception("FAILED TO DECODE KARMIC ARCHIVES")
                     deductions = {}
 
                 for guild in self.bot.guilds:
@@ -118,8 +121,10 @@ class Analyse(commands.Cog):
                                         f'CHANGED STATUS: "{self.message_count} MESSAGES ANALYSED"'
                                     )
 
-                        except discord.HTTPException as e:
-                            self.logger.error(f"HTTP ERROR: {e}")
+                        except discord.HTTPException:
+                            self.logger.exception(f"HTTP ERROR fetching history for channel {channel.name} in {guild.name}")
+                        except Exception:
+                            self.logger.exception(f"Unexpected error analyzing history for channel {channel.name} in {guild.name}")
         finally:
             self.logger.info("FINISHED COUNTING KARMA")
             self.bot.analysis_finished.set()
@@ -168,8 +173,10 @@ class Analyse(commands.Cog):
                     karmic_dict[guild.id][user.id][emoji_name] += 1
                     karmic_dict[guild.id][user.id]["Karma"] += reaction_dict[emoji_name]
 
-            except discord.HTTPException as e:
-                self.logger.error(f"HTTP ERROR: {e}")
+            except discord.HTTPException:
+                self.logger.exception(f"HTTP ERROR fetching reaction users for message {message.id}")
+            except Exception:
+                self.logger.exception(f"Unexpected error analyzing message {message.id}")
 
     @commands.Cog.listener()
     async def on_raw_reaction_add(self, payload):
