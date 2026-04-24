@@ -540,6 +540,8 @@ class AITools:
         :return: Server name
         """
         guild = self.bot.get_guild(server)
+        if not guild:
+            return "Server not found"
         return guild.name
 
     @tool
@@ -560,6 +562,9 @@ class AITools:
         :return:
         """
         guild = self.bot.get_guild(server)
+        if not guild:
+            return "Server not found"
+
         if online:
             return [
                 member.name
@@ -567,7 +572,7 @@ class AITools:
                 if member.status != discord.Status.offline
             ]
 
-        return guild.members
+        return [member.name for member in guild.members]
 
     @tool
     async def google_search(self, query: str = None):
@@ -621,6 +626,9 @@ class AITools:
         :return: List of custom discord emojis for the current server
         """
         guild = self.bot.get_guild(server)
+        if not guild:
+            return "Server not found"
+
         if emojis := [str(emoji) for emoji in guild.emojis]:
             return " ".join(emojis)
         else:
