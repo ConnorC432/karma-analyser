@@ -472,34 +472,6 @@ class AITools:
         """
         return response if response else "RESPONSE TO USER NOT FOUND, TRY AGAIN"
 
-    # @tool
-    # async def describe_image(self, image_url: str = None) -> str:
-    #     """
-    #     Describe an image from its image url, accepts images in the format .png, .jpg, .jpeg, .gif, etc.
-    #     It can also scrape a url's html response for images.
-    #     :param image_url: http/https image url
-    #     :return: Description of
-    #     """
-    #     imageb64 = await self.url_to_base64(image_url)
-    #
-    #     if not image_url:
-    #         return "No valid image found"
-    #
-    #     try:
-    #         response = self.client.chat(
-    #             model=self.vision_model,
-    #             messages=[{
-    #                 "role": "user",
-    #                 "content": "Please describe this image.",
-    #                 "images": [imageb64]
-    #             }]
-    #         )
-    #     except Exception as e:
-    #         self.logger.debug(f"FAILED TO GET IMAGE: {e}")
-    #         return "No valid image found"
-    #
-    #     return response.message.content
-
     # Karmic Dict stores user data using their id as a key, the bot can't make sense of a dict of ids, dict response will need to be post processed in some way?
     # @tool
     # def get_server_karma(self, server):
