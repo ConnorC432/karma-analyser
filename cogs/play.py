@@ -246,6 +246,7 @@ class Play(commands.Cog):
         :param query: YouTube search query
         :return: yt-dlp info object
         """
+        # Get cookies.txt with an addon like this: https://addons.mozilla.org/en-GB/firefox/addon/cookies-txt/
         cookie_path = Path("cookies.txt").resolve()
 
         ytdl_opts = {
