@@ -500,19 +500,20 @@ class AITools:
     #
     #     return response.message.content
 
-    @tool
-    def get_server_karma(self, server):
-        """
-        Get the statistics for all users within the server, containing:
-            - Messages
-            - Karma
-            - Karmic Emoji Counts
-        :return: A JSON formatted list of the stats for all members in the server
-        """
-        if karmic_dict:
-            return karmic_dict[server.id]
-
-        return "No data found"
+    # Karmic Dict stores user data using their id as a key, the bot can't make sense of a dict of ids, dict response will need to be post processed in some way?
+    # @tool
+    # def get_server_karma(self, server):
+    #     """
+    #     Get the statistics for all users within the server, containing:
+    #         - Messages
+    #         - Karma
+    #         - Karmic Emoji Counts
+    #     :return: A JSON formatted list of the stats for all members in the server
+    #     """
+    #     if server in karmic_dict:
+    #         return karmic_dict[server]
+    #
+    #     return "No data found"
 
     @tool
     async def get_gif(self, query: str = None):
