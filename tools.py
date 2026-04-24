@@ -589,7 +589,7 @@ class AITools:
                     if response.status != 200:
                         return f"Search failed with status {response.status}"
                     data = await response.json()
-            except aiohttp.ClientError as e:
+            except (aiohttp.ClientError, asyncio.TimeoutError) as e:
                 self.logger.error(f"SEARCH FAILED: {e}")
                 return "Failed to get search results."
 
