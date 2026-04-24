@@ -578,13 +578,22 @@ class AITools:
         if not query:
             return "No search query found"
 
-        params = {"q": query, "format": "json", "categories": "general", "count": 5}
+        params = {
+            "q": query,
+            "format": "json",
+            "categories": "general",
+            "count": 5
+        }
+        headers = {
+            "User-Agent": "Mozilla/5.0",
+            "Accept"    : "application/json",
+        }
 
         results = []
         async with aiohttp.ClientSession() as session:
             try:
                 async with session.get(
-                    self.search_url, params=params, timeout=10
+                    self.search_url, params=params, headers=headers, timeout=aiohttp.ClientTimeout(total=15)
                 ) as response:
                     if response.status != 200:
                         return f"Search failed with status {response.status}"
