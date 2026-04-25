@@ -13,7 +13,7 @@ class AskCog(commands.Cog):
         askbot_name,
         system_instructions,
         valid_server_ids=None,
-        model="dolphin-llama3",
+        model="llama3.2",
     ):
         """
         :param bot: Discord bot object

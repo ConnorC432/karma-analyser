@@ -29,6 +29,7 @@ class AskConnor(AskCog):
             "connor",
             system_instructions,
             valid_server_ids=utils.VALID_SERVER_IDS_1,
+            model="artifish/llama3.2-uncensored",
         )
 
     @commands.command(hidden=True)
