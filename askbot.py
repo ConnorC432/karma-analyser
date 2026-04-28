@@ -103,7 +103,10 @@ class AskCog(commands.Cog):
 
         messages = await self.tools._populate_messages(message)
 
-        if f"{self.bot.command_prefix}ask{self.askbot_name}" not in messages[0]["content"].lower():
+        if (
+            f"{self.bot.command_prefix}ask{self.askbot_name}"
+            not in messages[0]["content"].lower()
+        ):
             return
 
         response = await self.tools.ollama_response(

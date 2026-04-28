@@ -28,7 +28,9 @@ class Help(commands.Cog):
 
             for command in self.bot.commands:
                 if not command.hidden:
-                    embed.add_field(name=f"{ctx.prefix}{command.name}", value="", inline=False)
+                    embed.add_field(
+                        name=f"{ctx.prefix}{command.name}", value="", inline=False
+                    )
 
         else:
             command = self.bot.get_command(help_command.removeprefix(ctx.prefix))
