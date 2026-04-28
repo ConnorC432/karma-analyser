@@ -1,5 +1,9 @@
 FROM python:3.12-slim
 
+LABEL org.opencontainers.image.title="Karma-Analyser" \
+      org.opencontainers.image.description="Karma-Analyser Discord Bot built with discord.py" \
+      org.opencontainers.image.source="https://github.com/Lachlan-Hollis/karma-analyser"
+
 ENV DEBIAN_FRONTEND=noninteractive
 WORKDIR /app
 
