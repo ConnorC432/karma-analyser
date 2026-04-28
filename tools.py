@@ -62,6 +62,30 @@ JSON_PATTERN = regex.compile(
     regex.VERBOSE,
 )
 
+BASE_INSTRUCTIONS = (
+    "You have access to tools. You may call multiple tools before responding.\n"
+    "\n"
+    "Tool usage rules:\n"
+    "- You may call multiple tools in sequence\n"
+    "- You may call multiple different tools in parallel\n"
+    "- Do NOT call the same tool repeatedly unless new information is required\n"
+    "- If a tool already returned sufficient information, do not call it again\n"
+    "- Prefer using different tools to gather complementary information\n"
+    "- Plan before calling tools\n"
+    "\n"
+    "Reasoning workflow:\n"
+    "1. Think about what information is needed\n"
+    "2. Decide which tools to call\n"
+    "3. Call tools (possibly multiple)\n"
+    "4. Combine results\n"
+    "5. Only then respond to the user\n"
+    "\n"
+    "Only respond to the user when you are completely finished using tools.\n"
+    "\n"
+    "Do not call tools unnecessarily.\n"
+    "Do not repeat the same tool call with identical arguments.\n"
+)
+
 
 ## Tool decorator
 def tool(func):
@@ -150,6 +174,11 @@ class AITools:
         """
         if model is None:
             model = self.model
+
+        system_instructions = {
+            "role": "system",
+            "content": BASE_INSTRUCTIONS + system_instructions
+        }
 
         while True:
             # Send the user's message to Ollama
