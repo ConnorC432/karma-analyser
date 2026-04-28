@@ -360,8 +360,6 @@ class AITools:
         """
         return str(datetime.now(ZoneInfo("Europe/London")))
 
-    # noinspection PyIncorrectDocstring
-    # Docstring passed through in tool list, AI isn't intended to know about the "server" variable
     @tool
     def get_server_members(self, server, online=False):
         """
