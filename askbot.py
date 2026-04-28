@@ -72,7 +72,7 @@ class AskCog(commands.Cog):
         images_b64 = await self._get_images(ctx.message)
 
         response = await self.tools.ollama_response(
-            ctx=ctx,
+            message=ctx.message,
             system_instructions=self.system_instructions,
             messages=[
                 {
@@ -122,7 +122,7 @@ class AskCog(commands.Cog):
             return
 
         response = await self.tools.ollama_response(
-            ctx=message,
+            message=message,
             system_instructions=self.system_instructions,
             messages=messages,
             model=self.model,

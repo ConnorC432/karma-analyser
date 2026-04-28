@@ -107,7 +107,7 @@ class Gambling(commands.Cog):
 
                 try:
                     clean_response = await self.tools.ollama_response(
-                        ctx=ctx,
+                        message=ctx.message,
                         system_instructions=ai_instructions,
                         messages=[
                             {

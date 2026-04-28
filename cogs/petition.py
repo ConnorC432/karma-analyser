@@ -18,21 +18,21 @@ class Petition(commands.Cog):
         if not text:
             return
 
-        await self.create_petition(ctx, text)
+        await self.create_petition(ctx.message, text)
 
-    async def create_petition(self, ctx, text):
+    async def create_petition(self, message, text):
         try:
-            reply = await ctx.message.reply(
+            reply = await message.reply(
                 content=f"# {text}", file=discord.File("./petition.gif")
             )
 
             await reply.add_reaction("🖊️")
         except discord.Forbidden:
             self.logger.warning(
-                f"Missing permissions to create petition in {ctx.channel.id}"
+                f"Missing permissions to create petition in {message.channel.id}"
             )
         except discord.HTTPException:
-            self.logger.exception(f"Failed to create petition in {ctx.channel.id}")
+            self.logger.exception(f"Failed to create petition in {message.channel.id}")
         except Exception:
             self.logger.exception("Unexpected error in petition command")
 

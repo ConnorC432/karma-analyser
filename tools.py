@@ -162,7 +162,7 @@ class AITools:
         }
 
     async def ollama_response(
-        self, ctx, system_instructions, messages, model: str | None = None
+        self, message, system_instructions, messages, model: str | None = None
     ) -> str | None:
         """
         Generates an AI response using the ollama API.
@@ -194,18 +194,17 @@ class AITools:
                 self.logger.exception(f"Error calling Ollama API for model {model}")
                 return "RESPONSE GENERATION FAILED, PLEASE DOWNVOTE"
 
-            message = response.message
-            tool_calls = message.tool_calls or []
+            tool_calls = response.message.tool_calls or []
 
             # Go straight to the final response if no tool calls
             if not tool_calls:
-                return message.content
+                return response.message.content
 
             # Append the tool call message for context
-            messages.append(message)
+            messages.append(response.message)
 
             # Handle tools
-            tool_messages = await self._handle_tools(tool_calls, ctx)
+            tool_messages = await self._handle_tools(tool_calls, message)
             messages.extend(tool_messages)
             self.logger.debug(
                 f"Sending {len(messages)} messages to Ollama | "
@@ -214,7 +213,7 @@ class AITools:
 
             # Loop again until AI no longer needs to call tools
 
-    async def _handle_tools(self, tool_calls, ctx):
+    async def _handle_tools(self, tool_calls, message):
         """
         Executes Ollama tools and returns the resulting messages.
         :param tool_calls:
@@ -242,14 +241,14 @@ class AITools:
             kwargs = {}
             sig = inspect.signature(function)
 
-            # server, user and ctx should be invisible to Ollama to restrict its tool usage to the context in which it is called
+            # server, user and message should be invisible to Ollama to restrict its tool usage to the context in which it is called
             for param in sig.parameters.values():
                 if param.name == "server":
-                    kwargs[param.name] = ctx.guild.id
+                    kwargs[param.name] = message.guild.id
                 elif param.name == "user":
-                    kwargs[param.name] = args.get("user") or ctx.author.id
-                elif param.name == "ctx":
-                    kwargs[param.name] = args.get("user") or ctx
+                    kwargs[param.name] = args.get("user") or message.author.id
+                elif param.name == "message":
+                    kwargs[param.name] = message
                 elif param.name in args:
                     kwargs[param.name] = args[param.name]
                 elif param.default is not inspect.Parameter.empty:
@@ -442,7 +441,7 @@ class AITools:
     @tool
     async def create_poll(
         self,
-        ctx,
+        message,
         question: str,
         options: list[str],
         duration: int = 1,
@@ -475,7 +474,7 @@ class AITools:
             for option in options:
                 poll.add_answer(text=option)
 
-            await ctx.message.reply(poll=poll)
+            await message.reply(poll=poll)
             return "Poll created successfully"
 
         except Exception as e:
@@ -483,7 +482,7 @@ class AITools:
             return "Failed to create poll"
 
     @tool
-    async def create_petition(self, ctx, text: str):
+    async def create_petition(self, message, text: str):
         """
         Create a fully working petition in the current channel
         :param text: Required - Title of the petition
@@ -494,7 +493,7 @@ class AITools:
 
         try:
             cog = self.bot.get_cog("Petition")
-            await cog.create_petition(ctx, text)
+            await cog.create_petition(message, text)
             return "Petition created successfully"
 
         except Exception as e:

@@ -38,7 +38,7 @@ class TLDR(commands.Cog):
 
         try:
             response = await self.tools.ollama_response(
-                ctx=ctx,
+                message=ctx.message,
                 system_instructions=self.system_instructions,
                 messages=[
                     {
