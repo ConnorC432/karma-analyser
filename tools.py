@@ -98,7 +98,7 @@ class AITools:
         self.bot = bot
         self.logger = logging.getLogger(self.__class__.__name__)
 
-        self.model = "artifish/llama3.2-uncensored"
+        self.model = "gpt-oss:120b-cloud"
         self.vision_model = "llava"
 
         self.ollama_endpoint = os.getenv("OLLAMA_ENDPOINT")
