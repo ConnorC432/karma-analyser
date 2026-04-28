@@ -1,8 +1,9 @@
 import asyncio
 import inspect
+import json
 import logging
 import os
-from datetime import datetime
+from datetime import datetime, timedelta
 from zoneinfo import ZoneInfo
 
 import aiohttp
@@ -417,3 +418,39 @@ class AITools:
             return " ".join(emojis)
         else:
             return "No emojis found"
+
+    @tool
+    async def create_poll(self, ctx, question: str, options: list[str], duration: int = 1, multiple: bool = False):
+        """
+        Create a fully working poll in the current channel
+        :param question: The question the poll should ask
+        :param duration: How long the poll should last in hours (1 = 1 hour) (max 768 hours)
+        :param multiple: True if the poll should allow multiple answers, false otherwise
+        :param options: A list of options for the poll - at least 2 required
+        :return: Returns information on whether the poll was created successfully
+        """
+        duration = round(int(duration))
+        duration = max(1, min(duration, 768))
+        duration = timedelta(hours=duration)
+
+        if isinstance(options, str):
+            try:
+                options = json.loads(options)
+            except json.JSONDecodeError:
+                return "Options must be a list of strings."
+
+        try:
+            poll = discord.Poll(
+                question=question,
+                duration=duration,
+                multiple=multiple
+            )
+            for option in options:
+                poll.add_answer(text=option)
+
+            await ctx.message.reply(poll=poll)
+            return "Poll created successfully"
+
+        except Exception as e:
+            self.logger.error(f"Failed to create poll: {e}")
+            return "Failed to create poll"
