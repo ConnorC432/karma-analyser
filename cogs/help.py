@@ -31,7 +31,7 @@ class Help(commands.Cog):
                     embed.add_field(name=f"r/{command.name}", value="", inline=False)
 
         else:
-            command = self.bot.get_command(help_command)
+            command = self.bot.get_command(help_command.removeprefix("r/"))
             if command is None:
                 embed = discord.Embed(
                     title="Help",
