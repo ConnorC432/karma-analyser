@@ -149,8 +149,8 @@ class AskCog(commands.Cog):
                     "content": regex.sub(
                         r"<@!?(\d+)>",
                         lambda m: (
-                            (current.guild.get_member(int(m.author.id))).name
-                            if payload.guild.get_member(int(m.author.id))
+                            (current.guild.get_member(int(m.group(1)))).name
+                            if current.guild.get_member(int(m.group(1)))
                             else m.group(0)
                         ),
                         current.content,
