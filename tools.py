@@ -136,7 +136,7 @@ class AITools:
         }
 
     async def ollama_response(
-        self, system_instructions, messages, server, user, model: str | None = None
+        self, ctx, system_instructions, messages, model: str | None = None
     ) -> str | None:
         """
         Generates an AI response using the ollama API.
@@ -180,7 +180,7 @@ class AITools:
             )
 
             # Handle tools
-            tool_messages = await self._handle_tools(tool_calls, server, user)
+            tool_messages = await self._handle_tools(tool_calls, ctx)
             messages.extend(tool_messages)
             self.logger.debug(
                 f"Sending {len(messages)} messages to Ollama | "
@@ -189,7 +189,7 @@ class AITools:
 
             # Loop again until AI no longer needs to call tools
 
-    async def _handle_tools(self, tool_calls, server, user):
+    async def _handle_tools(self, tool_calls, ctx):
         """
         Executes Ollama tools and returns the resulting messages.
         :param tool_calls:
@@ -217,12 +217,14 @@ class AITools:
             kwargs = {}
             sig = inspect.signature(function)
 
-            # "server" and "user" should be invisible to Ollama to prevent its misuse
+            # server, user and ctx should be invisible to Ollama to restrict its tool usage to the context in which it is called
             for param in sig.parameters.values():
                 if param.name == "server":
-                    kwargs[param.name] = server
+                    kwargs[param.name] = ctx.guild
                 elif param.name == "user":
-                    kwargs[param.name] = args.get("user") or user
+                    kwargs[param.name] = args.get("user") or ctx.author
+                elif param.name == "ctx":
+                    kwargs[param.name] = args.get("user") or ctx
                 elif param.name in args:
                     kwargs[param.name] = args[param.name]
                 elif param.default is not inspect.Parameter.empty:

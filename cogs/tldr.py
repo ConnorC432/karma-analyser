@@ -38,6 +38,7 @@ class TLDR(commands.Cog):
 
         try:
             response = await self.tools.ollama_response(
+                ctx=ctx,
                 system_instructions=self.system_instructions,
                 messages=[
                     {
@@ -45,8 +46,6 @@ class TLDR(commands.Cog):
                         "content": text,
                     }
                 ],
-                server=ctx.guild.id if ctx.guild else None,
-                user=ctx.author.name,
             )
 
             await ctx.reply(response)

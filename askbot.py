@@ -1,14 +1,14 @@
+import base64
 import logging
 from collections import OrderedDict
 
 import aiohttp
 import discord
 import regex
+from bs4 import BeautifulSoup
 from discord.ext import commands
 
 from tools import AITools
-from bs4 import BeautifulSoup
-import base64
 
 
 class AskCog(commands.Cog):
@@ -72,6 +72,7 @@ class AskCog(commands.Cog):
         images_b64 = await self._get_images(ctx.message)
 
         response = await self.tools.ollama_response(
+            ctx=ctx,
             system_instructions=self.system_instructions,
             messages=[
                 {
@@ -81,8 +82,6 @@ class AskCog(commands.Cog):
                     "image": images_b64 or "",  # Support both for compatibility
                 }
             ],
-            server=ctx.guild.id if ctx.guild else None,
-            user=ctx.author.name,
             model=self.model,
         )
 
@@ -123,10 +122,9 @@ class AskCog(commands.Cog):
             return
 
         response = await self.tools.ollama_response(
+            ctx=message,
             system_instructions=self.system_instructions,
             messages=messages,
-            server=message.guild.id if message.guild else None,
-            user=message.author.name,
             model=self.model,
         )
 

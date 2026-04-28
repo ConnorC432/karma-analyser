@@ -107,6 +107,7 @@ class Gambling(commands.Cog):
 
                 try:
                     clean_response = await self.tools.ollama_response(
+                        ctx=ctx,
                         system_instructions=ai_instructions,
                         messages=[
                             {
@@ -114,8 +115,6 @@ class Gambling(commands.Cog):
                                 "content": "Convince your fellow redditor to keep gambling, so they can get their biggest jackpot yet!!!",
                             }
                         ],
-                        server=ctx.guild.id if ctx.guild else None,
-                        user=ctx.author.name,
                         model="llama3",
                     )
 

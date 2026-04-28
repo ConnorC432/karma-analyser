@@ -61,10 +61,9 @@ class Diagnose(commands.Cog):
             ) + "\n".join(message_log)
 
             clean_response = await self.tools.ollama_response(
+                ctx=ctx,
                 system_instructions=ai_instructions,
                 messages=[{"role": "user", "content": prompt}],
-                server=ctx.guild.id if ctx.guild else None,
-                user=ctx.author.name,
                 model="artifish/llama3.2-uncensored",
             )
 
