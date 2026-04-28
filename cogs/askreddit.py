@@ -1,5 +1,4 @@
 from discord.ext import commands
-import utils
 from askbot import AskCog
 
 
@@ -13,7 +12,6 @@ class AskReddit(AskCog):
             bot,
             "reddit",
             system_instructions,
-            valid_server_ids=utils.VALID_SERVER_IDS_1,
         )
 
     @commands.command(hidden=True)
