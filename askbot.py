@@ -110,9 +110,15 @@ class AskCog(commands.Cog):
 
         messages = await self._populate_messages(message)
 
-        if (
-            f"{self.bot.command_prefix}ask{self.askbot_name}"
-            not in messages[0]["content"].lower()
+        prefixes = (
+            self.bot.command_prefix
+            if isinstance(self.bot.command_prefix, (list, tuple))
+            else [self.bot.command_prefix]
+        )
+
+        if not any(
+            f"{prefix}ask{self.askbot_name}" in messages[0]["content"].lower()
+            for prefix in prefixes
         ):
             return
 

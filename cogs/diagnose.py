@@ -36,10 +36,17 @@ class Diagnose(commands.Cog):
 
         try:
             message_log = []
+            prefixes = (
+                self.bot.command_prefix
+                if isinstance(self.bot.command_prefix, (list, tuple))
+                else [self.bot.command_prefix]
+            )
             async for msg in ctx.channel.history(limit=200):
                 if (
                     msg.author == user
-                    and not msg.content.startswith(ctx.prefix)  # Ignore bot commands
+                    and not any(
+                        msg.content.startswith(prefix) for prefix in prefixes
+                    )  # Ignore bot commands
                     and "http" not in msg.content  # Ignore links
                 ):
                     message_log.append(msg.content)

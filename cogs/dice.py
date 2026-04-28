@@ -114,10 +114,20 @@ class Dice(commands.Cog):
         if ctx.author.bot:
             return
 
-        if not ctx.content.startswith(self.bot.command_prefix):
+        prefixes = (
+            self.bot.command_prefix
+            if isinstance(self.bot.command_prefix, (list, tuple))
+            else [self.bot.command_prefix]
+        )
+
+        if not any(ctx.content.startswith(prefix) for prefix in prefixes):
             return
 
-        dice = ctx.content[2:].strip()
+        # Remove prefix
+        used_prefix = next(
+            prefix for prefix in prefixes if ctx.content.startswith(prefix)
+        )
+        dice = ctx.content.removeprefix(used_prefix).strip()
 
         parsed = self._parse_roll_string(dice)
 

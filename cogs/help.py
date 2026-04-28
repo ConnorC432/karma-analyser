@@ -33,7 +33,18 @@ class Help(commands.Cog):
                     )
 
         else:
-            command = self.bot.get_command(help_command.removeprefix(ctx.prefix))
+            clean_help_command = help_command
+            prefixes = (
+                self.bot.command_prefix
+                if isinstance(self.bot.command_prefix, (list, tuple))
+                else [self.bot.command_prefix]
+            )
+            for prefix in prefixes:
+                if help_command.startswith(prefix):
+                    clean_help_command = help_command.removeprefix(prefix)
+                    break
+
+            command = self.bot.get_command(clean_help_command)
             if command is None:
                 embed = discord.Embed(
                     title="Help",
