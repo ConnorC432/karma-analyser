@@ -201,13 +201,7 @@ class AITools:
                 return message.content
 
             # Append the tool call message for context
-            messages.append(
-                {
-                    "role": "assistant",
-                    "content": message.content or "",
-                    "tool_calls": tool_calls,
-                }
-            )
+            messages.append(message)
 
             # Handle tools
             tool_messages = await self._handle_tools(tool_calls, ctx)
