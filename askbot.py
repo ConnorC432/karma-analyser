@@ -18,7 +18,7 @@ class AskCog(commands.Cog):
         askbot_name,
         system_instructions,
         valid_server_ids=None,
-        model="llama3.2",
+        model=None,
     ):
         """
         :param bot: Discord bot object
@@ -34,8 +34,8 @@ class AskCog(commands.Cog):
         self.valid_server_ids = valid_server_ids
         if isinstance(self.valid_server_ids, int):
             self.valid_server_ids = [self.valid_server_ids]
-        self.model = model
         self.tools = AITools(self.bot)
+        self.model = model or self.tools.model
         self.message_cache = OrderedDict()
         self.cache_size = 1000
 
