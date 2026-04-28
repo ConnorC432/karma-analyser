@@ -1,22 +1,20 @@
 import asyncio
 import base64
 import inspect
-import json
 import logging
 import os
 from collections import OrderedDict
 from datetime import datetime
-from json import JSONDecodeError
 from zoneinfo import ZoneInfo
 
 import aiohttp
 import discord
 import regex
 from bs4 import BeautifulSoup
-from json_repair import repair_json
 from ollama import Client
 
 import utils
+from utils import karmic_dict
 
 
 REDDIQUETTE = (
@@ -158,9 +156,8 @@ class AITools:
         if model is None:
             model = self.model
 
-        original_messages = messages = [system_instructions] + list(messages)
-
         while True:
+            # Send the user's message to Ollama
             try:
                 response = await asyncio.to_thread(
                     self.client.chat,
@@ -172,142 +169,95 @@ class AITools:
                 self.logger.exception(f"Error calling Ollama API for model {model}")
                 return "RESPONSE GENERATION FAILED, PLEASE DOWNVOTE"
 
-            self.logger.debug(f"RESPONSE: {response.message.content}")
+            message = response.message
+            tool_calls = message.tool_calls or []
 
-            tool_calls = response.message.tool_calls or []
+            # Go straight to the final response if no tool calls
+            if not tool_calls:
+                return message.content
 
+            # Append the tool call message for context
+            messages.append(
+                {
+                    "role": "assistant",
+                    "content": message.content or "",
+                    "tool_calls": tool_calls,
+                }
+            )
+
+            # Handle tools
+            tool_messages = await self._handle_tools(tool_calls, server, user)
+            messages.extend(tool_messages)
+            self.logger.debug(
+                f"Sending {len(messages)} messages to Ollama | "
+                f"Last Message: {messages[-1] if messages else None}"
+            )
+
+    async def _handle_tools(self, tool_calls, server, user):
+        """
+        Executes Ollama tools and returns the resulting messages.
+        :param tool_calls:
+        :param server:
+        :param user:
+        :return: Tool result messages
+        """
+
+        async def _run_tool(call):
+            function_name = call.function.name
+            args = call.function.arguments or {}
+
+            function = next(
+                (f for f in self.tools if f.__name__ == function_name), None
+            )
+
+            if not function:
+                return {
+                    "role": "tool",
+                    "name": function_name,
+                    "content": "Tool doesn't exist",
+                }
+
+            # Build kwargs from function signature
+            kwargs = {}
+            sig = inspect.signature(function)
+
+            # "server" and "user" should be invisible to Ollama to prevent its misuse
+            for param in sig.parameters.values():
+                if param.name == "server":
+                    kwargs[param.name] = server
+                elif param.name == "user":
+                    kwargs[param.name] = args.get("user") or user
+                elif param.name in args:
+                    kwargs[param.name] = args[param.name]
+                elif param.default is not inspect.Parameter.empty:
+                    kwargs[param.name] = param.default
+
+            # Execute tool
             try:
-                # First try JSON Repair
-                repaired = repair_json(response.message.content)
-                data = json.loads(repaired)
+                if inspect.iscoroutinefunction(function):
+                    result = await function(**kwargs)
+                else:
+                    result = function(**kwargs)
 
-                if isinstance(data, dict):
-                    data = [data]
-                elif not isinstance(data, list):
-                    data = []
-
-                for item in data:
-                    if isinstance(item, dict):
-                        if item.get("type") == "function" and "function" in item:
-                            tool_calls.append(item)
-
-            except Exception:
-                self.logger.exception("Failed to repair JSON")
-                # Backup JSON parsing
-                for j in JSON_PATTERN.findall(response.message.content):
-                    try:
-                        data = json.loads(j)
-                        if (
-                            isinstance(data, dict)
-                            and data.get("type") == "function"
-                            and "function" in data
-                        ):
-                            tool_calls.append(data)
-                    except JSONDecodeError:
-                        self.logger.exception("Failed to parse JSON")
-                        continue
-
-            if tool_calls:
-                for call in tool_calls:
-                    if isinstance(call, dict):
-                        if "function" not in call:
-                            self.logger.warning(f"Malformed tool call: {call}")
-                            continue
-                        function = call["function"]["name"]
-                        args = call.get("parameters") or {}
-                    else:
-                        function = call.function.name
-                        args = call.function.arguments or {}
-                        if isinstance(args, dict) and "parameters" in args:
-                            args = args["parameters"]
-
-                    function = next(
-                        (f for f in self.tools if f.__name__ == function), None
-                    )
-                    if function:
-                        sig = inspect.signature(function)
-                        kwargs = {}
-
-                        for param in sig.parameters.values():
-                            if param.name == "server":
-                                kwargs[param.name] = server
-                            elif param.name == "user":
-                                kwargs[param.name] = args.get("user") or user
-                            elif param.name in args:
-                                kwargs[param.name] = args[param.name]
-                            elif param.default is not inspect.Parameter.empty:
-                                kwargs[param.name] = param.default
-
-                        self.logger.debug(
-                            f"Tool {function.__name__} called with {kwargs}"
-                        )
-
-                        if inspect.iscoroutinefunction(function):
-                            result = await function(**kwargs)
-                        else:
-                            result = function(**kwargs)
-
-                        self.logger.debug(f"TOOL RESULT: {result}")
-
-                        messages.append(
-                            {
-                                "role": "tool",
-                                "name": function.__name__,
-                                "content": str(result),
-                            }
-                        )
-
-                    else:
-                        messages.append(
-                            {
-                                "role": "tool",
-                                "name": function.__name__,
-                                "content": "Tool doesn't exist",
-                            }
-                        )
-
-                continue
-
-            # Response Post-Processing
-            reply = JSON_PATTERN.sub("", response.message.content).strip()
-
-            # Fall back to response generation without tools if response is empty
-            if reply == "":
-                response = await asyncio.to_thread(
-                    self.client.chat,
-                    model=self.model,
-                    messages=original_messages,
+                self.logger.info(
+                    f"Tool executed successfully: {function.__name__} | args={kwargs}"
                 )
-                self.logger.warning("FALLING BACK TO NON-TOOL RESPONSE")
-                reply = response.message.content
 
-            guild = self.bot.get_guild(server)
-            if guild:
-                for member in guild.members:
-                    reply = regex.sub(
-                        rf"\b{regex.escape(member.name)}\b",
-                        member.mention,
-                        reply,
-                        flags=regex.IGNORECASE,
-                    )
+                return {
+                    "role": "tool",
+                    "name": function_name,
+                    "content": str(result),
+                }
 
-            reply = regex.sub(
-                r"(<think>.*?</think>|<json>.*?</json>)\n\n",
-                "",
-                reply,
-                flags=regex.DOTALL,
-            )
+            except Exception as e:
+                self.logger.exception(f"Error executing tool {function_name}")
+                return {
+                    "role": "tool",
+                    "name": function_name,
+                    "content": f"Error executing tool: {e}",
+                }
 
-            reply = regex.sub(
-                r'\{"type"\s*:\s*"function"\s*,\s*"function"\s*:\s*', "", reply
-            )
-
-            self.logger.debug(f"FINAL REPLY: {reply}")
-            return (
-                reply
-                if reply.strip()
-                else "RESPONSE GENERATION FAILED, PLEASE DOWNVOTE"
-            )
+        return await asyncio.gather(*(_run_tool(call) for call in tool_calls))
 
     async def _populate_messages(self, payload):
         """
@@ -495,19 +445,22 @@ class AITools:
         return response if response else "RESPONSE TO USER NOT FOUND, TRY AGAIN"
 
     # Karmic Dict stores user data using their id as a key, the bot can't make sense of a dict of ids, dict response will need to be post processed in some way?
-    # @tool
-    # def get_server_karma(self, server):
-    #     """
-    #     Get the statistics for all users within the server, containing:
-    #         - Messages
-    #         - Karma
-    #         - Karmic Emoji Counts
-    #     :return: A JSON formatted list of the stats for all members in the server
-    #     """
-    #     if server in karmic_dict:
-    #         return karmic_dict[server]
-    #
-    #     return "No data found"
+    @tool
+    def get_server_karma(self, server):
+        """
+        Get the karma values for all members in the current server
+        :return: A list of the stats for all members in the server
+        """
+        if server in karmic_dict:
+            karma = {}
+            for user_id, stats in karmic_dict[server].items():
+                guild = self.bot.get_guild(server)
+                user_name = guild.get_member(user_id).name if guild else user_id
+                karma[user_name] = stats.get("Karma", 69)
+
+            return karma
+
+        return "No data found"
 
     @tool
     async def get_gif(self, query: str = None):
