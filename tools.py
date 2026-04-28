@@ -193,6 +193,8 @@ class AITools:
                 f"Last Message: {messages[-1] if messages else None}"
             )
 
+            # Loop again until AI no longer needs to call tools
+
     async def _handle_tools(self, tool_calls, server, user):
         """
         Executes Ollama tools and returns the resulting messages.
@@ -444,7 +446,23 @@ class AITools:
         """
         return response if response else "RESPONSE TO USER NOT FOUND, TRY AGAIN"
 
-    # Karmic Dict stores user data using their id as a key, the bot can't make sense of a dict of ids, dict response will need to be post processed in some way?
+    @tool
+    def list_tools(self):
+        """
+        List all available tools
+        :return: Available tools
+        """
+        lines = []
+
+        for tool in self.tool_definitions:
+            func = tool["function"]
+
+            lines.append(
+                f"- {func['name']}: {func.get('description', 'No description')}"
+            )
+
+        return "\n".join(lines)
+
     @tool
     def get_server_karma(self, server):
         """
@@ -456,7 +474,7 @@ class AITools:
             for user_id, stats in karmic_dict[server].items():
                 guild = self.bot.get_guild(server)
                 user_name = guild.get_member(user_id).name if guild else user_id
-                karma[user_name] = stats.get("Karma", 69)
+                karma[user_name] = stats.get("Karma", 0)
 
             return karma
 
