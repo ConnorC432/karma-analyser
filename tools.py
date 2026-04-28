@@ -84,6 +84,7 @@ BASE_INSTRUCTIONS = (
     "\n"
     "Do not call tools unnecessarily.\n"
     "Do not repeat the same tool call with identical arguments.\n"
+    "Do not use table formatting in your answers.\n"
 )
 
 
