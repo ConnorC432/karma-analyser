@@ -509,3 +509,39 @@ class AITools:
         except Exception as e:
             self.logger.error(f"Failed to create petition: {e}")
             return "Failed to create petition"
+
+    # User Memory
+    @tool
+    async def set_user_memory(self, message, key: str, value):
+        """
+        Set a user memory to a value that can be retrieved later.
+        :param key: Key to store the value under
+        :param value: Value to store - can be either a string or integer
+        :return:
+        """
+        karmic_dict[message.guild.id][message.author.id][f"ai_{key}"] = value
+        self.logger.info(f"User memory set for key: {key} | Value: {value}")
+        return "User memory set successfully"
+
+    @tool
+    async def get_user_memory(self, message, key: str | None = None):
+        """
+        Retrieve a user memory by key. If no key is provided, returns all user memories for the user.
+        :param key: Key to retrieve the value for, or None to retrieve all values
+        :return: The value associated with the key, or a dictionary of all values if no key is provided
+        """
+        user_memory = karmic_dict[message.guild.id][message.author.id]
+
+        if not user_memory:
+            return "No user memory found"
+
+        if key:
+            full_key = f"ai_{key}"
+            if full_key in user_memory:
+                self.logger.info(f"User memory retrieved for key: {key}")
+                return f"{user_memory[full_key]}"
+            else:
+                return "Key not found"
+
+        self.logger.info(f"User memory retrieved: {user_memory}")
+        return f"{user_memory}"
