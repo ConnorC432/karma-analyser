@@ -259,16 +259,6 @@ class AITools:
         return await asyncio.gather(*(_run_tool(call) for call in tool_calls))
 
     @tool
-    def _respond_to_user(self, response=None) -> str:
-        """
-        Call this function if you have called the same tool multiple times
-        or you have already called all the tools you need.
-        :param response: Response to the user's message
-        :return:
-        """
-        return response if response else "RESPONSE TO USER NOT FOUND, TRY AGAIN"
-
-    @tool
     def list_tools(self):
         """
         List all available tools
