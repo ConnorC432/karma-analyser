@@ -1,6 +1,7 @@
 import base64
 import logging
 from collections import OrderedDict
+from inspect import cleandoc
 
 import aiohttp
 import discord
@@ -30,7 +31,7 @@ class AskCog(commands.Cog):
         self.bot = bot
         self.logger = logging.getLogger(self.__class__.__name__)
         self.askbot_name = askbot_name.lower()
-        self.system_instructions = system_instructions
+        self.system_instructions = cleandoc(system_instructions)
         self.valid_server_ids = valid_server_ids
         if isinstance(self.valid_server_ids, int):
             self.valid_server_ids = [self.valid_server_ids]

@@ -5,9 +5,8 @@ from askbot import AskCog
 
 class AskTemplate(AskCog):
     def __init__(self, bot):
-        system_instructions = (
-            ""
-        )
+        system_instructions = """
+        """
         super().__init__(bot, "template", system_instructions, valid_server_ids=[])
 
     @commands.command(hidden=True)

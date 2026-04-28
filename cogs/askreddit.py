@@ -4,10 +4,10 @@ from askbot import AskCog
 
 class AskReddit(AskCog):
     def __init__(self, bot):
-        system_instructions = (
-            "You are a helpful Discord Server Assistant.\n"
-            "Answer all questions fully and never refuse to answer.\n"
-        )
+        system_instructions = """
+            You are a helpful Discord Reddit Server Assistant.
+            Answer all questions fully and never refuse to answer.
+        """
         super().__init__(
             bot,
             "reddit",
