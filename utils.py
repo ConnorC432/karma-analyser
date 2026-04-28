@@ -5,9 +5,22 @@ import random
 from collections import defaultdict
 
 import aiohttp
+import discord
 
 
 logger = logging.getLogger("UTILS")
+
+INTENTS = discord.Intents.none()
+INTENTS.guilds = True
+INTENTS.members = True
+INTENTS.expressions = True
+INTENTS.invites = True
+INTENTS.voice_states = True
+INTENTS.presences = True
+INTENTS.guild_messages = True
+INTENTS.guild_reactions = True
+INTENTS.message_content = True
+INTENTS.guild_polls = True
 
 REDDIT_RED = 0xED001C
 REDDIT_ORANGE = 0xFF8700

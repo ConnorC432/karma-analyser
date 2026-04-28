@@ -12,6 +12,8 @@ from aiohttp import web
 from discord.ext import commands
 from discord.ext.commands import ExtensionError
 
+from utils import INTENTS
+
 
 # Parse launch arguments
 parser = argparse.ArgumentParser()
@@ -44,10 +46,9 @@ bot_token = os.environ.get("BOT_TOKEN")
 if not bot_token:
     raise ValueError("BOT_TOKEN environment variable is not set")
 
-intents = discord.Intents.all()
 bot = commands.Bot(
     command_prefix=("r/", "R/"),
-    intents=intents,
+    intents=INTENTS,
     case_insensitive=True,
     strip_after_prefix=True,
 )
