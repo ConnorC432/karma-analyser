@@ -353,6 +353,16 @@ class AITools:
         return guild.name
 
     @tool
+    def get_channel_name(self, message):
+        """
+        Get the name of the channel that the chat is taking place in
+        :return: Channel name
+        """
+        if message.channel:
+            return message.channel.name
+        return "No channel found"
+
+    @tool
     def get_datetime(self):
         """
         Get the current date & time for Europe/London
