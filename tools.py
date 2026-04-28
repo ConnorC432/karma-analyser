@@ -299,21 +299,29 @@ class AITools:
         return "\n".join(lines)
 
     @tool
-    def get_server_karma(self, server):
+    def get_server_karma(self, server: int):
         """
         Get the karma values for all members in the current server
         :return: A list of the stats for all members in the server
         """
-        if server in karmic_dict:
-            karma = {}
-            for user_id, stats in karmic_dict[server].items():
-                guild = self.bot.get_guild(server)
-                user_name = guild.get_member(user_id).name if guild else user_id
-                karma[user_name] = stats.get("Karma", 0)
+        guild = self.bot.get_guild(server)
+        if not guild:
+            return "Server not found"
 
-            return karma
+        guild_data = karmic_dict.get(server)
+        if not guild_data:
+            return "No karmic data found"
 
-        return "No data found"
+        result = {}
+
+        for user_id, stats in guild_data.items():
+            member = guild.get_member(user_id)
+            if member:
+                name = member.display_name
+
+            result[name] = stats.get("Karma", 0)
+
+        return result
 
     @tool
     async def get_gif(self, query: str = None):
