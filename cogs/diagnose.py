@@ -4,6 +4,7 @@ import discord
 from discord.ext import commands
 
 from tools import AITools, REDDIQUETTE
+from utils import karmic_dict
 
 
 class Diagnose(commands.Cog):
@@ -23,6 +24,8 @@ class Diagnose(commands.Cog):
 
         self.logger.info(f"DIAGNOSING {user.name}")
 
+        karma = karmic_dict[ctx.guild.id][user.id]["Karma"]
+
         try:
             reply = await ctx.reply("DIAGNOSING...")
         except discord.HTTPException:
@@ -36,8 +39,8 @@ class Diagnose(commands.Cog):
             async for msg in ctx.channel.history(limit=200):
                 if (
                     msg.author == user
-                    and not msg.content.startswith(ctx.prefix) # Ignore bot commands
-                    and "http" not in msg.content # Ignore links
+                    and not msg.content.startswith(ctx.prefix)  # Ignore bot commands
+                    and "http" not in msg.content  # Ignore links
                 ):
                     message_log.append(msg.content)
 
@@ -45,9 +48,10 @@ class Diagnose(commands.Cog):
                 "role": "system",
                 "content": "You are a reddit moderation bot...\n" + REDDIQUETTE,
             }
-            prompt = "These are the messages you need to analyse: \n" + "\n".join(
-                message_log
-            )
+            prompt = (
+                f"The user has {karma} karma, you need to suggest how they can improve their karma \n"
+                f"by analysing these messages: \n"
+            ) + "\n".join(message_log)
 
             clean_response = await self.tools.ollama_response(
                 system_instructions=ai_instructions,
