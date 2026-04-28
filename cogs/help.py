@@ -21,27 +21,27 @@ class Help(commands.Cog):
         if help_command is None:
             # Generic Help Menu
             embed = discord.Embed(
-                title="r/help",
-                description="Use r/help *command* to see help for a specific command",
+                title=f"{ctx.prefix}help",
+                description=f"Use {ctx.prefix}help *command* to see help for a specific command",
                 color=utils.REDDIT_RED,
             )
 
             for command in self.bot.commands:
                 if not command.hidden:
-                    embed.add_field(name=f"r/{command.name}", value="", inline=False)
+                    embed.add_field(name=f"{ctx.prefix}{command.name}", value="", inline=False)
 
         else:
-            command = self.bot.get_command(help_command.removeprefix("r/"))
+            command = self.bot.get_command(help_command.removeprefix(ctx.prefix))
             if command is None:
                 embed = discord.Embed(
                     title="Help",
-                    description=f"The command `r/{help_command}` doesn't exist.",
+                    description=f"The command `{ctx.prefix}{help_command}` doesn't exist.",
                     color=utils.REDDIT_RED,
                 )
 
             else:
                 embed = discord.Embed(
-                    title=f"r/{command.name}",
+                    title=f"{ctx.prefix}{command.name}",
                     description=command.help or "No description available",
                     color=utils.REDDIT_RED,
                 )

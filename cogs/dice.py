@@ -114,7 +114,7 @@ class Dice(commands.Cog):
         if ctx.author.bot:
             return
 
-        if not ctx.content.startswith("r/"):
+        if not ctx.content.startswith(self.bot.command_prefix):
             return
 
         dice = ctx.content[2:].strip()

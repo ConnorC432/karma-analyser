@@ -36,8 +36,8 @@ class Diagnose(commands.Cog):
             async for msg in ctx.channel.history(limit=200):
                 if (
                     msg.author == user
-                    and "r/" not in msg.content
-                    and "http" not in msg.content
+                    and not msg.content.startswith(ctx.prefix) # Ignore bot commands
+                    and "http" not in msg.content # Ignore links
                 ):
                     message_log.append(msg.content)
 

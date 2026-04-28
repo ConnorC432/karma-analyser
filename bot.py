@@ -45,7 +45,7 @@ if not bot_token:
     raise ValueError("BOT_TOKEN environment variable is not set")
 
 intents = discord.Intents.all()
-bot = commands.Bot(command_prefix=["r/", "R/"], intents=intents, case_insensitive=True)
+bot = commands.Bot(command_prefix=("r/", "R/"), intents=intents, case_insensitive=True)
 
 
 @bot.event
