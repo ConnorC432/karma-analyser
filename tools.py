@@ -3,6 +3,7 @@ import inspect
 import json
 import logging
 import os
+from contextlib import asynccontextmanager
 from datetime import datetime, timedelta
 from inspect import cleandoc
 from zoneinfo import ZoneInfo
@@ -13,7 +14,7 @@ import regex
 from ollama import Client
 
 import utils
-from utils import karmic_dict
+from utils import karma_lock, karmic_dict
 
 
 REDDIQUETTE = """
@@ -284,6 +285,18 @@ class AITools:
 
         return await asyncio.gather(*(_run_tool(call) for call in tool_calls))
 
+    @asynccontextmanager
+    async def _acquire_karma_lock(self, lock: asyncio.Lock, timeout: int = 10):
+        try:
+            await asyncio.wait_for(lock.acquire(), timeout=timeout)
+        except asyncio.TimeoutError:
+            raise TimeoutError("Karma lock acquire timed out")
+
+        try:
+            yield
+        finally:
+            lock.release()
+
     @tool
     def list_tools(self):
         """
@@ -302,29 +315,34 @@ class AITools:
         return "\n".join(lines)
 
     @tool
-    def get_server_karma(self, server: int):
+    async def get_server_karma(self, server: int):
         """
         Get the karma values for all members in the current server
         :return: A list of the stats for all members in the server
         """
-        guild = self.bot.get_guild(server)
-        if not guild:
-            return "Server not found"
+        try:
+            async with self._acquire_karma_lock(karma_lock):
+                guild = self.bot.get_guild(server)
+                if not guild:
+                    return "Server not found"
 
-        guild_data = karmic_dict.get(server)
-        if not guild_data:
-            return "No karmic data found"
+                guild_data = karmic_dict.get(server)
+                if not guild_data:
+                    return "No karmic data found"
 
-        result = {}
+                result = {}
 
-        for user_id, stats in guild_data.items():
-            member = guild.get_member(user_id)
-            if member:
-                name = member.display_name
+                for user_id, stats in guild_data.items():
+                    member = guild.get_member(user_id)
+                    if member:
+                        name = member.display_name
 
-            result[name] = stats.get("Karma", 0)
+                    result[name] = stats.get("Karma", 0)
 
-        return result
+                return result
+
+        except TimeoutError:
+            return "Karmic data is currently being updated, please try again later."
 
     @tool
     async def get_gif(self, query: str = None):
@@ -522,9 +540,13 @@ class AITools:
         :param value: Value to store - can be either a string or integer
         :return:
         """
-        karmic_dict[message.guild.id][message.author.id][f"ai_{key}"] = value
-        self.logger.info(f"User memory set for key: {key} | Value: {value}")
-        return "User memory set successfully"
+        try:
+            async with self._acquire_karma_lock(karma_lock):
+                karmic_dict[message.guild.id][message.author.id][f"ai_{key}"] = value
+                self.logger.info(f"User memory set for key: {key} | Value: {value}")
+                return "User memory set successfully"
+        except TimeoutError:
+            return "User memory could not be set. Please try again later."
 
     @tool
     async def get_user_memory(self, message, key: str | None = None):
@@ -533,18 +555,22 @@ class AITools:
         :param key: Key to retrieve the value for, or None to retrieve all values
         :return: The value associated with the key, or a dictionary of all values if no key is provided
         """
-        user_memory = karmic_dict[message.guild.id][message.author.id]
+        try:
+            async with self._acquire_karma_lock(karma_lock):
+                user_memory = karmic_dict[message.guild.id][message.author.id]
 
-        if not user_memory:
-            return "No user memory found"
+                if not user_memory:
+                    return "No user memory found"
 
-        if key:
-            full_key = f"ai_{key}"
-            if full_key in user_memory:
-                self.logger.info(f"User memory retrieved for key: {key}")
-                return f"{user_memory[full_key]}"
-            else:
-                return "Key not found"
+                if key:
+                    full_key = f"ai_{key}"
+                    if full_key in user_memory:
+                        self.logger.info(f"User memory retrieved for key: {key}")
+                        return f"{user_memory[full_key]}"
+                    else:
+                        return "Key not found"
 
-        self.logger.info(f"User memory retrieved: {user_memory}")
-        return f"{user_memory}"
+                self.logger.info(f"User memory retrieved: {user_memory}")
+                return f"{user_memory}"
+        except TimeoutError:
+            return "User memory could not be retrieved. Please try again later."
