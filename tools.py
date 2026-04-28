@@ -177,7 +177,7 @@ class AITools:
 
         system_instructions = {
             "role": "system",
-            "content": BASE_INSTRUCTIONS + system_instructions
+            "content": BASE_INSTRUCTIONS + system_instructions,
         }
 
         while True:
@@ -261,7 +261,7 @@ class AITools:
                 else:
                     result = function(**kwargs)
 
-                self.logger.info(
+                self.logger.debug(
                     f"Tool executed successfully: {function.__name__} | args={kwargs}"
                 )
 
