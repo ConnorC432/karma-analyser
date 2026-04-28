@@ -14,12 +14,13 @@ class Poll(commands.Cog):
     async def poll(self, ctx, question: str, duration: float, *options: str) -> None:
         """
         Create a poll with between 2 and 10 questions.
-        Underscores in the options will be replaced with spaces.
+        Underscores in the question/options will be replaced with spaces.
         - `text` (required): Poll question
         - `int`  (required): Poll duration in hours
         - `text` (required): Option 1
         - `text` (required): Option 2
         - `text` (optional): Option 3...
+        **Example**: `r/poll your_question 4 option_1 option_2 option_3`
         """
 
         # Ensure duration is between 1 and 768 hours - Prevents errors
@@ -38,7 +39,9 @@ class Poll(commands.Cog):
 
         try:
             poll = discord.Poll(
-                question=question[:300], duration=duration, multiple=False
+                question=question[:300].replace("_", " "),
+                duration=duration,
+                multiple=False,
             )
             for opt in options:
                 opt = opt.replace("_", " ")
