@@ -420,7 +420,14 @@ class AITools:
             return "No emojis found"
 
     @tool
-    async def create_poll(self, ctx, question: str, options: list[str], duration: int = 1, multiple: bool = False):
+    async def create_poll(
+        self,
+        ctx,
+        question: str,
+        options: list[str],
+        duration: int = 1,
+        multiple: bool = False,
+    ):
         """
         Create a fully working poll in the current channel
         :param question: The question the poll should ask
@@ -440,11 +447,7 @@ class AITools:
                 return "Options must be a list of strings."
 
         try:
-            poll = discord.Poll(
-                question=question,
-                duration=duration,
-                multiple=multiple
-            )
+            poll = discord.Poll(question=question, duration=duration, multiple=multiple)
             for option in options:
                 poll.add_answer(text=option)
 
@@ -454,3 +457,22 @@ class AITools:
         except Exception as e:
             self.logger.error(f"Failed to create poll: {e}")
             return "Failed to create poll"
+
+    @tool
+    async def create_petition(self, ctx, text: str):
+        """
+        Create a fully working petition in the current channel
+        :param text: Required - Title of the petition
+        :return: Returns information on whether the petition was created successfully
+        """
+        if not text:
+            return "Please provide a title for the petition"
+
+        try:
+            cog = self.bot.get_cog("Petition")
+            await cog.create_petition(ctx, text)
+            return "Petition created successfully"
+
+        except Exception as e:
+            self.logger.error(f"Failed to create petition: {e}")
+            return "Failed to create petition"

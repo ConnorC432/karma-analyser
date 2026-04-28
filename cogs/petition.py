@@ -15,6 +15,12 @@ class Petition(commands.Cog):
         Create a petition
         - `text` (required): The petition text
         """
+        if not text:
+            return
+
+        await self.create_petition(ctx, text)
+
+    async def create_petition(self, ctx, text):
         try:
             reply = await ctx.message.reply(
                 content=f"# {text}", file=discord.File("./petition.gif")
