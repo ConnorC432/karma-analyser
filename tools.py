@@ -13,6 +13,7 @@ import aiohttp
 import discord
 import regex
 from bs4 import BeautifulSoup
+from json_repair import repair_json
 from ollama import Client
 
 import utils
@@ -53,6 +54,16 @@ REDDIQUETTE = (
     "⦁ Insult others. Insults do not contribute to a rational discussion. Constructive Criticism, however, is appropriate and encouraged. \n"
     "⦁ Troll. Trolling does not contribute to the conversation. \n"
     "⦁ Take moderation positions in a community where your profession, employment, or biases could pose a direct conflict of interest to the neutral and user driven nature of Reddit. \n"
+)
+
+JSON_PATTERN = regex.compile(
+    r"""
+        (
+            \{ (?: [^{}]++ | (?R) )* \}
+          | \[ (?: [^\[\]]++ | (?R) )* \]
+        )
+    """,
+    regex.VERBOSE,
 )
 
 
@@ -165,32 +176,38 @@ class AITools:
 
             tool_calls = response.message.tool_calls or []
 
-            json_pattern = regex.compile(
-                r"""
-                    (
-                        \{ (?: [^{}]++ | (?R) )* \}
-                      | \[ (?: [^\[\]]++ | (?R) )* \]
-                    )
-                """,
-                regex.VERBOSE,
-            )
+            try:
+                # First try JSON Repair
+                repaired = repair_json(response.message.content)
+                data = json.loads(repaired)
 
-            for j in json_pattern.findall(response.message.content):
-                try:
-                    data = json.loads(j)
-                    if (
-                        isinstance(data, dict)
-                        and data.get("type") == "function"
-                        and "function" in data
-                    ):
-                        tool_calls.append(data)
-                except JSONDecodeError:
-                    self.logger.exception("Failed to decode JSON from response")
-                    continue
+                if isinstance(data, dict):
+                    data = [data]
+                elif not isinstance(data, list):
+                    data = []
+
+                for item in data:
+                    if isinstance(item, dict):
+                        if item.get("type") == "function" and "function" in item:
+                            tool_calls.append(item)
+
+            except Exception:
+                self.logger.exception("Failed to repair JSON")
+                # Backup JSON parsing
+                for j in JSON_PATTERN.findall(response.message.content):
+                    try:
+                        data = json.loads(j)
+                        if (
+                            isinstance(data, dict)
+                            and data.get("type") == "function"
+                            and "function" in data
+                        ):
+                            tool_calls.append(data)
+                    except JSONDecodeError:
+                        self.logger.exception("Failed to parse JSON")
+                        continue
 
             if tool_calls:
-                # self.logger.debug(f"TOOL CALLS: {tool_calls}")
-
                 for call in tool_calls:
                     if isinstance(call, dict):
                         if "function" not in call:
@@ -233,14 +250,18 @@ class AITools:
                         self.logger.debug(f"TOOL RESULT: {result}")
 
                         messages.append(
-                            {"role": "tool", "name": function, "content": str(result)}
+                            {
+                                "role": "tool",
+                                "name": function.__name__,
+                                "content": str(result),
+                            }
                         )
 
                     else:
                         messages.append(
                             {
                                 "role": "tool",
-                                "name": function,
+                                "name": function.__name__,
                                 "content": "Tool doesn't exist",
                             }
                         )
@@ -248,12 +269,14 @@ class AITools:
                 continue
 
             # Response Post-Processing
-            reply = json_pattern.sub("", response.message.content).strip()
+            reply = JSON_PATTERN.sub("", response.message.content).strip()
 
             # Fall back to response generation without tools if response is empty
             if reply == "":
                 response = await asyncio.to_thread(
-                    self.client.chat, model=self.model, messages=original_messages
+                    self.client.chat,
+                    model=self.model,
+                    messages=original_messages,
                 )
                 self.logger.warning("FALLING BACK TO NON-TOOL RESPONSE")
                 reply = response.message.content
