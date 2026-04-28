@@ -221,9 +221,9 @@ class AITools:
             # server, user and ctx should be invisible to Ollama to restrict its tool usage to the context in which it is called
             for param in sig.parameters.values():
                 if param.name == "server":
-                    kwargs[param.name] = ctx.guild
+                    kwargs[param.name] = ctx.guild.id
                 elif param.name == "user":
-                    kwargs[param.name] = args.get("user") or ctx.author
+                    kwargs[param.name] = args.get("user") or ctx.author.id
                 elif param.name == "ctx":
                     kwargs[param.name] = args.get("user") or ctx
                 elif param.name in args:
