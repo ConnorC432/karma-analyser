@@ -449,12 +449,16 @@ class AITools:
     ):
         """
         Create a fully working poll in the current channel
-        :param question: The question the poll should ask
-        :param duration: How long the poll should last in hours (1 = 1 hour) (max 768 hours)
-        :param multiple: True if the poll should allow multiple answers, false otherwise
-        :param options: A list of options for the poll - at least 2 required
+        :param question: Required - The question the poll should ask
+        :param duration: How long the poll should last in hours (1 = 1 hour) (max 768 hours) Default: 1 hour
+        :param multiple: True if the poll should allow multiple answers, false otherwise - Default: False
+        :param options: Required - A list of options for the poll - at least 2 required
         :return: Returns information on whether the poll was created successfully
         """
+        for arg in [question, options, duration]:
+            if not arg:
+                return "Please provide a valid question, options, and duration value"
+
         duration = round(int(duration))
         duration = max(1, min(duration, 768))
         duration = timedelta(hours=duration)
