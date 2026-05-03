@@ -103,9 +103,9 @@ async def load_extensions():
         cogs_to_load = [f"cogs.{cog}" for cog in args.c]
     else:
         cogs_to_load = [
-            f"cogs.{path.stem}"
-            for path in Path("./cogs").iterdir()
-            if path.suffix == ".py" and not path.name.startswith("_")
+            ".".join(path.with_suffix("").parts)
+            for path in Path("cogs").rglob("*.py")
+            if not path.name.startswith("_")
         ]
 
     if args.q:
