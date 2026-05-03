@@ -110,7 +110,7 @@ async def load_extensions():
 
     if args.q:
         logger.info("Skipping r/analyse cog...")
-        cogs_to_load.remove("cogs.analyse")
+        cogs_to_load.remove("cogs.karmic.analyse")
 
     loaded_count = 0
     failed_count = 0
