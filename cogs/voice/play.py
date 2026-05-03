@@ -7,6 +7,7 @@ import yt_dlp
 from discord.ext import commands
 
 import utils
+import voiceclient
 
 
 ## TODO playlist playback
@@ -101,25 +102,13 @@ class MusicControls(discord.ui.View):
             self.logger.exception("Unexpected error in stop interaction")
 
 
-class MusicPlayer:
-    """
-    Music Player class to allow for server independent voice clients/song queues
-    """
-
+class MusicPlayer(voiceclient.VoiceClient):
     def __init__(self, bot: commands.Bot, guild: discord.Guild):
-        self.bot = bot
-        self.logger = logging.getLogger(f"{self.__class__.__name__}")
+        super().__init__(bot, guild)
 
-        self.guild = guild
         self.queue = asyncio.Queue()
         self.current = None
-        self.voice_client = None
         self.play_next_event = asyncio.Event()
-
-        self.ffmpeg_opts = {
-            "before_options": "-reconnect 1 -reconnect_streamed 1 -reconnect_delay_max 5",
-            "options": "-vn",
-        }
 
         self.loop_task = bot.loop.create_task(self._player_loop())
 
@@ -211,23 +200,11 @@ class MusicPlayer:
                 self.logger.exception("Failed to send error reply during song playback")
             self.logger.exception("Unexpected error starting next song")
 
-    async def _join_vc(self, ctx):
-        channel = ctx.author.voice.channel
-
-        if self.voice_client and self.voice_client.is_connected():
-            if self.voice_client.channel != channel:
-                await self.voice_client.move_to(channel)
-
-        else:
-            self.voice_client = await channel.connect()
-
 
 class Play(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
         self.logger = logging.getLogger(f"{self.__class__.__name__}")
-
-        self.players: dict[int, MusicPlayer] = {}
 
     def _get_music_player(self, guild: discord.Guild) -> MusicPlayer:
         """
@@ -235,10 +212,10 @@ class Play(commands.Cog):
         :param guild:
         :return:
         """
-        if guild.id not in self.players:
-            self.players[guild.id] = MusicPlayer(self.bot, guild)
+        if guild.id not in voiceclient.VOICE_CLIENTS:
+            voiceclient.VOICE_CLIENTS[guild.id] = MusicPlayer(self.bot, guild)
 
-        return self.players[guild.id]
+        return voiceclient.VOICE_CLIENTS[guild.id]
 
     async def _search_youtube(self, query: str):
         """
