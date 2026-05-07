@@ -33,6 +33,7 @@ class AskLocky(AskCog):
             "locky",
             system_instructions,
             valid_server_ids=utils.VALID_SERVER_IDS_1,
+            model="artifish/llama3.2-uncensored:latest",
         )
 
     @commands.command(hidden=True)
