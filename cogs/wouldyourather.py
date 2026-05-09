@@ -91,6 +91,7 @@ QUESTIONS = [
     "'Win' Soggy Biscuit",
 ]
 
+
 class WouldYouRather(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
@@ -104,7 +105,7 @@ class WouldYouRather(commands.Cog):
 
         if ctx.guild.id in utils.VALID_SERVER_IDS_1:
             poll = discord.Poll(
-                question=f"Would you rather:",
+                question="Would you rather:",
                 duration=timedelta(hours=1),
                 multiple=False,
             )
@@ -117,11 +118,13 @@ class WouldYouRather(commands.Cog):
             poll.add_answer(text=option_a)
             poll.add_answer(text=option_b)
 
-            self.logger.debug(f"Would you rather poll created: {option_a} or {option_b}")
+            self.logger.debug(
+                f"Would you rather poll created: {option_a} or {option_b}"
+            )
 
             await ctx.reply(poll=poll)
 
-        self.logger.debug(f"WYR command ignored")
+        self.logger.debug("WYR command ignored")
         return
 
 
