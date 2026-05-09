@@ -178,10 +178,10 @@ class WouldYouRather(commands.Cog):
         The poll will last for 1 hour
         """
 
+        questions = QUESTIONS_1
+
         if ctx.guild.id in utils.VALID_SERVER_IDS_1:
-            questions = QUESTIONS_1 + QUESTIONS_2
-        else:
-            questions = QUESTIONS_1
+            questions += QUESTIONS_2
 
         poll = discord.Poll(
             question="Would you rather:",
