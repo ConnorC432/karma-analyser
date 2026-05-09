@@ -1,10 +1,11 @@
 import logging
 
 import discord
-from discord.ext import commands
+from discord.ext import commands, voice_recv
 
 
 VOICE_CLIENTS = {}
+
 
 class VoiceClient:
     """
@@ -28,7 +29,9 @@ class VoiceClient:
 
         if self.voice_client and self.voice_client.is_connected():
             if self.voice_client.channel != channel:
-                await self.voice_client.move_to(channel)
+                self.voice_client = await channel.connect(
+                    cls=voice_recv.VoiceRecvClient
+                )
 
         else:
             self.voice_client = await channel.connect()

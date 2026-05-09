@@ -8,5 +8,6 @@ services:
       KLIPY_KEY: "${KLIPY_KEY}"
       OLLAMA_ENDPOINT: "${OLLAMA_ENDPOINT}"
       SEARXNG_ENDPOINT: "${SEARXNG_ENDPOINT}"
+      ELEVENLABS_KEY: "${ELEVENLABS_KEY}"
     volumes:
       - ./cookies.txt:/app/cookies.txt:ro
