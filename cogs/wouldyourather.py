@@ -140,6 +140,8 @@ QUESTIONS = [
     "Petril",
     "Play Dead by Daylight",
     "Goon to Hotel Chocolat",
+    "Wash your clothes but only with fabric softener",
+    "Polish your forehead",
 ]
 
 
