@@ -54,6 +54,10 @@ QUESTIONS_1 = [
     "Watch Stranger Things",
     "Fight a Demogorgon",
     "Collect Funko pops",
+    "Get punched in the mouth",
+    "Shit in your hands and clap",
+    "Play a game of chess",
+    "Play Dark Souls",
 ]
 
 QUESTIONS_2 = [
@@ -144,6 +148,21 @@ QUESTIONS_2 = [
     "Goon to Hotel Chocolat",
     "Wash your clothes but only with fabric softener",
     "Polish your forehead",
+    "Spank ben",
+    "Pussy Wagon, Chicken Nugget",
+    "Work for EasyJet",
+    "Work for RyanAir",
+    "Strum your lute",
+    "Hit the Sea Lion",
+    "Eat a cold and soggy MrBeast Burger",
+    "Clap Ben's cheeks",
+    "Suckle on Jeff Bezos' bollocks",
+    "Rub Elon Musk's big toe",
+    "Play Assassins creed on a keyboard",
+    "Play Futa Runner",
+    "Stroke your keyboard",
+    "Subscribe to Razer Software",
+    "Own nothing and be happy",
 ]
 
 
@@ -156,6 +175,7 @@ class WouldYouRather(commands.Cog):
     async def wouldyourather(self, ctx):
         """
         Create a would you rather question
+        The poll will last for 1 hour
         """
 
         if ctx.guild.id in utils.VALID_SERVER_IDS_1:
