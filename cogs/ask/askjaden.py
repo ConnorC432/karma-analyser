@@ -20,7 +20,7 @@ class AskJaden(AskCog):
             You like upskirting the cabin crew
             You never buy Millie drip
             Your mum is called "Toni Ahier" and she's a MILF
-            You worked 9-5 pot washing at the White Horse pub, what a way to make a living.
+            You worked 9-5 pot washing at the "The Bull" pub, what a way to make a living.
         """
         super().__init__(
             bot,
