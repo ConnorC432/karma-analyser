@@ -197,9 +197,7 @@ class WouldYouRather(commands.Cog):
         poll.add_answer(text=option_a)
         poll.add_answer(text=option_b)
 
-        self.logger.debug(
-            f"Would you rather poll created: {option_a} or {option_b}"
-        )
+        self.logger.debug(f"Would you rather poll created: {option_a} or {option_b}")
 
         await ctx.reply(poll=poll)
 
