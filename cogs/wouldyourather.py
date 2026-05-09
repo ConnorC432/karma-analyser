@@ -58,6 +58,8 @@ QUESTIONS_1 = [
     "Shit in your hands and clap",
     "Play a game of chess",
     "Play Dark Souls",
+    "Chew on a cockroach",
+    "Catch Hantavirus",
 ]
 
 QUESTIONS_2 = [
@@ -163,6 +165,12 @@ QUESTIONS_2 = [
     "Stroke your keyboard",
     "Subscribe to Razer Software",
     "Own nothing and be happy",
+    "Eat a schnitzel stick",
+    "Wait for GTA 6",
+    "Be French",
+    "Nothing",
+    "Fill a river with starving and invasive leeches",
+    "",
 ]
 
 
