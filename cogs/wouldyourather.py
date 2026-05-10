@@ -71,7 +71,7 @@ QUESTIONS_2 = [
     "Get in a plane when Jaden is the pilot",
     "Move to Mongoria",
     "Wear a slug outfit near chandy",
-    "Order a Cheng's garden then just get a dominoes delivered instead of picking it up",
+    "Order a Cheng's garden then get a dominos instead",
     "Shove a pencil up your arse",
     "Clog Taz's toilet",
     "Finger your bum",
@@ -114,7 +114,7 @@ QUESTIONS_2 = [
     "'Lose' Soggy Biscuit",
     "'Win' Soggy Biscuit",
     "Never play Jackbox again",
-    "Live in the white and blue striped house on Little St James",
+    "Live in the white & blue house on Little St James",
     "Work in a sports bar",
     "Live in a universe without food trucks",
     "Sprinkle nob cheese over your pasta",
@@ -129,7 +129,7 @@ QUESTIONS_2 = [
     "Eat the nut crust off your goon sock",
     "Be an extra on 'Ullraisers",
     "Clean your butt crust off",
-    "Adapt an Israeli TV Show, and set it in Hull for some reason I guess",
+    "Adapt an Israeli TV Show, and set it in Hull",
     "Go to the pub with Wayne Derry",
     "Teach Wayne how to read",
     "Give bad comms",
@@ -137,7 +137,7 @@ QUESTIONS_2 = [
     "Miss GTA and that",
     "Put a piece of rolled up cloth in your vest",
     "Buy more friendslop",
-    "Have a plague doctor sniff your bumhole with that big ass nose",
+    "Have a plague doctor sniff your bumhole",
     "Replace 4 road wheels on your tiger tank",
     "Tear people's tarmac up with your tank",
     "Get creampied by Colin Nobinson",
@@ -215,4 +215,8 @@ async def setup(bot):
 
 
 if __name__ == "__main__":
-    print(len(QUESTIONS_1 + QUESTIONS_2))
+    questions = QUESTIONS_1 + QUESTIONS_2
+    print(f"number of questions: {len(questions)}")
+    for question in questions:
+        if len(question) > 55:
+            print(f"question too long: {question}")
