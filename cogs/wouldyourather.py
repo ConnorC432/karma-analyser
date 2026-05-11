@@ -170,7 +170,6 @@ QUESTIONS_2 = [
     "Be French",
     "Nothing",
     "Fill a river with starving and invasive leeches",
-    "",
 ]
 
 
