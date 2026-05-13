@@ -37,20 +37,19 @@ verify:
 
 build-and-push:
   stage: build
-  image: docker:24.0.5
-  services:
-    - docker:24.0.5-dind
+  image:
+    name: gcr.io/kaniko-project/executor:debug
+    entrypoint: [""]
   needs: ["secret_detection", "verify"]
-  variables:
-    DOCKER_TLS_CERTDIR: "/certs"
-  before_script:
-    - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
   script:
+    - mkdir -p /kaniko/.docker
     - |
-      docker build -t $CI_REGISTRY_IMAGE:latest .
-      docker tag $CI_REGISTRY_IMAGE:latest $CI_REGISTRY_IMAGE:$CI_COMMIT_SHA
-      docker push $CI_REGISTRY_IMAGE:latest
-      docker push $CI_REGISTRY_IMAGE:$CI_COMMIT_SHA
+      echo "{\"auths\":{\"$CI_REGISTRY\":{\"username\":\"$CI_REGISTRY_USER\",\"password\":\"$CI_REGISTRY_PASSWORD\"}}}" > /kaniko/.docker/config.json
+    - /kaniko/executor
+      --context "$CI_PROJECT_DIR"
+      --dockerfile "$CI_PROJECT_DIR/Dockerfile"
+      --destination "$CI_REGISTRY_IMAGE:latest"
+      --destination "$CI_REGISTRY_IMAGE:$CI_COMMIT_SHA"
   rules:
     - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
     - if: $CI_PIPELINE_SOURCE == "merge_request_event"
