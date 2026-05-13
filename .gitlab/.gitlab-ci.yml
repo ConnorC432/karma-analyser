@@ -1,0 +1,56 @@
+stages:
+  - security
+  - lint
+  - verify
+  - build
+
+include:
+  - template: Jobs/Secret-Detection.gitlab-ci.yml
+
+secret_detection:
+  stage: security
+  variables:
+    SECRET_DETECTION_EXCLUDED_PATHS: ""
+
+lint:
+  stage: lint
+  image: python:3.12
+  before_script:
+    - pip install ruff
+  script:
+    - ruff check .
+    - ruff format --check --diff .
+
+verify:
+  stage: verify
+  image: python:3.12
+  needs: ["lint"]
+  before_script:
+    - python -m pip install --upgrade pip
+    - pip install -r requirements.txt
+  script:
+    - python bot.py -t
+  variables:
+    BOT_TOKEN: "test"
+    OLLAMA_ENDPOINT: "test"
+    SEARXNG_ENDPOINT: "test"
+
+build-and-push:
+  stage: build
+  image: docker:24.0.5
+  services:
+    - docker:24.0.5-dind
+  needs: ["secret_detection", "verify"]
+  variables:
+    DOCKER_TLS_CERTDIR: "/certs"
+  before_script:
+    - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
+  script:
+    - |
+      docker build -t $CI_REGISTRY_IMAGE:latest .
+      docker tag $CI_REGISTRY_IMAGE:latest $CI_REGISTRY_IMAGE:$CI_COMMIT_SHA
+      docker push $CI_REGISTRY_IMAGE:latest
+      docker push $CI_REGISTRY_IMAGE:$CI_COMMIT_SHA
+  rules:
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
