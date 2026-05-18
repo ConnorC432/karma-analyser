@@ -445,7 +445,7 @@ class Analyse(commands.Cog):
 
             misc_cog = self.bot.get_cog("Misc")
             if misc_cog:
-                await misc_cog._change_status()
+                await misc_cog.change_status()
 
 
 async def setup(bot):

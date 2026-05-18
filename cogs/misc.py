@@ -182,7 +182,7 @@ class Misc(commands.Cog):
         await ctx.reply("Thank you kind stranger!")
 
     @tasks.loop(minutes=15)
-    async def _change_status(self):
+    async def change_status(self):
         try:
             activity_type, activity_text = random.choice(activities)
             self.logger.info(f"CHANGED STATUS: {activity_text}")
@@ -191,7 +191,7 @@ class Misc(commands.Cog):
         except Exception:
             self.logger.exception("Unexpected error in _change_status loop")
 
-    @_change_status.before_loop
+    @change_status.before_loop
     async def before_change_status(self):
         await self.bot.wait_until_ready()
         if not self.bot.get_cog("Analyse"):
@@ -214,4 +214,4 @@ class Misc(commands.Cog):
 async def setup(bot):
     cog = Misc(bot)
     await bot.add_cog(cog)
-    cog._change_status.start()
+    cog.change_status.start()
