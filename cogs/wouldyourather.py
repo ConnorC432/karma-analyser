@@ -170,6 +170,8 @@ QUESTIONS_2 = [
     "Be French",
     "Nothing",
     "Fill a river with starving and invasive leeches",
+    "Waffle stomp in your shower",
+    "Get a dessert ubered after salt and pepper club",
 ]
 
 
