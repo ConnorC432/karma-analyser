@@ -6,7 +6,6 @@ from typing import Any, TypeAlias
 import discord
 import yt_dlp
 from discord.ext import commands
-from yt_dlp.networking import impersonate
 
 import utils
 
