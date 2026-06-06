@@ -172,6 +172,8 @@ QUESTIONS_2 = [
     "Fill a river with starving and invasive leeches",
     "Waffle stomp in your shower",
     "Get a dessert ubered after salt and pepper club",
+    "Have a scrap down big park",
+    "Get in a bare knuckle at the White Horse"
 ]
 
 
