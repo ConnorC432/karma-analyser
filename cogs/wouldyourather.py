@@ -173,7 +173,10 @@ QUESTIONS_2 = [
     "Waffle stomp in your shower",
     "Get a dessert ubered after salt and pepper club",
     "Have a scrap down big park",
-    "Get in a bare knuckle at the White Horse"
+    "Get in a bare knuckle at the White Horse",
+    "Have a private jet",
+    "Have a smelly sket",
+    "Have a smelly bum"
 ]
 
 
