@@ -176,7 +176,17 @@ QUESTIONS_2 = [
     "Get in a bare knuckle at the White Horse",
     "Have a private jet",
     "Have a smelly sket",
-    "Have a smelly bum"
+    "Have a smelly bum",
+    "Run the Sneakers O'Tool",
+    "Be fired from your job",
+    "Be a smelly ginger",
+    "Kick a ginger",
+    "Be ginger on the 5th of November",
+    "Steal undies",
+    "Do a 9/11",
+    "Drax them sklounst",
+    "Sit next to terries up in here",
+    "Sit in the combat seat"
 ]
 
 
