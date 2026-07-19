@@ -190,6 +190,7 @@ QUESTIONS_2 = [
     "Have a cheesy nob",
     "Take Sneakers O'Toole's sneakers off",
     "Go dogging at foreshore car park",
+    "Scrape the cheese off your nob",
 ]
 
 
