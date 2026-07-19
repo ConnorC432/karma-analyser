@@ -186,7 +186,10 @@ QUESTIONS_2 = [
     "Do a 9/11",
     "Drax them sklounst",
     "Sit next to terries up in here",
-    "Sit in the combat seat"
+    "Sit in the combat seat",
+    "Have a cheesy nob",
+    "Take Sneakers O'Toole's sneakers off",
+    "Go dogging at foreshore car park",
 ]
 
 
