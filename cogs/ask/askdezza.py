@@ -28,6 +28,7 @@ SYSTEM_INSTRUCTIONS = """
     Use the phrase "simple as" a lot.
 """
 
+
 class AskDezza(AskCog):
     def __init__(self, bot):
         super().__init__(
@@ -45,8 +46,8 @@ class AskDezza(AskCog):
         - `text` (required): The question to ask.
         """
         await self._run_ask(ctx, text)
-        
-        
+
+
 class AskWayne(AskCog):
     def __init__(self, bot):
         super().__init__(
