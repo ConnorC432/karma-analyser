@@ -35,8 +35,6 @@ jobs:
 
       - name: Lint
         uses: astral-sh/ruff-action@v3
-        with:
-          args: "check ."
 
       - name: Format
         uses: astral-sh/ruff-action@v3
