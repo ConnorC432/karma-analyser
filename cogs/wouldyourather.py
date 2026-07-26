@@ -60,6 +60,7 @@ QUESTIONS_1 = [
     "Play Dark Souls",
     "Chew on a cockroach",
     "Catch Hantavirus",
+    "Watch Disney+",
 ]
 
 QUESTIONS_2 = [
@@ -191,6 +192,7 @@ QUESTIONS_2 = [
     "Take Sneakers O'Toole's sneakers off",
     "Go dogging at foreshore car park",
     "Scrape the cheese off your nob",
+    "Sea of thieves nuts fit in your mouth",
 ]
 
 
