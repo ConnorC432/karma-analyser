@@ -14,7 +14,7 @@ import regex
 from ollama import Client
 
 import utils
-from utils import karma_lock, karmic_dict
+from utils import ai_memories, ai_memory_lock, karma_lock, karmic_dict
 
 
 REDDIQUETTE = """
@@ -617,14 +617,39 @@ class AITools:
     @tool
     async def set_user_memory(self, message, key: str, value):
         """
-        Set a user memory to a value that can be retrieved later.
+        Persist a user memory so it can be retrieved after the bot restarts.
         :param key: Key to store the value under
         :param value: Value to store - can be either a string or integer
         :return:
         """
         try:
-            async with self._acquire_karma_lock(karma_lock):
-                karmic_dict[message.guild.id][message.author.id][f"ai_{key}"] = value
+            async with self._acquire_karma_lock(ai_memory_lock):
+                guild_id = str(message.guild.id)
+                user_id = str(message.author.id)
+                guild_memories = ai_memories.setdefault(guild_id, {})
+                user_memories = guild_memories.setdefault(user_id, {})
+
+                had_previous_value = key in user_memories
+                previous_value = user_memories.get(key)
+                user_memories[key] = value
+
+                try:
+                    await asyncio.to_thread(utils.save_ai_memories, ai_memories)
+                except (OSError, TypeError, ValueError):
+                    if had_previous_value:
+                        user_memories[key] = previous_value
+                    else:
+                        user_memories.pop(key, None)
+                        if not user_memories:
+                            guild_memories.pop(user_id, None)
+                        if not guild_memories:
+                            ai_memories.pop(guild_id, None)
+
+                    self.logger.exception(
+                        "Failed to persist user memory for key: %s", key
+                    )
+                    return "User memory could not be saved. Please try again later."
+
                 self.logger.info(f"User memory set for key: {key} | Value: {value}")
                 return "User memory set successfully"
         except TimeoutError:
@@ -638,17 +663,18 @@ class AITools:
         :return: The value associated with the key, or a dictionary of all values if no key is provided
         """
         try:
-            async with self._acquire_karma_lock(karma_lock):
-                user_memory = karmic_dict[message.guild.id][message.author.id]
+            async with self._acquire_karma_lock(ai_memory_lock):
+                user_memory = ai_memories.get(str(message.guild.id), {}).get(
+                    str(message.author.id), {}
+                )
 
                 if not user_memory:
                     return "No user memory found"
 
                 if key:
-                    full_key = f"ai_{key}"
-                    if full_key in user_memory:
+                    if key in user_memory:
                         self.logger.info(f"User memory retrieved for key: {key}")
-                        return f"{user_memory[full_key]}"
+                        return f"{user_memory[key]}"
                     else:
                         return "Key not found"
 

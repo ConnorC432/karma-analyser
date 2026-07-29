@@ -1,8 +1,10 @@
 import asyncio
+import json
 import logging
 import os
 import random
 from collections import defaultdict
+from pathlib import Path
 
 import aiohttp
 import discord
@@ -32,6 +34,47 @@ VALID_SERVER_IDS_1 = [683033503834963978, 1361336155169226792, 11841818745920635
 
 karmic_dict = defaultdict(lambda: defaultdict(lambda: defaultdict(int)))
 karma_lock = asyncio.Lock()
+
+AI_MEMORY_DIR = Path(os.getenv("AI_MEMORY_DIR") or "data")
+AI_MEMORY_FILE = AI_MEMORY_DIR / "ai_memories.json"
+ai_memory_lock = asyncio.Lock()
+
+
+def load_ai_memories():
+    try:
+        with AI_MEMORY_FILE.open("r", encoding="utf-8") as file:
+            memories = json.load(file)
+    except FileNotFoundError:
+        return {}
+    except (OSError, json.JSONDecodeError):
+        logger.exception("Failed to load AI memories from %s", AI_MEMORY_FILE)
+        return {}
+
+    if not isinstance(memories, dict):
+        logger.error("Ignoring invalid AI memory data in %s", AI_MEMORY_FILE)
+        return {}
+
+    logger.info("Loaded AI memories from %s", AI_MEMORY_FILE)
+    return memories
+
+
+def save_ai_memories(memories):
+    AI_MEMORY_DIR.mkdir(parents=True, exist_ok=True)
+    temporary_file = AI_MEMORY_FILE.with_suffix(".json.tmp")
+
+    try:
+        with temporary_file.open("w", encoding="utf-8") as file:
+            json.dump(memories, file, indent=2, sort_keys=True)
+            file.flush()
+            os.fsync(file.fileno())
+
+        temporary_file.replace(AI_MEMORY_FILE)
+    except Exception:
+        temporary_file.unlink(missing_ok=True)
+        raise
+
+
+ai_memories = load_ai_memories()
 
 
 async def gif_search(query: str):
