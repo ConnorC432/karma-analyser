@@ -4,6 +4,6 @@ beautifulsoup4==4.14.3
 discord.py[voice]~=2.7.1
 ollama==0.6.1
 regex~=2026.4.4
-yt-dlp~=2026.3.17
+yt-dlp~=2026.8.19
 discord-ext-voice-recv~=0.5.2a179
 elevenlabs~=2.45.0

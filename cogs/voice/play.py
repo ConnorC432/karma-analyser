@@ -29,7 +29,6 @@ YTDL_OPTIONS = {
     # Deno JS runtime
     "extractor_args": {
         "youtube": {
-            "player_client": ["web"],
             "player_skip": [],
         },
         "generic": {
