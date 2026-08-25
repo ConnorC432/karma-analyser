@@ -1,5 +1,6 @@
 import asyncio
 import logging
+import shlex
 from pathlib import Path
 from typing import Any, TypeAlias
 
@@ -205,7 +206,18 @@ class MusicPlayer:
             self.logger.exception("Unexpected error starting next song")
 
     def _play_audio(self, song_info: SongInfo) -> None:
-        source = discord.FFmpegPCMAudio(song_info["url"], **FFMPEG_OPTIONS)
+        ffmpeg_options = {**FFMPEG_OPTIONS}
+        http_headers = song_info.get("http_headers", {})
+
+        if http_headers:
+            headers = "\r\n".join(
+                f"{name}: {value}" for name, value in http_headers.items()
+            )
+            ffmpeg_options["before_options"] = (
+                f"{ffmpeg_options['before_options']} -headers {shlex.quote(headers)}"
+            )
+
+        source = discord.FFmpegPCMAudio(song_info["url"], **ffmpeg_options)
 
         self.play_next_event.clear()
         self.voice_client.play(
