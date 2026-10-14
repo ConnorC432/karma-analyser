@@ -218,17 +218,19 @@ class Analyse(commands.Cog):
             guild_id = payload.guild_id
             author_id = payload.message_author_id
 
+            modifier = 1 if add else -1
+
             # Add or remove karma and reaction counts
-            karmic_dict[guild_id][author_id][payload.emoji.name] += 1
-            karmic_dict[guild_id][author_id]["Karma"] += reaction_dict[
-                payload.emoji.name
-            ]
+            karmic_dict[guild_id][author_id][payload.emoji.name] += modifier
+            karmic_dict[guild_id][author_id]["Karma"] += (
+                reaction_dict[payload.emoji.name] * modifier
+            )
 
             # Count Reactions given
-            karmic_dict[guild_id][user.id][f"{payload.emoji.name}_given"] += 1
-            karmic_dict[guild_id][user.id]["Karma_given"] += reaction_dict[
-                payload.emoji.name
-            ]
+            karmic_dict[guild_id][user.id][f"{payload.emoji.name}_given"] += modifier
+            karmic_dict[guild_id][user.id]["Karma_given"] += (
+                reaction_dict[payload.emoji.name] * modifier
+            )
 
             if karmic_dict[guild_id][author_id]["Karma"] in KARMIC_MILESTONE:
                 if (
