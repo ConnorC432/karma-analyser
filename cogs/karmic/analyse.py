@@ -174,8 +174,10 @@ class Analyse(commands.Cog):
                     ]
 
                     # Count Reactions given
-                    karmic_dict[guild.id][user.id][emoji_name] += 1
-                    karmic_dict[guild.id][user.id]["Karma"] += reaction_dict[emoji_name]
+                    karmic_dict[guild.id][user.id][f"{emoji_name}_given"] += 1
+                    karmic_dict[guild.id][user.id]["Karma_given"] += reaction_dict[
+                        emoji_name
+                    ]
 
             except discord.HTTPException:
                 self.logger.exception(
@@ -219,6 +221,12 @@ class Analyse(commands.Cog):
             # Add or remove karma and reaction counts
             karmic_dict[guild_id][author_id][payload.emoji.name] += 1
             karmic_dict[guild_id][author_id]["Karma"] += reaction_dict[
+                payload.emoji.name
+            ]
+
+            # Count Reactions given
+            karmic_dict[guild_id][user.id][f"{payload.emoji.name}_given"] += 1
+            karmic_dict[guild_id][user.id]["Karma_given"] += reaction_dict[
                 payload.emoji.name
             ]
 
@@ -335,6 +343,9 @@ class Analyse(commands.Cog):
                 karma_ratio = karma / messages if messages != 0 else 0
                 karma_str = UPVOTE_STR if karma >= 0 else DOWNVOTE_STR
 
+                karma_given = user_data["Karma_given"]
+                karma_given_str = UPVOTE_STR if karma_given >= 0 else DOWNVOTE_STR
+
                 # Create Karmic analysis embed for each user
                 embed = discord.Embed(
                     title=f"{user_str}",
@@ -356,25 +367,32 @@ class Analyse(commands.Cog):
                     ),
                     ("Helpful", f"{user_data['helpful']} {HELPFUL_STR}", True),
                     ("Trukes", f"{user_data['truke']} {TRUKE_STR}", True),
-                    ("Karma_given", f"{karma} {karma_str}", False),
+                    ("Karma given", f"{karma_given} {karma_given_str}", False),
                     (
-                        "Silver_given",
-                        f"{user_data['reddit_silver']} {SILVER_STR}",
-                        True,
-                    ),
-                    ("Gold_given", f"{user_data['reddit_gold']} {GOLD_STR}", True),
-                    (
-                        "Platinum_given",
-                        f"{user_data['reddit_platinum']} {PLAT_STR}",
+                        "Silver given",
+                        f"{user_data['reddit_silver_given']} {SILVER_STR}",
                         True,
                     ),
                     (
-                        "Wholesome_given",
-                        f"{user_data['reddit_wholesome']} {WHOLESOME_STR}",
+                        "Gold given",
+                        f"{user_data['reddit_gold_given']} {GOLD_STR}",
                         True,
                     ),
-                    ("Helpful_given", f"{user_data['helpful']} {HELPFUL_STR}", True),
-                    ("Trukes_given", f"{user_data['truke']} {TRUKE_STR}", True),
+                    (
+                        "Platinum given",
+                        f"{user_data['reddit_platinum_given']} {PLAT_STR}",
+                        True,
+                    ),
+                    (
+                        "Wholesome given",
+                        f"{user_data['reddit_wholesome_given']} {WHOLESOME_STR}",
+                        True,
+                    ),
+                    (
+                        "Helpful given",
+                        f"{user_data['helpful_given']} {HELPFUL_STR}",
+                        True,
+                    ),
                 ]
 
                 for name, value, inline in fields:
