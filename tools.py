@@ -166,7 +166,12 @@ class AITools:
         }
 
     async def ollama_response(
-        self, message, system_instructions, messages, model: str | None = None
+        self,
+        message,
+        system_instructions,
+        messages,
+        model: str | None = None,
+        use_tools: bool = True,
     ) -> str | None:
         """
         Generates an AI response using the ollama API.
@@ -175,6 +180,7 @@ class AITools:
         :param server: Server ID the chat is taking place in
         :param user: user.name who triggered the request
         :param model: Optional - model to use for text generation
+        :param use_tools: Whether to allow the model to make tool calls
         :return: AI response string
         """
         if model is None:
@@ -192,7 +198,7 @@ class AITools:
                     self.client.chat,
                     model=model,
                     messages=[system_instructions] + list(messages),
-                    tools=self.tool_definitions,
+                    tools=self.tool_definitions if use_tools else None,
                 )
             except Exception:
                 self.logger.exception(f"Error calling Ollama API for model {model}")

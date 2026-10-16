@@ -20,6 +20,7 @@ class AskCog(commands.Cog):
         system_instructions,
         valid_server_ids=None,
         model=None,
+        tools_enabled=False,
     ):
         """
         :param bot: Discord bot object
@@ -27,6 +28,7 @@ class AskCog(commands.Cog):
         :param system_instructions: System instructions for the askbot
         :param valid_server_ids: Optional server ID(s) for which the askbot will be limited to
         :param model: Optional model name for the askbot
+        :param tools_enabled: Whether this askbot is allowed to use AI tools
         """
         self.bot = bot
         self.logger = logging.getLogger(self.__class__.__name__)
@@ -37,6 +39,7 @@ class AskCog(commands.Cog):
             self.valid_server_ids = [self.valid_server_ids]
         self.tools = AITools(self.bot)
         self.model = model or self.tools.model
+        self.tools_enabled = tools_enabled
         self.message_cache = OrderedDict()
         self.cache_size = 1000
 
@@ -84,6 +87,7 @@ class AskCog(commands.Cog):
                 }
             ],
             model=self.model,
+            use_tools=self.tools_enabled,
         )
 
         await self._handle_response(response, ctx)
@@ -127,6 +131,7 @@ class AskCog(commands.Cog):
             system_instructions=self.system_instructions,
             messages=messages,
             model=self.model,
+            use_tools=self.tools_enabled,
         )
 
         await self._handle_response(response, message)
