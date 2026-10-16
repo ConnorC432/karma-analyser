@@ -12,6 +12,7 @@ class AskReddit(AskCog):
             bot,
             "reddit",
             system_instructions,
+            tools_enabled=True,
         )
 
     @commands.command(hidden=True)
