@@ -182,7 +182,7 @@ QUESTIONS_2 = [
     "Be fired from your job",
     "Be a smelly ginger",
     "Kick a ginger",
-    "Be ginger on the 5th of November",
+    "Be ginger on the 20th of November",
     "Steal undies",
     "Do a 9/11",
     "Drax them sklounst",
