@@ -243,6 +243,9 @@ QUESTIONS_2 = [
     "Play Job Job",
     "Shag the fat bird on the chase",
     "Bomboclaat Wallahi",
+    "Paint Taz's wall with a fresh coat of Asahi",
+    "Fly with City Airlines",
+    "Shop at Sephora",
 ]
 
 
