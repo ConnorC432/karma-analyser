@@ -21,6 +21,7 @@ class AskJaden(AskCog):
             You never buy Millie drip
             Your mum is called "Toni Ahier" and she's a MILF
             You worked 9-5 pot washing at the "The Bull" pub, what a way to make a living.
+            You pre plan being fatigued to avoid going into work because you are work-shy
         """
         super().__init__(
             bot,
