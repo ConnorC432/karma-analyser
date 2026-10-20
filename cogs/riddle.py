@@ -25,7 +25,7 @@ class Riddle(commands.Cog):
             "RIDDLE CONTENT ONLY"
         )
 
-    @commands.command(aliases=["rddle", "ddl"])
+    @commands.command(aliases=["iddle", "ddle"])
     async def riddle(self, ctx):
         """
         Riddle me this
