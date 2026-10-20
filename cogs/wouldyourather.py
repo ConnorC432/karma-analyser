@@ -255,11 +255,16 @@ class WouldYouRather(commands.Cog):
         self.logger = logging.getLogger(self.__class__.__name__)
 
     @commands.command(aliases=["wyr"])
-    async def wouldyourather(self, ctx):
+    async def wouldyourather(self, ctx, num_questions: int = 2):
         """
         Create a would you rather question
         The poll will last for 1 hour
+        An optional number of options (2-10) can be provided, e.g. !wyr 4
         """
+
+        if num_questions < 2 or num_questions > 10:
+            await ctx.reply("The number of options must be between 2 and 10.")
+            return
 
         questions = QUESTIONS_1
 
@@ -272,15 +277,12 @@ class WouldYouRather(commands.Cog):
             multiple=False,
         )
 
-        option_a = random.choice(questions)
-        option_b = random.choice(questions)
-        while option_a == option_b:
-            option_b = random.choice(questions)
+        options = random.sample(questions, num_questions)
 
-        poll.add_answer(text=option_a)
-        poll.add_answer(text=option_b)
+        for option in options:
+            poll.add_answer(text=option)
 
-        self.logger.debug(f"Would you rather poll created: {option_a} or {option_b}")
+        self.logger.debug(f"Would you rather poll created: {', '.join(options)}")
 
         await ctx.reply(poll=poll)
 
