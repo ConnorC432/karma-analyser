@@ -65,6 +65,11 @@ QUESTIONS_1 = [
     "Play the Jackbox Naughty Pack",
     "Play Death Stranding",
     "Play D&D",
+    "Order a small dominoes",
+    "Order a large dominoes",
+    "I Don't Know",
+    "Shrug",
+    "No",
 ]
 
 QUESTIONS_2 = [
@@ -76,7 +81,7 @@ QUESTIONS_2 = [
     "Get in a plane when Jaden is the pilot",
     "Move to Mongoria",
     "Wear a slug outfit near chandy",
-    "Order a Cheng's garden then get a dominos instead",
+    "Order a Cheng's garden then get a dominoes instead",
     "Shove a pencil up your arse",
     "Clog Taz's toilet",
     "Finger your bum",
@@ -246,6 +251,35 @@ QUESTIONS_2 = [
     "Paint Taz's wall with a fresh coat of Asahi",
     "Fly with City Airlines",
     "Shop at Sephora",
+    "Go Cyberpsycho",
+    "Go to the moon",
+    "Play WoW Forever",
+    "Play WoW Retail",
+    "Play WoW Classic",
+    "Goon to futa",
+    "Give an ogre a rimmy",
+    "Subscribe to Toni's onlyfans",
+    "Fly a carpet over Israel",
+    "Pull Japanese birds at a Buddhist temple",
+    "Join the Taliban",
+    "Rename South Park to South America",
+    "Fight Randy Marsh",
+    "Eat a sausage sandwich on a saturday morning",
+    "Be one of Genghis Khan's offspring",
+    "Eat a gravyless pie",
+    "Be one of Henry VIII's wives",
+    "Have a poo without scrolling reels",
+    "Own a BMW 116i",
+    "Live in Kazakhstan",
+    "Puppet the Pope",
+    "Be squashed by Adam Smasher",
+    "Let Keanu Reeves take over your body",
+    "Kill Keanu Reeves' Dog",
+    "Shove an Aim-9 Sidewinder up your bum",
+    "Shove an Aim-120 AMRAAM up your bum",
+    "Watch TommyKay",
+    "Ban someone with an Ataturk profile picture",
+    "Buy all of the Sims 4 DLC",
 ]
 
 
@@ -255,11 +289,16 @@ class WouldYouRather(commands.Cog):
         self.logger = logging.getLogger(self.__class__.__name__)
 
     @commands.command(aliases=["wyr"])
-    async def wouldyourather(self, ctx):
+    async def wouldyourather(self, ctx, num_questions: int = 2):
         """
         Create a would you rather question
         The poll will last for 1 hour
+        An optional number of options (2-10) can be provided, e.g. !wyr 4
         """
+
+        if num_questions < 2 or num_questions > 10:
+            await ctx.reply("The number of options must be between 2 and 10.")
+            return
 
         questions = QUESTIONS_1
 
@@ -272,15 +311,12 @@ class WouldYouRather(commands.Cog):
             multiple=False,
         )
 
-        option_a = random.choice(questions)
-        option_b = random.choice(questions)
-        while option_a == option_b:
-            option_b = random.choice(questions)
+        options = random.sample(questions, num_questions)
 
-        poll.add_answer(text=option_a)
-        poll.add_answer(text=option_b)
+        for option in options:
+            poll.add_answer(text=option)
 
-        self.logger.debug(f"Would you rather poll created: {option_a} or {option_b}")
+        self.logger.debug(f"Would you rather poll created: {', '.join(options)}")
 
         await ctx.reply(poll=poll)
 
