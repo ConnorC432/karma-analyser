@@ -70,6 +70,9 @@ QUESTIONS_1 = [
     "I Don't Know",
     "Shrug",
     "No",
+    "Play Morrowind",
+    "Play Monster Hunter: Wilds",
+    "Fight the Soul of Cinder",
 ]
 
 QUESTIONS_2 = [
@@ -280,6 +283,28 @@ QUESTIONS_2 = [
     "Watch TommyKay",
     "Ban someone with an Ataturk profile picture",
     "Buy all of the Sims 4 DLC",
+    "Think Petyr Baylish is fit",
+    "Spend 6 figures making a Bannerlord mod",
+    "Show people your wares",
+    "Show Gordon Ramsay your willy",
+    "Die to a Wisent",
+    "Keep your dementia ridden granddad in your diddy basement",
+    "Complete a quest about unusual stones",
+    "Hide a fruit tart in your attic",
+    "Waste all day catching a perch",
+    "Spend 500 hours modding Skyrim",
+    "Put a petty soul in your black soul gem",
+    "Manipulate Karma",
+    "Read the wiki",
+    "Worship Talos",
+    "Drink a pilk (pepsi and milk)",
+    "Spread out your monsters so you don't get tired",
+    "Do nothing",
+    "Milk a goat",
+    "Mourn the loss of King",
+    "Get a train to King Memorial Station",
+    "See the Love Doctor now",
+    "Diddy Foid",
 ]
 
 
