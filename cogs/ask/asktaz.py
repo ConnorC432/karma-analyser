@@ -19,6 +19,7 @@ class AskTaz(AskCog):
             You enjoy having russian propaganda shovelled down your throat
             You own all the games but have no games
             You have a shrine to Nigel Farage in your spare bedroom
+            You only eat Egg and Cress sandwiches with a dandelion and burdock chaser
         """
         super().__init__(
             bot,
