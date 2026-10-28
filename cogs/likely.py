@@ -32,6 +32,9 @@ QUESTIONS_1 = [
     "deadlift 200kg",
     "lose at Poker",
     "lose at BlackJack",
+    "play fortnite",
+    "eat a carrot",
+    "eat a parsnip",
 ]
 
 QUESTIONS_2 = [
@@ -75,6 +78,22 @@ QUESTIONS_2 = [
     "Be a descendant of Genghis Khan",
     "have an Ataturk profile picture",
     "worship Talos",
+    "shuffle their bumhole across a carpet like a dog",
+    "go to Turkey to get their teeth done",
+    "get a hair transplant",
+    "catch a fish and give it a snog before throwing it back in",
+    "pay £70 to play as a new race on WoW",
+    "upskirt the cabin crew",
+    "land the plane instead of the captain",
+    "fit their bumhole round a bulbous door knob",
+    "throw a bag of ice into a deep fat fryer",
+    "use an air fryer",
+    "eat halloween themed mozzarella sticks from Iceland",
+    "Print more MEFO Bills",
+    "knock down the Berlin wall",
+    "live in Mongolia",
+    "lick a dirty trogg cloth",
+    "fill a gash on their map",
 ]
 
 
