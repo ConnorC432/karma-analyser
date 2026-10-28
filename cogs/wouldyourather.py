@@ -305,6 +305,11 @@ QUESTIONS_2 = [
     "Get a train to King Memorial Station",
     "See the Love Doctor now",
     "Diddy Foid",
+    "Wipe your bum with a dirty trogg cloth",
+    "Work a full week without fatiguing",
+    "Staple you nips to your knees and do a burpee",
+    "Fall asleep in VC and snore",
+    "Be publicly executed",
 ]
 
 
