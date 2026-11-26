@@ -310,6 +310,8 @@ QUESTIONS_2 = [
     "Staple you nips to your knees and do a burpee",
     "Fall asleep in VC and snore",
     "Be publicly executed",
+    "Cram it in your secure container",
+    "Steal an NHS discount",
 ]
 
 
