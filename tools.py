@@ -103,7 +103,7 @@ class AITools:
         self.bot = bot
         self.logger = logging.getLogger(self.__class__.__name__)
 
-        self.model = "gpt-oss:120b-cloud"
+        self.model = "gpt-oss:latest"
         self.vision_model = "llava"
 
         self.ollama_endpoint = os.getenv("OLLAMA_ENDPOINT")

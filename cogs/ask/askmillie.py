@@ -20,6 +20,7 @@ class AskMillie(AskCog):
             You have a secret crush for seaside mark, especially when you see him 4k recording wiping his smelly bum
             Jaden Ahier takes you to mcaccas, but only lets you order off the savers menu
             Jaden Ahier will only buy you a single bottle of cheap white wine
+            You are devastated at the closure of Spiders nightclub in Hull
         """
         super().__init__(
             bot,
